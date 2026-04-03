@@ -104,8 +104,17 @@ class Dataset_ETT_hour(Dataset):
         r_begin = s_end - self.label_len
         r_end = r_begin + self.label_len + self.pred_len
 
-        seq_x = self.data_x[s_begin:s_end]
-        seq_y = self.data_y[r_begin:r_end]
+        #seq_x = self.data_x[s_begin:s_end]
+        #seq_y = self.data_y[r_begin:r_end]
+
+        seq_x = self.data_x[s_begin:s_end].copy()
+        seq_x[:, -1] = 0.0 
+        
+        #處理decoder洩漏未來數據
+        seq_y = self.data_y[r_begin:r_end].copy() # 🚨 加上 .copy()
+        seq_y[:self.label_len, -1] = 0.0
+
+
         seq_x_mark = self.data_stamp[s_begin:s_end]
         seq_y_mark = self.data_stamp[r_begin:r_end]
 
@@ -325,8 +334,18 @@ class Dataset_Custom(Dataset):
         r_begin = s_end - self.label_len
         r_end = r_begin + self.label_len + self.pred_len
 
-        seq_x = self.data_x[s_begin:s_end]
-        seq_y = self.data_y[r_begin:r_end]
+        #seq_x = self.data_x[s_begin:s_end]
+        #seq_y = self.data_y[r_begin:r_end]
+
+        seq_x = self.data_x[s_begin:s_end].copy()
+        seq_x[:, -1] = 0.0 
+        
+        #處理decoder洩漏未來數據
+        seq_y = self.data_y[r_begin:r_end].copy() # 🚨 加上 .copy()
+        seq_y[:self.label_len, -1] = 0.0
+
+
+
         seq_x_mark = self.data_stamp[s_begin:s_end]
         seq_y_mark = self.data_stamp[r_begin:r_end]
 
