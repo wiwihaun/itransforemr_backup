@@ -16,25 +16,35 @@ warnings.filterwarnings('ignore')
 
 #123
 
-class StockBCELoss(nn.Module):
-    def __init__(self):
-        super().__init__()
-        # 1. 建立一個 Tensor 來存放權重 (假設您算出來是 2.5)
-        # 必須確保它跟模型跑在同一個設備上 (通常是 cuda)
-        weight_tensor = torch.tensor([4.74]).cuda() 
-        
-        # 2. 將權重傳入 BCEWithLogitsLoss
-        self.bce = nn.BCEWithLogitsLoss(pos_weight=weight_tensor)
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
 
-    def forward(self, pred, true):
-        # 1. 破解框架的雞婆標準化：
-        # 標準化後的數據，平均值會是 0。所以大於 0 的，就是原本真實的 1(漲)
-        # 我們在這裡把 true 強制還原回純淨的 0 和 1 (float格式)
+class StockFocalLoss(nn.Module):
+    def __init__(self, alpha=0.75, gamma=2.0):
+        super().__init__()
+        self.alpha = alpha
+        self.gamma = gamma
+
+    def forward(self, pred_prob, true):
         true_binary = (true > 0).float()
         
-        # 2. 為了防止模型偷看未來的極端作弊行為，我們還可以對 true_binary 加入一些防禦機制
-        # 但最關鍵的是把還原後的 0/1 交給真正的 BCE 計算
-        return self.bce(pred, true_binary)
+        # 🚨 防呆機制與極限值保護：確保輸入真的是 0~1 之間的機率
+        # 如果模型吐出 1.0，log(1-1.0) 會變成無限大崩潰，所以要 clamp 限制範圍
+        pred_prob = torch.clamp(pred_prob, min=1e-7, max=1.0 - 1e-7)
+        
+        # 1. 使用普通的 BCE (沒有 Logits，不會發生 Double-Sigmoid)
+        bce_loss = F.binary_cross_entropy(pred_prob, true_binary, reduction='none')
+        
+        # 2. 直接計算 pt
+        # 如果真實是 1，pt 就是預測機率；如果真實是 0，pt 就是 (1 - 預測機率)
+        pt = torch.where(true_binary == 1, pred_prob, 1 - pred_prob)
+        
+        # 3. Focal Loss 核心加權
+        alpha_factor = true_binary * self.alpha + (1 - true_binary) * (1 - self.alpha)
+        focal_loss = alpha_factor * (1 - pt) ** self.gamma * bce_loss
+        
+        return focal_loss.mean()
 
 
 class Exp_Long_Term_Forecast(Exp_Basic):
