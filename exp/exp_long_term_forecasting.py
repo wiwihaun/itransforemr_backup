@@ -21,7 +21,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class StockFocalLoss(nn.Module):
-    def __init__(self, alpha=0.75, gamma=2.0):
+    def __init__(self, alpha=0.86, gamma=2.0):
         super().__init__()
         self.alpha = alpha
         self.gamma = gamma
@@ -67,7 +67,7 @@ class Exp_Long_Term_Forecast(Exp_Basic):
         return model_optim
 
     def _select_criterion(self):
-        criterion = StockBCELoss()  # 改成我們剛剛寫的客製化 Loss
+        criterion = StockFocalLoss()  # 改成我們剛剛寫的客製化 Loss
         return criterion
  
 
