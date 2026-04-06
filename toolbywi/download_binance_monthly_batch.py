@@ -39,7 +39,7 @@ def download_binance_monthly_batch(symbol="BTCUSDT", interval="1h", start_year=2
                 with z.open(csv_filename) as f:
                     df_month = pd.read_csv(f, header=None, names=columns)
                     all_dataframes.append(df_month)
-                    print(f"✅ 成功下載並讀取: {year}-{month:02d}")
+                    
 
         except Exception as e:
             print(f"❌ 下載 {year}-{month:02d} 時發生錯誤: {e}")
@@ -120,10 +120,7 @@ def binance_load_5min(symbol="BTCUSDT", start_year=2024, start_month=1,
                 with z.open(csv_filename) as f:
                     df_day = pd.read_csv(f, header=None, names=columns)
                     all_dataframes.append(df_day)
-
-            # 每月第一天印一次進度
-            if d == 1:
-                print(f"✅ 下載中... {y}-{m:02d}")
+                
 
         except Exception as e:
             print(f"❌ 下載 {y}-{m:02d}-{d:02d} 時發生錯誤: {e}")
