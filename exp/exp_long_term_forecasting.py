@@ -25,7 +25,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class StockFocalLoss(nn.Module):
-    def __init__(self, alpha=0.77, gamma=2.0):
+    def __init__(self, alpha=0.79, gamma=0.0):
         super().__init__()
         self.alpha = alpha
         self.gamma = gamma
