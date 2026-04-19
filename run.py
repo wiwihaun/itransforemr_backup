@@ -136,6 +136,8 @@ if __name__ == '__main__':
     parser.add_argument('--discsdtw', default=False, action="store_true",
                         help="Discrimitive shapeDTW warp preset augmentation")
     parser.add_argument('--extra_tag', type=str, default="", help="Anything extra")
+    parser.add_argument('--focal_alpha', type=float, default=0.77,
+                        help='Focal loss alpha for positive class weighting (e.g. 0.93 for 6.6%% positive rate)')
 
     # TimeXer
     parser.add_argument('--patch_len', type=int, default=16, help='patch length')
