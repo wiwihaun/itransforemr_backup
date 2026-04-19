@@ -125,7 +125,7 @@ class Dataset_ETT_hour(Dataset):
         return len(self.data_x) - self.seq_len - self.pred_len + 1
 
     def inverse_transform(self, data):
-        return self.scaler.inverse_transform(data)
+        return data
 
 
 class Dataset_ETT_minute(Dataset):
@@ -237,7 +237,7 @@ class Dataset_ETT_minute(Dataset):
         return len(self.data_x) - self.seq_len - self.pred_len + 1
 
     def inverse_transform(self, data):
-        return self.scaler.inverse_transform(data)
+        return data
 
 
 class Dataset_Custom(Dataset):
