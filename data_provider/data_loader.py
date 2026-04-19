@@ -360,7 +360,9 @@ class Dataset_Custom(Dataset):
         return len(self.data_x) - self.seq_len - self.pred_len + 1
 
     def inverse_transform(self, data):
-        return self.scaler.inverse_transform(data)
+        # scale=False：Z-score 已在外部 feature_scale.py 完成，scaler 未 fit
+        # 直接回傳原值，避免呼叫未 fit 的 StandardScaler 導致崩潰
+        return data
 
 
 class Dataset_M4(Dataset):
