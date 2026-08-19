@@ -1,0 +1,351 @@
+<title>Round 4：partial AUC 選模 + OHLC 微結構特徵</title>
+<style>
+  :root{
+    --paper:#F5F3EE; --ink:#151C20; --ink-2:#3A484D; --muted:#68787C;
+    --rule:#D9D5CC; --rule-2:#E8E5DE; --card:#FBFAF7;
+    --accent:#2E6B78; --accent-soft:#2E6B7815;
+    --pos:#3C7A5C; --neg:#AC4A2C; --warn:#AC4A2C; --warn-soft:#AC4A2C12;
+    --grid:#00000010;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --paper:#0E1417; --ink:#E4E6E3; --ink-2:#AEB9BB; --muted:#7C8B8F;
+      --rule:#25302F; --rule-2:#1B2427; --card:#141C1F;
+      --accent:#6FB3BF; --accent-soft:#6FB3BF18;
+      --pos:#6DBE92; --neg:#E08762; --warn:#E08762; --warn-soft:#E0876214;
+      --grid:#FFFFFF10;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#0E1417; --ink:#E4E6E3; --ink-2:#AEB9BB; --muted:#7C8B8F;
+    --rule:#25302F; --rule-2:#1B2427; --card:#141C1F;
+    --accent:#6FB3BF; --accent-soft:#6FB3BF18;
+    --pos:#6DBE92; --neg:#E08762; --warn:#E08762; --warn-soft:#E0876214;
+    --grid:#FFFFFF10;
+  }
+  :root[data-theme="light"]{
+    --paper:#F5F3EE; --ink:#151C20; --ink-2:#3A484D; --muted:#68787C;
+    --rule:#D9D5CC; --rule-2:#E8E5DE; --card:#FBFAF7;
+    --accent:#2E6B78; --accent-soft:#2E6B7815;
+    --pos:#3C7A5C; --neg:#AC4A2C; --warn:#AC4A2C; --warn-soft:#AC4A2C12;
+    --grid:#00000010;
+  }
+
+  html{background:var(--paper);}
+  body{background:var(--paper); color:var(--ink);
+    font-family:Georgia,"Iowan Old Style","Palatino Linotype","Songti TC","Times New Roman",serif;
+    font-size:17px; line-height:1.62; margin:0; -webkit-font-smoothing:antialiased;}
+  .wrap{max-width:1120px; margin:0 auto; padding:0 28px 120px;}
+  .col{max-width:660px;}
+  p{margin:0 0 1.1em;}
+  code{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:.87em; background:var(--accent-soft); padding:1px 5px; border-radius:2px;}
+  .mono{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;}
+  .eyebrow{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:11.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); margin:0 0 10px;}
+
+  header{padding:64px 0 40px; border-bottom:2px solid var(--ink);}
+  h1{font-size:clamp(28px,4.2vw,44px); line-height:1.16; margin:0 0 18px;
+    font-weight:400; letter-spacing:-.015em; text-wrap:balance; max-width:26ch;}
+  .dek{font-size:19px; color:var(--ink-2); max-width:62ch; margin:0 0 26px;}
+  .meta{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:12px; color:var(--muted); display:flex; flex-wrap:wrap; gap:6px 22px;}
+
+  .tiles{display:grid; grid-template-columns:repeat(auto-fit,minmax(168px,1fr));
+    gap:1px; background:var(--rule); border:1px solid var(--rule); margin:0 0 12px;}
+  .tile{background:var(--card); padding:20px 18px 18px;}
+  .tile .k{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin:0 0 10px;}
+  .tile .v{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:22px; font-variant-numeric:tabular-nums; letter-spacing:-.02em; line-height:1; margin:0 0 7px;}
+  .tile .n{font-size:13px; color:var(--muted); line-height:1.4;}
+  .v.pos{color:var(--pos);} .v.neg{color:var(--neg);} .v.acc{color:var(--accent);}
+
+  section{padding:56px 0 0;}
+  h2{font-size:26px; font-weight:400; letter-spacing:-.01em; line-height:1.25; margin:0 0 6px; text-wrap:balance;}
+  h2 .num{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:12px; color:var(--accent); letter-spacing:.1em; display:block; margin-bottom:9px;}
+  h3{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:12px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted);
+    font-weight:400; margin:34px 0 12px; padding-bottom:7px; border-bottom:1px solid var(--rule-2);}
+  .lede{font-size:18.5px; color:var(--ink-2); max-width:62ch;}
+
+  figure{margin:26px 0 0; padding:0;}
+  .chart{border:1px solid var(--rule); background:var(--card); padding:22px 20px 14px; overflow-x:auto;}
+  .chart svg{display:block; width:100%; height:auto; min-width:520px;}
+  .duo{display:grid; grid-template-columns:repeat(auto-fit,minmax(360px,1fr)); gap:18px;}
+  figcaption{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:12px; color:var(--muted); line-height:1.55; margin-top:11px; max-width:84ch;}
+  .legend{display:flex; flex-wrap:wrap; gap:5px 20px; margin-bottom:14px;
+    font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:11.5px; color:var(--muted);}
+  .legend i{width:11px; height:11px; display:inline-block; margin-right:6px;
+    vertical-align:-1px; border-radius:1px;}
+  .legend .ln{width:16px; height:2px; display:inline-block; margin-right:6px; vertical-align:2px;}
+
+  .tbl-wrap{overflow-x:auto; margin:18px 0 0; border:1px solid var(--rule);}
+  table{border-collapse:collapse; width:100%; min-width:520px; background:var(--card);
+    font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:12.5px; font-variant-numeric:tabular-nums;}
+  th{text-align:left; font-weight:400; color:var(--muted); letter-spacing:.06em;
+    text-transform:uppercase; font-size:10.5px; padding:11px 14px;
+    border-bottom:1px solid var(--rule); white-space:nowrap;}
+  td{padding:10px 14px; border-bottom:1px solid var(--rule-2); white-space:nowrap;}
+  tr:last-child td{border-bottom:none;}
+  td.num,th.num{text-align:right;}
+  tr.hi td{background:var(--accent-soft);}
+  tr.hi td:first-child{box-shadow:inset 3px 0 0 var(--accent);}
+  tr.bad td{background:var(--warn-soft);}
+  tr.bad td:first-child{box-shadow:inset 3px 0 0 var(--warn);}
+  tr.good td{background:color-mix(in srgb, var(--pos) 10%, transparent);}
+  tr.good td:first-child{box-shadow:inset 3px 0 0 var(--pos);}
+  .pos{color:var(--pos);} .neg{color:var(--neg);} .dim{color:var(--muted);}
+
+  .flag{border-left:3px solid var(--warn); background:var(--warn-soft);
+    padding:18px 22px; margin:26px 0 0; max-width:660px;}
+  .flag .t{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--warn); margin:0 0 9px;}
+  .flag p:last-child{margin-bottom:0;}
+  .note{border-left:3px solid var(--accent); background:var(--accent-soft);
+    padding:18px 22px; margin:26px 0 0; max-width:660px;}
+  .note .t{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--accent); margin:0 0 9px;}
+  .note p:last-child{margin-bottom:0;}
+  .good-box{border-left:3px solid var(--pos); background:color-mix(in srgb, var(--pos) 8%, transparent);
+    padding:18px 22px; margin:26px 0 0; max-width:660px;}
+  .good-box .t{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--pos); margin:0 0 9px;}
+  .good-box p:last-child{margin-bottom:0;}
+
+  ul{margin:0 0 1.1em; padding-left:1.15em; max-width:62ch;}
+  li{margin-bottom:.55em;} li::marker{color:var(--accent);}
+
+  footer{margin-top:80px; padding-top:26px; border-top:1px solid var(--rule);
+    font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:11.5px; color:var(--muted); line-height:1.7; max-width:74ch;}
+  @media (max-width:640px){
+    body{font-size:16px;} .wrap{padding:0 18px 80px;} .tile .v{font-size:19px;}
+  }
+</style>
+
+<div class="wrap">
+
+<header>
+  <p class="eyebrow">BTCUSDT.P 5min · iTransformer · Round 4 · partial AUC 選模 + OHLC 微結構特徵</p>
+  <h1>換成 partial AUC 之後，測試集勝率從 42.79% 回升到 47.81%——但這個數字早在訓練之前就被 pAUC 準確預告過。</h1>
+  <p class="dek">這輪起點是一個方法論修正：系統只交易 top 5~20% 的分數，用全域 AUC 選模等於把 80~95% 根本不會下單的樣本也算進去。換成 partial AUC 之前，先把 Round 3 冠軍 checkpoint 用新指標重新計分，得到測試集平均 pAUC <strong>0.5004</strong>——幾乎精確的無技巧基準，這就是本輪的事前註冊門檻。同時把被丟棄的 5 個原始欄位（Open/High/Low/Quote_asset_volume 等）轉成 6 個平穩衍生特徵重新評估。最終結果：驗證集平均 pAUC <strong>0.5048</strong>、測試集 <strong>0.5013</strong>，兩者都貼著這輪自己的事前基準——pAUC 在訓練開始前就準確預告了「這條路線不會有邊際」，測試集勝率 47.81%（95% CI [44.02%, 51.62%]）也確實沒有跨過損益兩平 54.05%。</p>
+  <div class="meta">
+    <span>選模指標：mean partial AUC（0.05/0.10/0.15/0.20 平均）</span>
+    <span>候選特徵 53+6=59 → 15</span>
+    <span>iTransformer e_layers=1 focal_g2 seq_len=512 patience=5</span>
+    <span>資料維持 5 分鐘 K 線</span>
+  </div>
+</header>
+
+<section style="padding-top:40px;">
+  <div class="tiles">
+    <div class="tile"><p class="k">事前註冊基準（R3 冠軍重新計分）</p><p class="v">0.5004</p><p class="n">測試集平均 pAUC，幾乎精確無技巧</p></div>
+    <div class="tile"><p class="k">GBDT 關卡（v3→v4，同指標）</p><p class="v">0.5024→0.5035</p><p class="n">CI 大幅重疊，新特徵無顯著貢獻</p></div>
+    <div class="tile"><p class="k">入選特徵變化</p><p class="v acc">9 同 / 6 異</p><p class="n">換指標後 15 個裡有 6 個換人，2 個新微結構特徵入選</p></div>
+    <div class="tile"><p class="k">驗證集平均 pAUC</p><p class="v">0.5048</p><p class="n">貼著事前基準 0.5050，沒有推進</p></div>
+    <div class="tile"><p class="k">測試集勝率</p><p class="v neg">47.81%</p><p class="n">95% CI [44.02%, 51.62%]，未跨過 54.05%</p></div>
+    <div class="tile"><p class="k">關卡結論</p><p class="v neg">未通過</p><p class="n">但 pAUC 事前已準確預告，非訓練後才知道</p></div>
+  </div>
+</section>
+
+<section>
+  <h2><span class="num">01 — 背景</span>全域 AUC 把不會下單的樣本也算進選模指標</h2>
+  <p class="lede">Round 3（<code>report/2026-08-17-round3/</code>）測試集勝率 42.79%，用戶指出一個方法論錯誤：系統只交易 <code>p_up</code> 排進前 5~20% 的樣本，但 <code>compare_checkpoints.py</code>／<code>gbdt_probe.py</code> 一直是用全域 <code>roc_auc_score</code> 選模——這個指標把後面 80~95% 根本不會下單的樣本排序品質也算進總分，跟系統實際依賴的「頭部排序」是兩件事。</p>
+
+  <p>在動手改任何程式碼之前，先做了一次事前檢查：把 Round 3 冠軍 checkpoint（<code>iTransformer, e_layers=1, focal_g2</code>）的驗證集與測試集機率，用 <code>sklearn.roc_auc_score(..., max_fpr=f)</code>（McClish 標準化，已用隨機分數驗證 no-skill=0.4989≈0.50）重新計分：</p>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>切分</th><th class="num">全域 AUC</th><th class="num">pAUC@0.05</th><th class="num">pAUC@0.10</th><th class="num">pAUC@0.15</th><th class="num">pAUC@0.20</th><th class="num">平均 pAUC</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">驗證集</td><td class="num">0.5329</td><td class="num">0.5017</td><td class="num">0.5036</td><td class="num">0.5061</td><td class="num">0.5086</td><td class="num">0.5050</td></tr>
+        <tr class="bad"><td class="mono">測試集</td><td class="num">0.5081</td><td class="num">0.5007</td><td class="num">0.5004</td><td class="num">0.5002</td><td class="num">0.5000</td><td class="num neg">0.5004</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>驗證集全域 AUC 0.5329 看起來像訊號，但測試集平均 pAUC 是 <strong>0.5004</strong>——系統實際會下單的那個區間，幾乎精確等於擲硬幣。這正是 Round 3 測試集勝率只有 42.79% 的機制解釋，也證實了這次要換指標的判斷是對的。這兩個數字（驗證集 0.5050、測試集 0.5004）就是本輪的事前註冊門檻：本輪任何改動都要拿這兩個數字當基準，而不是拿 Round 3 的全域 AUC 比較（兩者不同尺度，不可直接比大小）。</p>
+
+  <div class="note">
+    <p class="t">pAUC 與交易門檻的關係，以及一個重要限制</p>
+    <p><code>max_fpr=f</code> 限制的是「前 f% 的負樣本」，而 <code>evaluate_event.py</code> 的門檻是「前 q% 的全部分數」——在 <code>pos_rate≈0.50</code> 且模型很弱時兩者幾乎重合，但不是同一組樣本。另外四個 <code>max_fpr</code> 操作點是巢狀區間、彼此高度相關，平均並不能線性縮減 4 倍變異數。pAUC 的角色是「選模／選特徵時看對區域」，最終關卡仍然只看勝率 + Wilson CI，測試集不會因為 pAUC 而多被碰第二次。</p>
+  </div>
+</section>
+
+<section>
+  <h2><span class="num">02 — 六個微結構特徵：判斷與取捨</span>被丟棄的 5 個原始欄位，轉成平穩衍生形式重新評估</h2>
+  <p class="lede"><code>prepare_event_data.py</code> 從 Round 1 起就丟棄 <code>Open/High/Low/Quote_asset_volume/Taker_buy_quote_asset_volume</code> 五個原始欄位再做 Z-score。實測這五欄裡，<code>Open/High/Low</code> 與 <code>Close</code> 相關 0.99997+，是三份非平穩價格水位的複本；<code>Taker_buy_quote_asset_volume</code> 已被既有 <code>Taker_Ratio</code>（= 它 / <code>Quote_asset_volume</code>）消化。判斷：全部五欄都需要前處理才能安全加入，不能直接丟原始值進模型。</p>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>採用的 6 個衍生特徵</th><th>公式</th><th class="num">corr(Close 水位)</th><th class="num">train→test 漂移</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">HL_Range</td><td class="dim">(High−Low)/Close×100</td><td class="num">−0.114</td><td class="num">−0.181 sd</td></tr>
+        <tr><td class="mono">OC_Ret</td><td class="dim">(Close−Open)/Open×100</td><td class="num">+0.005</td><td class="num">−0.002 sd</td></tr>
+        <tr><td class="mono">Up_Wick</td><td class="dim">(High−max(O,C))/Close×100</td><td class="num">−0.102</td><td class="num">−0.102 sd</td></tr>
+        <tr><td class="mono">Low_Wick</td><td class="dim">(min(O,C)−Low)/Close×100</td><td class="num">−0.084</td><td class="num">−0.105 sd</td></tr>
+        <tr class="hi"><td class="mono">BarVWAP_Dev ← 入選</td><td class="dim">(Close−QuoteVol/Vol)/Close×100</td><td class="num">+0.007</td><td class="num">−0.003 sd</td></tr>
+        <tr class="hi"><td class="mono">ATR_Pct_14</td><td class="dim">ATR_14/Close×100</td><td class="num">−0.149</td><td class="num">−0.235 sd</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>對照組：R3 選中的 <code>EMA_72</code> 漂移 −2.51 sd、<code>OBV</code> −2.84 sd——這 6 個新特徵全部落在 ±0.24 sd 內，量級小了一個數量級。<code>ATR_Pct_14</code> 是 <code>ATR_14</code>（R3 選中的原始美元水位特徵）的零成本平穩替代版，重用 <code>features()</code> 已算好的值。</p>
+
+  <h3>兩個候選特徵已剔除</h3>
+  <p><strong><code>QVol_Ratio</code></strong>（<code>Quote_asset_volume</code> 的 20 根滾動相對量）與既有 <code>Volume_Ratio</code> 相關 <strong>0.99998</strong>——因為 <code>Quote_asset_volume ≈ Volume × Close</code>，20 根滾動比值把價格因子約掉了，加進去只會讓兩者在 permutation importance 裡互相瓜分。<strong><code>Gap_Open</code></strong>（跳空）在永續合約上退化：實測 <strong>51.8%</strong> 是精確 0，std 僅 7e-4%——這是把股票開盤跳空的概念套到 24/7 無收盤的市場。</p>
+</section>
+
+<section>
+  <h2><span class="num">03 — GBDT 關卡：同一把尺量兩次，新特徵沒有顯著貢獻</span></h2>
+  <p class="lede">為了把「換指標」與「加新特徵」的效果分開看，用<strong>完全相同的 mean pAUC 指標</strong>各跑一次 GBDT 關卡：一次用 Round 3 原本的 53 個候選特徵，一次用加了 6 個微結構特徵的 59 個候選特徵。兩次都只用 train+val（132,556 列），測試期未被讀取；信賴區間改用 block bootstrap（<code>block_len=6</code>=lookahead，修正標籤重疊造成的 CI 虛假精確）。</p>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>候選特徵</th><th class="num">OOF 平均 pAUC</th><th class="num">95% CI（block bootstrap）</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">53（Round 3 原有）</td><td class="num">0.5024</td><td class="num">[0.5006, 0.5045]</td></tr>
+        <tr class="hi"><td class="mono">59（+6 個微結構特徵）</td><td class="num pos">0.5035</td><td class="num">[0.5018, 0.5055]</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>59 個特徵的點估計比 53 個高 0.0011，但兩個 95% CI 大幅重疊（重疊區間 [0.5018, 0.5045]）——統計上無法區分這 6 個新特徵有沒有推動訊號。這跟 Round 3 加入 metrics/funding/premium 三組全新資料來源時的結論一樣：新資訊確實不是完全無效，但量級遠不到「解鎖訊號」的程度。</p>
+
+  <div class="flag">
+    <p class="t">1σ 規則這次完全沒有特徵通過</p>
+    <p>59 個候選特徵裡，<code>importance_mean − importance_std &gt; 0</code> 的通過數是 <strong>0</strong>（Round 3 的 53 個候選裡還有 2 個通過）。套用 top-k 底線規則 <code>k = max(15, 0) = 15</code>，直接取重要度前 15 名——這代表在 pAUC 這把新尺度下，訊號比全域 AUC 量出來的更稀薄、更不穩定，不是量測誤差，是規則設計上刻意保留的底線在生效。</p>
+  </div>
+</section>
+
+<section>
+  <h2><span class="num">04 — 換了指標，選中的特徵也換了一批</span>15 個裡有 6 個不一樣，2 個是新加的微結構特徵</h2>
+  <p class="lede">用 mean pAUC 排序後選出的 15 個特徵，跟 Round 3 用全域 AUC 選出的 15 個比較：9 個相同、6 個不同。這是預期中的效果——不同指標對「排序品質」的定義不同，選出來的贏家自然不會完全一樣，兩輪的特徵集合因此不可直接並列比較。</p>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>分類</th><th>特徵</th></tr></thead>
+      <tbody>
+        <tr><td class="mono dim">兩輪都選中（9）</td><td class="mono">Stoch_D, VWAP_Dev, Stoch_K, CCI_20, OI_Chg_72, Taker_Ratio, RSI_30, RSI_14, TopTrader_Acct_LS</td></tr>
+        <tr><td class="mono dim">只在 R3（6，這輪被換掉）</td><td class="mono">ROC_30, BB_PB, TopTrader_Pos_LS, ATR_14, EMA_72, OBV</td></tr>
+        <tr class="hi"><td class="mono">只在 R4（6，這輪新入選）</td><td class="mono">MACD_Signal, ETH_RSI14, SOL_RSI14, <span class="pos">BarVWAP_Dev</span>, CMF_14, <span class="pos">HL_Range</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>被換掉的 6 個裡有 4 個是原始水位型特徵（<code>ATR_14</code>、<code>EMA_72</code>、<code>OBV</code> 及部分依賴它們的組合）——這跟 pAUC 只看頭部排序、不像全域 AUC 那樣容易被中段大量樣本的粗略趨勢帶動有關。新入選的 <code>ETH_RSI14</code>／<code>SOL_RSI14</code>（輔幣動能）跟 <code>MACD_Signal</code>／<code>CMF_14</code>（既有指標，Round 3 未進前 15）在頭部排序上比在全域排序上更有用。6 個新微結構特徵裡，<code>BarVWAP_Dev</code>（bar 內成交均價偏離）與 <code>HL_Range</code>（高低價相對區間）入選，其餘 4 個（<code>OC_Ret</code>、<code>Up_Wick</code>、<code>Low_Wick</code>、<code>ATR_Pct_14</code>）未進前 15。</p>
+</section>
+
+<section>
+  <h2><span class="num">05 — 訓練：同樣的過擬合模式，epoch 1 最佳</span></h2>
+  <p class="lede">最終選定組合：<code>iTransformer, e_layers=1, focal_g2, seq_len=512, patience=5</code>，15 個 pAUC 選出的特徵。訓練過程首次完整記錄逐 epoch loss（Round 1-3 沒有這份紀錄，只能看終端機當下輸出）：</p>
+
+  <figure>
+    <div class="chart">
+      <div class="legend">
+        <span><i class="ln" style="background:var(--muted)"></i>訓練損失</span>
+        <span><i class="ln" style="background:var(--neg)"></i>驗證損失</span>
+        <span><i class="ln" style="background:var(--accent)"></i>測試損失</span>
+      </div>
+      <svg viewBox="0 0 940 300" xmlns="http://www.w3.org/2000/svg" role="img"
+           aria-label="Round 4 訓練/驗證/測試損失隨 epoch 變化，6 個 epoch 後 early stop，最佳點在 epoch 1">
+        <g transform="translate(30,10)">
+          <line x1="0" y1="260.0" x2="900" y2="260.0" stroke="var(--grid)"/><text x="-6" y="263.0" text-anchor="end" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">0.084</text>
+          <line x1="0" y1="225.7" x2="900" y2="225.7" stroke="var(--grid)"/><text x="-6" y="228.7" text-anchor="end" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">0.085</text>
+          <line x1="0" y1="191.4" x2="900" y2="191.4" stroke="var(--grid)"/><text x="-6" y="194.4" text-anchor="end" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">0.086</text>
+          <line x1="0" y1="157.1" x2="900" y2="157.1" stroke="var(--grid)"/><text x="-6" y="160.1" text-anchor="end" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">0.087</text>
+          <line x1="0" y1="122.9" x2="900" y2="122.9" stroke="var(--grid)"/><text x="-6" y="125.9" text-anchor="end" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">0.088</text>
+          <line x1="0" y1="88.6" x2="900" y2="88.6" stroke="var(--grid)"/><text x="-6" y="91.6" text-anchor="end" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">0.089</text>
+          <line x1="0" y1="54.3" x2="900" y2="54.3" stroke="var(--grid)"/><text x="-6" y="57.3" text-anchor="end" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">0.090</text>
+          <line x1="0" y1="20.0" x2="900" y2="20.0" stroke="var(--grid)"/><text x="-6" y="23.0" text-anchor="end" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">0.091</text>
+
+          <polyline points="0.0,101.9 180.0,175.6 360.0,186.2 540.0,197.7 720.0,214.8 900.0,235.1" fill="none" stroke="var(--muted)" stroke-width="2.4"/>
+          <polyline points="0.0,170.9 180.0,164.8 360.0,151.5 540.0,113.8 720.0,78.5 900.0,57.6" fill="none" stroke="var(--neg)" stroke-width="1.8" stroke-dasharray="2 3"/>
+          <polyline points="0.0,157.4 180.0,142.3 360.0,133.6 540.0,100.6 720.0,50.3 900.0,24.3" fill="none" stroke="var(--accent)" stroke-width="1.8" stroke-dasharray="5 3"/>
+
+          <circle cx="0.0" cy="170.9" r="5.5" fill="var(--neg)"/>
+          <text x="0.0" y="170.9" dy="-12" text-anchor="start" font-family="ui-monospace,Menlo,monospace" font-size="10" fill="var(--neg)">最佳點（epoch 1，checkpoint 存檔）</text>
+          <circle cx="900.0" cy="57.6" r="5" fill="var(--neg)"/>
+          <text x="900.0" y="57.6" dy="-10" text-anchor="end" font-family="ui-monospace,Menlo,monospace" font-size="10" fill="var(--neg)">early stop（epoch 6）</text>
+
+          <text x="0.0" y="276" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">1</text>
+          <text x="180.0" y="276" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">2</text>
+          <text x="360.0" y="276" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">3</text>
+          <text x="540.0" y="276" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">4</text>
+          <text x="720.0" y="276" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">5</text>
+          <text x="900.0" y="276" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">6</text>
+          <text x="450" y="292" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="10" fill="var(--muted)">Epoch</text>
+        </g>
+      </svg>
+    </div>
+    <figcaption>訓練損失持續下降到 0.0847，驗證與測試損失在 epoch 1 後同步爬升——跟 Round 1-3 一模一樣的過擬合模式：加了新特徵、換了選模指標，都沒有改變「模型一開始訓練就在記憶訓練集」這個底層事實。patience=5 在 epoch 6 觸發 early stop，實際保留的 checkpoint 是驗證損失最低的 epoch 1。這是本專案第一次有完整的逐 epoch 紀錄（<code>train_event.py</code> 起把訓練 stdout tee 進 <code>logs/{setting}.log</code> 並解析存進 <code>training_history.json</code>），Round 1-3 沒有這份資料，無法回溯畫出對應圖表。</figcaption>
+  </figure>
+</section>
+
+<section>
+  <h2><span class="num">06 — 最終測試結果：pAUC 在訓練前就準確預告了這裡</span></h2>
+  <p class="lede">驗證集用百分位掃描門檻（<code>entry_at=1</code> 事前固定，不做任何選擇），這次選出的並非窄門檻，而是最寬的候選——反映驗證集訊號本身就很平：</p>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>百分位</th><th class="num">門檻</th><th class="num">驗證集交易數</th><th class="num">驗證集勝率</th><th class="num">CI 下界</th></tr></thead>
+      <tbody>
+        <tr class="hi"><td class="mono">30% ← 鎖定</td><td class="num">0.5005</td><td class="num">340</td><td class="num">54.41%</td><td class="num">49.10%</td></tr>
+        <tr><td class="mono">20%</td><td class="num">0.5047</td><td class="num">296</td><td class="num">52.03%</td><td class="num">46.35%</td></tr>
+        <tr><td class="mono">10%</td><td class="num">0.5104</td><td class="num">206</td><td class="num">52.43%</td><td class="num">45.63%</td></tr>
+        <tr><td class="mono">5%</td><td class="num">0.5152</td><td class="num">138</td><td class="num">48.55%</td><td class="num">40.36%</td></tr>
+        <tr><td class="mono">3%</td><td class="num">0.5182</td><td class="num">106</td><td class="num">52.83%</td><td class="num">43.40%</td></tr>
+        <tr><td class="mono">2%</td><td class="num">0.5203</td><td class="num">83</td><td class="num">55.42%</td><td class="num">44.73%</td></tr>
+        <tr><td class="mono">1%</td><td class="num">0.5231</td><td class="num">51</td><td class="num">50.98%</td><td class="num">37.68%</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>值得注意：<strong>全部 7 個百分位候選的 CI 下界都低於 50%</strong>——驗證集本身就沒有給出任何一個「有把握」的操作點，30% 只是這堆弱候選裡 CI 下界相對最高的一個（因為交易數最多、CI 最窄），不是訊號特別強。這跟前面 GBDT 關卡「1σ 通過數=0」的訊號稀薄程度互相印證。</p>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>統計</th><th class="num">交易數</th><th class="num">勝率</th><th>95% CI</th><th>結論</th></tr></thead>
+      <tbody>
+        <tr class="bad"><td class="mono">主要指標（叢集規則）</td><td class="num">661</td><td class="num neg">47.81%</td><td class="mono">[44.02%, 51.62%]</td><td class="neg">CI 涵蓋 50%，未跨過損益兩平</td></tr>
+        <tr><td class="mono">busy_only 次要參考</td><td class="num">2008</td><td class="num">48.80%</td><td class="mono dim">[46.62%, 50.99%]</td><td class="dim">樣本更大，CI 幾乎全在 50% 以下</td></tr>
+        <tr><td class="mono">always_up / 多數類基準</td><td class="num dim">--</td><td class="num dim">50.00%</td><td class="dim">--</td><td class="dim">參考</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>測試集 AUC = 0.5024、平均 pAUC = <strong>0.5013</strong>——跟本輪自己的事前基準（驗證集 0.5048、測試集期望值貼近 R3 基準 0.5004）幾乎完全吻合。661 筆交易（比 Round 3 的 416 筆多，因為這次選中的是最寬的 30% 門檻），95% CI [44.02%, 51.62%] 完整涵蓋 50%，離損益兩平 54.05% 還有一段距離但沒有 Round 3 那麼誇張。</p>
+
+  <div class="note">
+    <p class="t">這是本輪最重要的方法論收穫：pAUC 事前就預告了結果</p>
+    <p>在跑任何 Round 4 的訓練之前，Round 3 冠軍 checkpoint 重新計分的測試集平均 pAUC 就已經是 0.5004（見第 01 節）。這輪換了特徵、換了選模指標，最終驗證集平均 pAUC 落在 0.5048、測試集 0.5013——都貼著同一個「幾乎精確無技巧」的量級。<strong>如果一開始就用 pAUC 評估 Round 3 的模型，本可以在動手做任何 Round 4 特徵工程之前，就對「這條路線很可能還是不會過關」有更準確的預期</strong>——這正是使用者最初批評「全域 AUC 選模是錯的」這句話的價值所在：換對指標之後，指標本身變得更誠實、更能提前預警，而不只是最後結果變好或變壞。</p>
+  </div>
+</section>
+
+<section>
+  <h2><span class="num">07 — 結論</span>四輪裡第二差，但方法論這次是清楚勝出的</h2>
+  <ul>
+    <li><strong>未通過關卡</strong>：測試集勝率 47.81%，95% CI [44.02%, 51.62%]，CI 涵蓋擲硬幣的 50%，未跨過損益兩平 54.05%。四輪測試集勝率：51.32% → 50.59% → 42.79% → <strong>47.81%</strong>——比 Round 3 好，但仍是四輪裡第二差，且與 Round 3 的 CI 只在邊緣重疊（[38.12%,47.59%] vs [44.02%,51.62%]），改善是否具統計意義仍存疑，不宜過度解讀成「找到方向了」。</li>
+    <li><strong>partial AUC 修正了選模指標與交易決策的錯位，且此結論站得住腳</strong>：R3 冠軍 checkpoint 驗證集全域 AUC 0.5329 看起來像訊號，但測試集平均 pAUC 只有 0.5004——這個落差正是 R3 勝率崩盤的機制解釋。本輪換指標後，模型在自己的驗證/測試集上的 pAUC（0.5048／0.5013）與這個基準高度一致，證明 pAUC 是比全域 AUC 更誠實、更能提前反映「頭部訊號強度」的指標。</li>
+    <li><strong>6 個微結構特徵沒有無效，但也沒有解鎖訊號</strong>：用同一把 pAUC 尺量 53 vs 59 個候選特徵，OOF 平均 pAUC 從 0.5024 微升到 0.5035，95% CI 大幅重疊——統計上無法區分。2 個新特徵（<code>BarVWAP_Dev</code>、<code>HL_Range</code>）擠進了最終 15 個，但整體訊號量級沒有實質改變。</li>
+    <li><strong>換指標讓入選特徵組合換了 6 個</strong>：15 個裡 9 個兩輪都選中，被換掉的 6 個裡有 4 個是原始水位型特徵（<code>ATR_14</code>/<code>EMA_72</code>/<code>OBV</code> 等）——pAUC 只看頭部排序，比全域 AUC 更不容易被這類中段趨勢帶動，這本身是預期中、也是合理的效果。</li>
+    <li><strong>標籤重疊問題在 GBDT 關卡的信賴區間上首次系統性修正</strong>：block bootstrap（block_len=6）比舊版 iid bootstrap 寬約 1.5~1.6 倍，用 R3 資料回測發現 R3 當初「通過關卡」的驗證集結果，在誠實的 CI 下其實沒有顯著超過 0.50——這件事也一併記錄在本輪，供未來輪次參考。</li>
+    <li><strong>首次有完整的逐 epoch 訓練紀錄</strong>：<code>train_event.py</code> 起把訓練過程 tee 進 log 並解析出 <code>training_history.json</code>，本輪與未來所有輪次都能回溯畫出 loss-epoch 圖；Round 1-3 沒有這份資料。</li>
+  </ul>
+
+  <div class="good-box">
+    <p class="t">下一步建議（僅供參考，非既定計畫）</p>
+    <p>(1) 四輪下來，不管是全域 AUC 還是誠實計算的 pAUC，訊號量級都在「幾乎無技巧」附近反覆震盪，沒有一輪的測試集平均 pAUC 明顯超過 0.502——這比「特徵不夠多」更像是「5 分鐘 K 線 + 30 分鐘方向」這個問題設定本身在目前這類特徵下就是接近隨機的；(2) 既然 pAUC 已被驗證是更誠實的事前預警指標，未來任何新一輪改動，建議先用 GBDT 關卡的 pAUC 結果決定要不要繼續投入訓練 transformer 的時間，而不是每次都跑完整套流程才知道結果；(3) 47.81% 的測試集勝率在賠率 0.85 下期望值仍為負（權益曲線最終剩 0.193，最大回撤 −84.7%），不建議依此系統下單。</p>
+  </div>
+</section>
+
+<footer>
+  <p>資料沿用 Round 3 的下載範圍（BTCUSDT + ETHUSDT/BNBUSDT/SOLUSDT 5min，2025-01-01 ~ 2026-07-31，維持 5 分鐘 K 線、<code>lookahead=6</code>=30 分鐘結算，未改動）；新增 6 個微結構特徵（<code>HL_Range, OC_Ret, Up_Wick, Low_Wick, BarVWAP_Dev, ATR_Pct_14</code>，由被丟棄的 <code>Open/High/Low/Quote_asset_volume</code> 衍生，逐根 pointwise 轉換，零 warmup），候選特徵總數 53+6=59。選模指標改為 <code>toolbywi/event_common.py</code> 的 <code>mean_partial_auc()</code>（<code>sklearn.roc_auc_score(max_fpr=f)</code>，McClish 標準化，no-skill=0.5，四個操作點 0.05/0.10/0.15/0.20 平均），<code>permutation_importance</code> 用對應的可 pickle scorer（<code>make_mean_pauc_scorer()</code>），信賴區間改用 <code>block_bootstrap_ci()</code>（block_len=lookahead=6，修正標籤重疊造成的 iid bootstrap CI 虛假精確，實測寬度比 block/iid≈1.5~1.6）。GBDT 關卡（<code>gbdt_probe.py --metric mean_pauc</code>）在 train+val（132,556 列）跨 5 折 TimeSeriesSplit × 5 次重複計算，top-k 規則 <code>k=max(15, 1sigma 通過數)=max(15,0)=15</code> 篩至 15 個特徵。模型：iTransformer，<code>seq_len=512, label_len=48, pred_len=1, d_model=256, d_ff=512, e_layers=1, n_heads=8, dropout=0.2, batch_size=64, lr=1e-4, lradj=type3, focal_alpha=0.4985, patience=5</code>，損失函數 <code>focal_g2</code>（沿用 Round 3 勝出組合，本輪未重新比較損失函數/深度），Apple MPS 訓練，6 epoch 觸發 early stop，checkpoint 取自 epoch 1。訓練過程首次用 <code>train_event.py</code> 的 Popen-tee 完整記錄逐 epoch loss，寫入 <code>logs/{setting}.log</code> 與 <code>{data_dir}/training_history.json</code>，由 <code>plot_training_curve.py</code> 產圖。<code>entry_at</code> 事前固定為 1，不做任何選擇/掃描；賠率固定 0.85，損益兩平 54.05%。門檻用驗證集百分位（30/20/10/5/3/2/1%），在下單數 &gt;=100 的候選中取 CI 下界最高者（30% 百分位，門檻 0.5005），測試集只評估一次。叢集進場（<code>toolbywi/event_common.py</code> 的 <code>cluster_entries()</code>/<code>cluster_step()</code>）只認買漲方向，gap=6 對齊 30 分鐘結算，保證任兩筆交易 index 差 &gt; gap（661 筆交易，最小間隔 7 根 > gap 6，已斷言驗證）。回歸驗證：本輪新產生的 <code>dataset/event30m_v4</code> 與既有 <code>dataset/event30m_v3</code> 共有的 53 個特徵欄，在共同日期上逐值比對一致；發現的唯一差異來自 Binance <code>metrics</code> 日包在兩次下載時間點各缺 1 根快照（外部資料源非確定性，與本輪程式碼改動無關，已個別排查確認）。因果性測試新增 <code>test_microstructure_features_causal()</code>、<code>test_zero_volume_bar()</code>，全數通過。原始數據見專案 <code>dataset/event30m_v4/gbdt_probe_report.json</code>（59 特徵重要度）、<code>dataset/event30m_v4_sel/meta.json</code>、<code>dataset/event30m_v4_sel/checkpoint_comparison.json</code>、<code>dataset/event30m_v4_sel/evaluate_report.json</code>（含 <code>val_pauc_report</code>/<code>test_pauc_report</code>）、<code>dataset/event30m_v4_sel/trades.csv</code>（661 筆逐筆交易明細）、<code>dataset/event30m_v4_sel/training_history.json</code>（逐 epoch loss）。</p>
+</footer>
+
+</div>

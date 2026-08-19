@@ -1,0 +1,352 @@
+<meta charset="utf-8">
+<title>Round 4&#xFF1A;partial AUC &#x9078;&#x6A21; + OHLC &#x5FAE;&#x7D50;&#x69CB;&#x7279;&#x5FB5;</title>
+<style>
+  :root{
+    --paper:#F5F3EE; --ink:#151C20; --ink-2:#3A484D; --muted:#68787C;
+    --rule:#D9D5CC; --rule-2:#E8E5DE; --card:#FBFAF7;
+    --accent:#2E6B78; --accent-soft:#2E6B7815;
+    --pos:#3C7A5C; --neg:#AC4A2C; --warn:#AC4A2C; --warn-soft:#AC4A2C12;
+    --grid:#00000010;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --paper:#0E1417; --ink:#E4E6E3; --ink-2:#AEB9BB; --muted:#7C8B8F;
+      --rule:#25302F; --rule-2:#1B2427; --card:#141C1F;
+      --accent:#6FB3BF; --accent-soft:#6FB3BF18;
+      --pos:#6DBE92; --neg:#E08762; --warn:#E08762; --warn-soft:#E0876214;
+      --grid:#FFFFFF10;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#0E1417; --ink:#E4E6E3; --ink-2:#AEB9BB; --muted:#7C8B8F;
+    --rule:#25302F; --rule-2:#1B2427; --card:#141C1F;
+    --accent:#6FB3BF; --accent-soft:#6FB3BF18;
+    --pos:#6DBE92; --neg:#E08762; --warn:#E08762; --warn-soft:#E0876214;
+    --grid:#FFFFFF10;
+  }
+  :root[data-theme="light"]{
+    --paper:#F5F3EE; --ink:#151C20; --ink-2:#3A484D; --muted:#68787C;
+    --rule:#D9D5CC; --rule-2:#E8E5DE; --card:#FBFAF7;
+    --accent:#2E6B78; --accent-soft:#2E6B7815;
+    --pos:#3C7A5C; --neg:#AC4A2C; --warn:#AC4A2C; --warn-soft:#AC4A2C12;
+    --grid:#00000010;
+  }
+
+  html{background:var(--paper);}
+  body{background:var(--paper); color:var(--ink);
+    font-family:Georgia,"Iowan Old Style","Palatino Linotype","Songti TC","Times New Roman",serif;
+    font-size:17px; line-height:1.62; margin:0; -webkit-font-smoothing:antialiased;}
+  .wrap{max-width:1120px; margin:0 auto; padding:0 28px 120px;}
+  .col{max-width:660px;}
+  p{margin:0 0 1.1em;}
+  code{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:.87em; background:var(--accent-soft); padding:1px 5px; border-radius:2px;}
+  .mono{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;}
+  .eyebrow{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:11.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); margin:0 0 10px;}
+
+  header{padding:64px 0 40px; border-bottom:2px solid var(--ink);}
+  h1{font-size:clamp(28px,4.2vw,44px); line-height:1.16; margin:0 0 18px;
+    font-weight:400; letter-spacing:-.015em; text-wrap:balance; max-width:26ch;}
+  .dek{font-size:19px; color:var(--ink-2); max-width:62ch; margin:0 0 26px;}
+  .meta{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:12px; color:var(--muted); display:flex; flex-wrap:wrap; gap:6px 22px;}
+
+  .tiles{display:grid; grid-template-columns:repeat(auto-fit,minmax(168px,1fr));
+    gap:1px; background:var(--rule); border:1px solid var(--rule); margin:0 0 12px;}
+  .tile{background:var(--card); padding:20px 18px 18px;}
+  .tile .k{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin:0 0 10px;}
+  .tile .v{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:22px; font-variant-numeric:tabular-nums; letter-spacing:-.02em; line-height:1; margin:0 0 7px;}
+  .tile .n{font-size:13px; color:var(--muted); line-height:1.4;}
+  .v.pos{color:var(--pos);} .v.neg{color:var(--neg);} .v.acc{color:var(--accent);}
+
+  section{padding:56px 0 0;}
+  h2{font-size:26px; font-weight:400; letter-spacing:-.01em; line-height:1.25; margin:0 0 6px; text-wrap:balance;}
+  h2 .num{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:12px; color:var(--accent); letter-spacing:.1em; display:block; margin-bottom:9px;}
+  h3{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:12px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted);
+    font-weight:400; margin:34px 0 12px; padding-bottom:7px; border-bottom:1px solid var(--rule-2);}
+  .lede{font-size:18.5px; color:var(--ink-2); max-width:62ch;}
+
+  figure{margin:26px 0 0; padding:0;}
+  .chart{border:1px solid var(--rule); background:var(--card); padding:22px 20px 14px; overflow-x:auto;}
+  .chart svg{display:block; width:100%; height:auto; min-width:520px;}
+  .duo{display:grid; grid-template-columns:repeat(auto-fit,minmax(360px,1fr)); gap:18px;}
+  figcaption{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:12px; color:var(--muted); line-height:1.55; margin-top:11px; max-width:84ch;}
+  .legend{display:flex; flex-wrap:wrap; gap:5px 20px; margin-bottom:14px;
+    font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:11.5px; color:var(--muted);}
+  .legend i{width:11px; height:11px; display:inline-block; margin-right:6px;
+    vertical-align:-1px; border-radius:1px;}
+  .legend .ln{width:16px; height:2px; display:inline-block; margin-right:6px; vertical-align:2px;}
+
+  .tbl-wrap{overflow-x:auto; margin:18px 0 0; border:1px solid var(--rule);}
+  table{border-collapse:collapse; width:100%; min-width:520px; background:var(--card);
+    font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:12.5px; font-variant-numeric:tabular-nums;}
+  th{text-align:left; font-weight:400; color:var(--muted); letter-spacing:.06em;
+    text-transform:uppercase; font-size:10.5px; padding:11px 14px;
+    border-bottom:1px solid var(--rule); white-space:nowrap;}
+  td{padding:10px 14px; border-bottom:1px solid var(--rule-2); white-space:nowrap;}
+  tr:last-child td{border-bottom:none;}
+  td.num,th.num{text-align:right;}
+  tr.hi td{background:var(--accent-soft);}
+  tr.hi td:first-child{box-shadow:inset 3px 0 0 var(--accent);}
+  tr.bad td{background:var(--warn-soft);}
+  tr.bad td:first-child{box-shadow:inset 3px 0 0 var(--warn);}
+  tr.good td{background:color-mix(in srgb, var(--pos) 10%, transparent);}
+  tr.good td:first-child{box-shadow:inset 3px 0 0 var(--pos);}
+  .pos{color:var(--pos);} .neg{color:var(--neg);} .dim{color:var(--muted);}
+
+  .flag{border-left:3px solid var(--warn); background:var(--warn-soft);
+    padding:18px 22px; margin:26px 0 0; max-width:660px;}
+  .flag .t{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--warn); margin:0 0 9px;}
+  .flag p:last-child{margin-bottom:0;}
+  .note{border-left:3px solid var(--accent); background:var(--accent-soft);
+    padding:18px 22px; margin:26px 0 0; max-width:660px;}
+  .note .t{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--accent); margin:0 0 9px;}
+  .note p:last-child{margin-bottom:0;}
+  .good-box{border-left:3px solid var(--pos); background:color-mix(in srgb, var(--pos) 8%, transparent);
+    padding:18px 22px; margin:26px 0 0; max-width:660px;}
+  .good-box .t{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--pos); margin:0 0 9px;}
+  .good-box p:last-child{margin-bottom:0;}
+
+  ul{margin:0 0 1.1em; padding-left:1.15em; max-width:62ch;}
+  li{margin-bottom:.55em;} li::marker{color:var(--accent);}
+
+  footer{margin-top:80px; padding-top:26px; border-top:1px solid var(--rule);
+    font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:11.5px; color:var(--muted); line-height:1.7; max-width:74ch;}
+  @media (max-width:640px){
+    body{font-size:16px;} .wrap{padding:0 18px 80px;} .tile .v{font-size:19px;}
+  }
+</style>
+
+<div class="wrap">
+
+<header>
+  <p class="eyebrow">BTCUSDT.P 5min &#xB7; iTransformer &#xB7; Round 4 &#xB7; partial AUC &#x9078;&#x6A21; + OHLC &#x5FAE;&#x7D50;&#x69CB;&#x7279;&#x5FB5;</p>
+  <h1>&#x63DB;&#x6210; partial AUC &#x4E4B;&#x5F8C;&#xFF0C;&#x6E2C;&#x8A66;&#x96C6;&#x52DD;&#x7387;&#x5F9E; 42.79% &#x56DE;&#x5347;&#x5230; 47.81%&#x2014;&#x2014;&#x4F46;&#x9019;&#x500B;&#x6578;&#x5B57;&#x65E9;&#x5728;&#x8A13;&#x7DF4;&#x4E4B;&#x524D;&#x5C31;&#x88AB; pAUC &#x6E96;&#x78BA;&#x9810;&#x544A;&#x904E;&#x3002;</h1>
+  <p class="dek">&#x9019;&#x8F2A;&#x8D77;&#x9EDE;&#x662F;&#x4E00;&#x500B;&#x65B9;&#x6CD5;&#x8AD6;&#x4FEE;&#x6B63;&#xFF1A;&#x7CFB;&#x7D71;&#x53EA;&#x4EA4;&#x6613; top 5~20% &#x7684;&#x5206;&#x6578;&#xFF0C;&#x7528;&#x5168;&#x57DF; AUC &#x9078;&#x6A21;&#x7B49;&#x65BC;&#x628A; 80~95% &#x6839;&#x672C;&#x4E0D;&#x6703;&#x4E0B;&#x55AE;&#x7684;&#x6A23;&#x672C;&#x4E5F;&#x7B97;&#x9032;&#x53BB;&#x3002;&#x63DB;&#x6210; partial AUC &#x4E4B;&#x524D;&#xFF0C;&#x5148;&#x628A; Round 3 &#x51A0;&#x8ECD; checkpoint &#x7528;&#x65B0;&#x6307;&#x6A19;&#x91CD;&#x65B0;&#x8A08;&#x5206;&#xFF0C;&#x5F97;&#x5230;&#x6E2C;&#x8A66;&#x96C6;&#x5E73;&#x5747; pAUC <strong>0.5004</strong>&#x2014;&#x2014;&#x5E7E;&#x4E4E;&#x7CBE;&#x78BA;&#x7684;&#x7121;&#x6280;&#x5DE7;&#x57FA;&#x6E96;&#xFF0C;&#x9019;&#x5C31;&#x662F;&#x672C;&#x8F2A;&#x7684;&#x4E8B;&#x524D;&#x8A3B;&#x518A;&#x9580;&#x6ABB;&#x3002;&#x540C;&#x6642;&#x628A;&#x88AB;&#x4E1F;&#x68C4;&#x7684; 5 &#x500B;&#x539F;&#x59CB;&#x6B04;&#x4F4D;&#xFF08;Open/High/Low/Quote_asset_volume &#x7B49;&#xFF09;&#x8F49;&#x6210; 6 &#x500B;&#x5E73;&#x7A69;&#x884D;&#x751F;&#x7279;&#x5FB5;&#x91CD;&#x65B0;&#x8A55;&#x4F30;&#x3002;&#x6700;&#x7D42;&#x7D50;&#x679C;&#xFF1A;&#x9A57;&#x8B49;&#x96C6;&#x5E73;&#x5747; pAUC <strong>0.5048</strong>&#x3001;&#x6E2C;&#x8A66;&#x96C6; <strong>0.5013</strong>&#xFF0C;&#x5169;&#x8005;&#x90FD;&#x8CBC;&#x8457;&#x9019;&#x8F2A;&#x81EA;&#x5DF1;&#x7684;&#x4E8B;&#x524D;&#x57FA;&#x6E96;&#x2014;&#x2014;pAUC &#x5728;&#x8A13;&#x7DF4;&#x958B;&#x59CB;&#x524D;&#x5C31;&#x6E96;&#x78BA;&#x9810;&#x544A;&#x4E86;&#x300C;&#x9019;&#x689D;&#x8DEF;&#x7DDA;&#x4E0D;&#x6703;&#x6709;&#x908A;&#x969B;&#x300D;&#xFF0C;&#x6E2C;&#x8A66;&#x96C6;&#x52DD;&#x7387; 47.81%&#xFF08;95% CI [44.02%, 51.62%]&#xFF09;&#x4E5F;&#x78BA;&#x5BE6;&#x6C92;&#x6709;&#x8DE8;&#x904E;&#x640D;&#x76CA;&#x5169;&#x5E73; 54.05%&#x3002;</p>
+  <div class="meta">
+    <span>&#x9078;&#x6A21;&#x6307;&#x6A19;&#xFF1A;mean partial AUC&#xFF08;0.05/0.10/0.15/0.20 &#x5E73;&#x5747;&#xFF09;</span>
+    <span>&#x5019;&#x9078;&#x7279;&#x5FB5; 53+6=59 &#x2192; 15</span>
+    <span>iTransformer e_layers=1 focal_g2 seq_len=512 patience=5</span>
+    <span>&#x8CC7;&#x6599;&#x7DAD;&#x6301; 5 &#x5206;&#x9418; K &#x7DDA;</span>
+  </div>
+</header>
+
+<section style="padding-top:40px;">
+  <div class="tiles">
+    <div class="tile"><p class="k">&#x4E8B;&#x524D;&#x8A3B;&#x518A;&#x57FA;&#x6E96;&#xFF08;R3 &#x51A0;&#x8ECD;&#x91CD;&#x65B0;&#x8A08;&#x5206;&#xFF09;</p><p class="v">0.5004</p><p class="n">&#x6E2C;&#x8A66;&#x96C6;&#x5E73;&#x5747; pAUC&#xFF0C;&#x5E7E;&#x4E4E;&#x7CBE;&#x78BA;&#x7121;&#x6280;&#x5DE7;</p></div>
+    <div class="tile"><p class="k">GBDT &#x95DC;&#x5361;&#xFF08;v3&#x2192;v4&#xFF0C;&#x540C;&#x6307;&#x6A19;&#xFF09;</p><p class="v">0.5024&#x2192;0.5035</p><p class="n">CI &#x5927;&#x5E45;&#x91CD;&#x758A;&#xFF0C;&#x65B0;&#x7279;&#x5FB5;&#x7121;&#x986F;&#x8457;&#x8CA2;&#x737B;</p></div>
+    <div class="tile"><p class="k">&#x5165;&#x9078;&#x7279;&#x5FB5;&#x8B8A;&#x5316;</p><p class="v acc">9 &#x540C; / 6 &#x7570;</p><p class="n">&#x63DB;&#x6307;&#x6A19;&#x5F8C; 15 &#x500B;&#x88E1;&#x6709; 6 &#x500B;&#x63DB;&#x4EBA;&#xFF0C;2 &#x500B;&#x65B0;&#x5FAE;&#x7D50;&#x69CB;&#x7279;&#x5FB5;&#x5165;&#x9078;</p></div>
+    <div class="tile"><p class="k">&#x9A57;&#x8B49;&#x96C6;&#x5E73;&#x5747; pAUC</p><p class="v">0.5048</p><p class="n">&#x8CBC;&#x8457;&#x4E8B;&#x524D;&#x57FA;&#x6E96; 0.5050&#xFF0C;&#x6C92;&#x6709;&#x63A8;&#x9032;</p></div>
+    <div class="tile"><p class="k">&#x6E2C;&#x8A66;&#x96C6;&#x52DD;&#x7387;</p><p class="v neg">47.81%</p><p class="n">95% CI [44.02%, 51.62%]&#xFF0C;&#x672A;&#x8DE8;&#x904E; 54.05%</p></div>
+    <div class="tile"><p class="k">&#x95DC;&#x5361;&#x7D50;&#x8AD6;</p><p class="v neg">&#x672A;&#x901A;&#x904E;</p><p class="n">&#x4F46; pAUC &#x4E8B;&#x524D;&#x5DF2;&#x6E96;&#x78BA;&#x9810;&#x544A;&#xFF0C;&#x975E;&#x8A13;&#x7DF4;&#x5F8C;&#x624D;&#x77E5;&#x9053;</p></div>
+  </div>
+</section>
+
+<section>
+  <h2><span class="num">01 &#x2014; &#x80CC;&#x666F;</span>&#x5168;&#x57DF; AUC &#x628A;&#x4E0D;&#x6703;&#x4E0B;&#x55AE;&#x7684;&#x6A23;&#x672C;&#x4E5F;&#x7B97;&#x9032;&#x9078;&#x6A21;&#x6307;&#x6A19;</h2>
+  <p class="lede">Round 3&#xFF08;<code>report/2026-08-17-round3/</code>&#xFF09;&#x6E2C;&#x8A66;&#x96C6;&#x52DD;&#x7387; 42.79%&#xFF0C;&#x7528;&#x6236;&#x6307;&#x51FA;&#x4E00;&#x500B;&#x65B9;&#x6CD5;&#x8AD6;&#x932F;&#x8AA4;&#xFF1A;&#x7CFB;&#x7D71;&#x53EA;&#x4EA4;&#x6613; <code>p_up</code> &#x6392;&#x9032;&#x524D; 5~20% &#x7684;&#x6A23;&#x672C;&#xFF0C;&#x4F46; <code>compare_checkpoints.py</code>&#xFF0F;<code>gbdt_probe.py</code> &#x4E00;&#x76F4;&#x662F;&#x7528;&#x5168;&#x57DF; <code>roc_auc_score</code> &#x9078;&#x6A21;&#x2014;&#x2014;&#x9019;&#x500B;&#x6307;&#x6A19;&#x628A;&#x5F8C;&#x9762; 80~95% &#x6839;&#x672C;&#x4E0D;&#x6703;&#x4E0B;&#x55AE;&#x7684;&#x6A23;&#x672C;&#x6392;&#x5E8F;&#x54C1;&#x8CEA;&#x4E5F;&#x7B97;&#x9032;&#x7E3D;&#x5206;&#xFF0C;&#x8DDF;&#x7CFB;&#x7D71;&#x5BE6;&#x969B;&#x4F9D;&#x8CF4;&#x7684;&#x300C;&#x982D;&#x90E8;&#x6392;&#x5E8F;&#x300D;&#x662F;&#x5169;&#x4EF6;&#x4E8B;&#x3002;</p>
+
+  <p>&#x5728;&#x52D5;&#x624B;&#x6539;&#x4EFB;&#x4F55;&#x7A0B;&#x5F0F;&#x78BC;&#x4E4B;&#x524D;&#xFF0C;&#x5148;&#x505A;&#x4E86;&#x4E00;&#x6B21;&#x4E8B;&#x524D;&#x6AA2;&#x67E5;&#xFF1A;&#x628A; Round 3 &#x51A0;&#x8ECD; checkpoint&#xFF08;<code>iTransformer, e_layers=1, focal_g2</code>&#xFF09;&#x7684;&#x9A57;&#x8B49;&#x96C6;&#x8207;&#x6E2C;&#x8A66;&#x96C6;&#x6A5F;&#x7387;&#xFF0C;&#x7528; <code>sklearn.roc_auc_score(..., max_fpr=f)</code>&#xFF08;McClish &#x6A19;&#x6E96;&#x5316;&#xFF0C;&#x5DF2;&#x7528;&#x96A8;&#x6A5F;&#x5206;&#x6578;&#x9A57;&#x8B49; no-skill=0.4989&#x2248;0.50&#xFF09;&#x91CD;&#x65B0;&#x8A08;&#x5206;&#xFF1A;</p>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>&#x5207;&#x5206;</th><th class="num">&#x5168;&#x57DF; AUC</th><th class="num">pAUC@0.05</th><th class="num">pAUC@0.10</th><th class="num">pAUC@0.15</th><th class="num">pAUC@0.20</th><th class="num">&#x5E73;&#x5747; pAUC</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">&#x9A57;&#x8B49;&#x96C6;</td><td class="num">0.5329</td><td class="num">0.5017</td><td class="num">0.5036</td><td class="num">0.5061</td><td class="num">0.5086</td><td class="num">0.5050</td></tr>
+        <tr class="bad"><td class="mono">&#x6E2C;&#x8A66;&#x96C6;</td><td class="num">0.5081</td><td class="num">0.5007</td><td class="num">0.5004</td><td class="num">0.5002</td><td class="num">0.5000</td><td class="num neg">0.5004</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>&#x9A57;&#x8B49;&#x96C6;&#x5168;&#x57DF; AUC 0.5329 &#x770B;&#x8D77;&#x4F86;&#x50CF;&#x8A0A;&#x865F;&#xFF0C;&#x4F46;&#x6E2C;&#x8A66;&#x96C6;&#x5E73;&#x5747; pAUC &#x662F; <strong>0.5004</strong>&#x2014;&#x2014;&#x7CFB;&#x7D71;&#x5BE6;&#x969B;&#x6703;&#x4E0B;&#x55AE;&#x7684;&#x90A3;&#x500B;&#x5340;&#x9593;&#xFF0C;&#x5E7E;&#x4E4E;&#x7CBE;&#x78BA;&#x7B49;&#x65BC;&#x64F2;&#x786C;&#x5E63;&#x3002;&#x9019;&#x6B63;&#x662F; Round 3 &#x6E2C;&#x8A66;&#x96C6;&#x52DD;&#x7387;&#x53EA;&#x6709; 42.79% &#x7684;&#x6A5F;&#x5236;&#x89E3;&#x91CB;&#xFF0C;&#x4E5F;&#x8B49;&#x5BE6;&#x4E86;&#x9019;&#x6B21;&#x8981;&#x63DB;&#x6307;&#x6A19;&#x7684;&#x5224;&#x65B7;&#x662F;&#x5C0D;&#x7684;&#x3002;&#x9019;&#x5169;&#x500B;&#x6578;&#x5B57;&#xFF08;&#x9A57;&#x8B49;&#x96C6; 0.5050&#x3001;&#x6E2C;&#x8A66;&#x96C6; 0.5004&#xFF09;&#x5C31;&#x662F;&#x672C;&#x8F2A;&#x7684;&#x4E8B;&#x524D;&#x8A3B;&#x518A;&#x9580;&#x6ABB;&#xFF1A;&#x672C;&#x8F2A;&#x4EFB;&#x4F55;&#x6539;&#x52D5;&#x90FD;&#x8981;&#x62FF;&#x9019;&#x5169;&#x500B;&#x6578;&#x5B57;&#x7576;&#x57FA;&#x6E96;&#xFF0C;&#x800C;&#x4E0D;&#x662F;&#x62FF; Round 3 &#x7684;&#x5168;&#x57DF; AUC &#x6BD4;&#x8F03;&#xFF08;&#x5169;&#x8005;&#x4E0D;&#x540C;&#x5C3A;&#x5EA6;&#xFF0C;&#x4E0D;&#x53EF;&#x76F4;&#x63A5;&#x6BD4;&#x5927;&#x5C0F;&#xFF09;&#x3002;</p>
+
+  <div class="note">
+    <p class="t">pAUC &#x8207;&#x4EA4;&#x6613;&#x9580;&#x6ABB;&#x7684;&#x95DC;&#x4FC2;&#xFF0C;&#x4EE5;&#x53CA;&#x4E00;&#x500B;&#x91CD;&#x8981;&#x9650;&#x5236;</p>
+    <p><code>max_fpr=f</code> &#x9650;&#x5236;&#x7684;&#x662F;&#x300C;&#x524D; f% &#x7684;&#x8CA0;&#x6A23;&#x672C;&#x300D;&#xFF0C;&#x800C; <code>evaluate_event.py</code> &#x7684;&#x9580;&#x6ABB;&#x662F;&#x300C;&#x524D; q% &#x7684;&#x5168;&#x90E8;&#x5206;&#x6578;&#x300D;&#x2014;&#x2014;&#x5728; <code>pos_rate&#x2248;0.50</code> &#x4E14;&#x6A21;&#x578B;&#x5F88;&#x5F31;&#x6642;&#x5169;&#x8005;&#x5E7E;&#x4E4E;&#x91CD;&#x5408;&#xFF0C;&#x4F46;&#x4E0D;&#x662F;&#x540C;&#x4E00;&#x7D44;&#x6A23;&#x672C;&#x3002;&#x53E6;&#x5916;&#x56DB;&#x500B; <code>max_fpr</code> &#x64CD;&#x4F5C;&#x9EDE;&#x662F;&#x5DE2;&#x72C0;&#x5340;&#x9593;&#x3001;&#x5F7C;&#x6B64;&#x9AD8;&#x5EA6;&#x76F8;&#x95DC;&#xFF0C;&#x5E73;&#x5747;&#x4E26;&#x4E0D;&#x80FD;&#x7DDA;&#x6027;&#x7E2E;&#x6E1B; 4 &#x500D;&#x8B8A;&#x7570;&#x6578;&#x3002;pAUC &#x7684;&#x89D2;&#x8272;&#x662F;&#x300C;&#x9078;&#x6A21;&#xFF0F;&#x9078;&#x7279;&#x5FB5;&#x6642;&#x770B;&#x5C0D;&#x5340;&#x57DF;&#x300D;&#xFF0C;&#x6700;&#x7D42;&#x95DC;&#x5361;&#x4ECD;&#x7136;&#x53EA;&#x770B;&#x52DD;&#x7387; + Wilson CI&#xFF0C;&#x6E2C;&#x8A66;&#x96C6;&#x4E0D;&#x6703;&#x56E0;&#x70BA; pAUC &#x800C;&#x591A;&#x88AB;&#x78B0;&#x7B2C;&#x4E8C;&#x6B21;&#x3002;</p>
+  </div>
+</section>
+
+<section>
+  <h2><span class="num">02 &#x2014; &#x516D;&#x500B;&#x5FAE;&#x7D50;&#x69CB;&#x7279;&#x5FB5;&#xFF1A;&#x5224;&#x65B7;&#x8207;&#x53D6;&#x6368;</span>&#x88AB;&#x4E1F;&#x68C4;&#x7684; 5 &#x500B;&#x539F;&#x59CB;&#x6B04;&#x4F4D;&#xFF0C;&#x8F49;&#x6210;&#x5E73;&#x7A69;&#x884D;&#x751F;&#x5F62;&#x5F0F;&#x91CD;&#x65B0;&#x8A55;&#x4F30;</h2>
+  <p class="lede"><code>prepare_event_data.py</code> &#x5F9E; Round 1 &#x8D77;&#x5C31;&#x4E1F;&#x68C4; <code>Open/High/Low/Quote_asset_volume/Taker_buy_quote_asset_volume</code> &#x4E94;&#x500B;&#x539F;&#x59CB;&#x6B04;&#x4F4D;&#x518D;&#x505A; Z-score&#x3002;&#x5BE6;&#x6E2C;&#x9019;&#x4E94;&#x6B04;&#x88E1;&#xFF0C;<code>Open/High/Low</code> &#x8207; <code>Close</code> &#x76F8;&#x95DC; 0.99997+&#xFF0C;&#x662F;&#x4E09;&#x4EFD;&#x975E;&#x5E73;&#x7A69;&#x50F9;&#x683C;&#x6C34;&#x4F4D;&#x7684;&#x8907;&#x672C;&#xFF1B;<code>Taker_buy_quote_asset_volume</code> &#x5DF2;&#x88AB;&#x65E2;&#x6709; <code>Taker_Ratio</code>&#xFF08;= &#x5B83; / <code>Quote_asset_volume</code>&#xFF09;&#x6D88;&#x5316;&#x3002;&#x5224;&#x65B7;&#xFF1A;&#x5168;&#x90E8;&#x4E94;&#x6B04;&#x90FD;&#x9700;&#x8981;&#x524D;&#x8655;&#x7406;&#x624D;&#x80FD;&#x5B89;&#x5168;&#x52A0;&#x5165;&#xFF0C;&#x4E0D;&#x80FD;&#x76F4;&#x63A5;&#x4E1F;&#x539F;&#x59CB;&#x503C;&#x9032;&#x6A21;&#x578B;&#x3002;</p>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>&#x63A1;&#x7528;&#x7684; 6 &#x500B;&#x884D;&#x751F;&#x7279;&#x5FB5;</th><th>&#x516C;&#x5F0F;</th><th class="num">corr(Close &#x6C34;&#x4F4D;)</th><th class="num">train&#x2192;test &#x6F02;&#x79FB;</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">HL_Range</td><td class="dim">(High&#x2212;Low)/Close&#xD7;100</td><td class="num">&#x2212;0.114</td><td class="num">&#x2212;0.181 sd</td></tr>
+        <tr><td class="mono">OC_Ret</td><td class="dim">(Close&#x2212;Open)/Open&#xD7;100</td><td class="num">+0.005</td><td class="num">&#x2212;0.002 sd</td></tr>
+        <tr><td class="mono">Up_Wick</td><td class="dim">(High&#x2212;max(O,C))/Close&#xD7;100</td><td class="num">&#x2212;0.102</td><td class="num">&#x2212;0.102 sd</td></tr>
+        <tr><td class="mono">Low_Wick</td><td class="dim">(min(O,C)&#x2212;Low)/Close&#xD7;100</td><td class="num">&#x2212;0.084</td><td class="num">&#x2212;0.105 sd</td></tr>
+        <tr class="hi"><td class="mono">BarVWAP_Dev &#x2190; &#x5165;&#x9078;</td><td class="dim">(Close&#x2212;QuoteVol/Vol)/Close&#xD7;100</td><td class="num">+0.007</td><td class="num">&#x2212;0.003 sd</td></tr>
+        <tr class="hi"><td class="mono">ATR_Pct_14</td><td class="dim">ATR_14/Close&#xD7;100</td><td class="num">&#x2212;0.149</td><td class="num">&#x2212;0.235 sd</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>&#x5C0D;&#x7167;&#x7D44;&#xFF1A;R3 &#x9078;&#x4E2D;&#x7684; <code>EMA_72</code> &#x6F02;&#x79FB; &#x2212;2.51 sd&#x3001;<code>OBV</code> &#x2212;2.84 sd&#x2014;&#x2014;&#x9019; 6 &#x500B;&#x65B0;&#x7279;&#x5FB5;&#x5168;&#x90E8;&#x843D;&#x5728; &#xB1;0.24 sd &#x5167;&#xFF0C;&#x91CF;&#x7D1A;&#x5C0F;&#x4E86;&#x4E00;&#x500B;&#x6578;&#x91CF;&#x7D1A;&#x3002;<code>ATR_Pct_14</code> &#x662F; <code>ATR_14</code>&#xFF08;R3 &#x9078;&#x4E2D;&#x7684;&#x539F;&#x59CB;&#x7F8E;&#x5143;&#x6C34;&#x4F4D;&#x7279;&#x5FB5;&#xFF09;&#x7684;&#x96F6;&#x6210;&#x672C;&#x5E73;&#x7A69;&#x66FF;&#x4EE3;&#x7248;&#xFF0C;&#x91CD;&#x7528; <code>features()</code> &#x5DF2;&#x7B97;&#x597D;&#x7684;&#x503C;&#x3002;</p>
+
+  <h3>&#x5169;&#x500B;&#x5019;&#x9078;&#x7279;&#x5FB5;&#x5DF2;&#x5254;&#x9664;</h3>
+  <p><strong><code>QVol_Ratio</code></strong>&#xFF08;<code>Quote_asset_volume</code> &#x7684; 20 &#x6839;&#x6EFE;&#x52D5;&#x76F8;&#x5C0D;&#x91CF;&#xFF09;&#x8207;&#x65E2;&#x6709; <code>Volume_Ratio</code> &#x76F8;&#x95DC; <strong>0.99998</strong>&#x2014;&#x2014;&#x56E0;&#x70BA; <code>Quote_asset_volume &#x2248; Volume &#xD7; Close</code>&#xFF0C;20 &#x6839;&#x6EFE;&#x52D5;&#x6BD4;&#x503C;&#x628A;&#x50F9;&#x683C;&#x56E0;&#x5B50;&#x7D04;&#x6389;&#x4E86;&#xFF0C;&#x52A0;&#x9032;&#x53BB;&#x53EA;&#x6703;&#x8B93;&#x5169;&#x8005;&#x5728; permutation importance &#x88E1;&#x4E92;&#x76F8;&#x74DC;&#x5206;&#x3002;<strong><code>Gap_Open</code></strong>&#xFF08;&#x8DF3;&#x7A7A;&#xFF09;&#x5728;&#x6C38;&#x7E8C;&#x5408;&#x7D04;&#x4E0A;&#x9000;&#x5316;&#xFF1A;&#x5BE6;&#x6E2C; <strong>51.8%</strong> &#x662F;&#x7CBE;&#x78BA; 0&#xFF0C;std &#x50C5; 7e-4%&#x2014;&#x2014;&#x9019;&#x662F;&#x628A;&#x80A1;&#x7968;&#x958B;&#x76E4;&#x8DF3;&#x7A7A;&#x7684;&#x6982;&#x5FF5;&#x5957;&#x5230; 24/7 &#x7121;&#x6536;&#x76E4;&#x7684;&#x5E02;&#x5834;&#x3002;</p>
+</section>
+
+<section>
+  <h2><span class="num">03 &#x2014; GBDT &#x95DC;&#x5361;&#xFF1A;&#x540C;&#x4E00;&#x628A;&#x5C3A;&#x91CF;&#x5169;&#x6B21;&#xFF0C;&#x65B0;&#x7279;&#x5FB5;&#x6C92;&#x6709;&#x986F;&#x8457;&#x8CA2;&#x737B;</span></h2>
+  <p class="lede">&#x70BA;&#x4E86;&#x628A;&#x300C;&#x63DB;&#x6307;&#x6A19;&#x300D;&#x8207;&#x300C;&#x52A0;&#x65B0;&#x7279;&#x5FB5;&#x300D;&#x7684;&#x6548;&#x679C;&#x5206;&#x958B;&#x770B;&#xFF0C;&#x7528;<strong>&#x5B8C;&#x5168;&#x76F8;&#x540C;&#x7684; mean pAUC &#x6307;&#x6A19;</strong>&#x5404;&#x8DD1;&#x4E00;&#x6B21; GBDT &#x95DC;&#x5361;&#xFF1A;&#x4E00;&#x6B21;&#x7528; Round 3 &#x539F;&#x672C;&#x7684; 53 &#x500B;&#x5019;&#x9078;&#x7279;&#x5FB5;&#xFF0C;&#x4E00;&#x6B21;&#x7528;&#x52A0;&#x4E86; 6 &#x500B;&#x5FAE;&#x7D50;&#x69CB;&#x7279;&#x5FB5;&#x7684; 59 &#x500B;&#x5019;&#x9078;&#x7279;&#x5FB5;&#x3002;&#x5169;&#x6B21;&#x90FD;&#x53EA;&#x7528; train+val&#xFF08;132,556 &#x5217;&#xFF09;&#xFF0C;&#x6E2C;&#x8A66;&#x671F;&#x672A;&#x88AB;&#x8B80;&#x53D6;&#xFF1B;&#x4FE1;&#x8CF4;&#x5340;&#x9593;&#x6539;&#x7528; block bootstrap&#xFF08;<code>block_len=6</code>=lookahead&#xFF0C;&#x4FEE;&#x6B63;&#x6A19;&#x7C64;&#x91CD;&#x758A;&#x9020;&#x6210;&#x7684; CI &#x865B;&#x5047;&#x7CBE;&#x78BA;&#xFF09;&#x3002;</p>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>&#x5019;&#x9078;&#x7279;&#x5FB5;</th><th class="num">OOF &#x5E73;&#x5747; pAUC</th><th class="num">95% CI&#xFF08;block bootstrap&#xFF09;</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">53&#xFF08;Round 3 &#x539F;&#x6709;&#xFF09;</td><td class="num">0.5024</td><td class="num">[0.5006, 0.5045]</td></tr>
+        <tr class="hi"><td class="mono">59&#xFF08;+6 &#x500B;&#x5FAE;&#x7D50;&#x69CB;&#x7279;&#x5FB5;&#xFF09;</td><td class="num pos">0.5035</td><td class="num">[0.5018, 0.5055]</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>59 &#x500B;&#x7279;&#x5FB5;&#x7684;&#x9EDE;&#x4F30;&#x8A08;&#x6BD4; 53 &#x500B;&#x9AD8; 0.0011&#xFF0C;&#x4F46;&#x5169;&#x500B; 95% CI &#x5927;&#x5E45;&#x91CD;&#x758A;&#xFF08;&#x91CD;&#x758A;&#x5340;&#x9593; [0.5018, 0.5045]&#xFF09;&#x2014;&#x2014;&#x7D71;&#x8A08;&#x4E0A;&#x7121;&#x6CD5;&#x5340;&#x5206;&#x9019; 6 &#x500B;&#x65B0;&#x7279;&#x5FB5;&#x6709;&#x6C92;&#x6709;&#x63A8;&#x52D5;&#x8A0A;&#x865F;&#x3002;&#x9019;&#x8DDF; Round 3 &#x52A0;&#x5165; metrics/funding/premium &#x4E09;&#x7D44;&#x5168;&#x65B0;&#x8CC7;&#x6599;&#x4F86;&#x6E90;&#x6642;&#x7684;&#x7D50;&#x8AD6;&#x4E00;&#x6A23;&#xFF1A;&#x65B0;&#x8CC7;&#x8A0A;&#x78BA;&#x5BE6;&#x4E0D;&#x662F;&#x5B8C;&#x5168;&#x7121;&#x6548;&#xFF0C;&#x4F46;&#x91CF;&#x7D1A;&#x9060;&#x4E0D;&#x5230;&#x300C;&#x89E3;&#x9396;&#x8A0A;&#x865F;&#x300D;&#x7684;&#x7A0B;&#x5EA6;&#x3002;</p>
+
+  <div class="flag">
+    <p class="t">1&#x3C3; &#x898F;&#x5247;&#x9019;&#x6B21;&#x5B8C;&#x5168;&#x6C92;&#x6709;&#x7279;&#x5FB5;&#x901A;&#x904E;</p>
+    <p>59 &#x500B;&#x5019;&#x9078;&#x7279;&#x5FB5;&#x88E1;&#xFF0C;<code>importance_mean &#x2212; importance_std &gt; 0</code> &#x7684;&#x901A;&#x904E;&#x6578;&#x662F; <strong>0</strong>&#xFF08;Round 3 &#x7684; 53 &#x500B;&#x5019;&#x9078;&#x88E1;&#x9084;&#x6709; 2 &#x500B;&#x901A;&#x904E;&#xFF09;&#x3002;&#x5957;&#x7528; top-k &#x5E95;&#x7DDA;&#x898F;&#x5247; <code>k = max(15, 0) = 15</code>&#xFF0C;&#x76F4;&#x63A5;&#x53D6;&#x91CD;&#x8981;&#x5EA6;&#x524D; 15 &#x540D;&#x2014;&#x2014;&#x9019;&#x4EE3;&#x8868;&#x5728; pAUC &#x9019;&#x628A;&#x65B0;&#x5C3A;&#x5EA6;&#x4E0B;&#xFF0C;&#x8A0A;&#x865F;&#x6BD4;&#x5168;&#x57DF; AUC &#x91CF;&#x51FA;&#x4F86;&#x7684;&#x66F4;&#x7A00;&#x8584;&#x3001;&#x66F4;&#x4E0D;&#x7A69;&#x5B9A;&#xFF0C;&#x4E0D;&#x662F;&#x91CF;&#x6E2C;&#x8AA4;&#x5DEE;&#xFF0C;&#x662F;&#x898F;&#x5247;&#x8A2D;&#x8A08;&#x4E0A;&#x523B;&#x610F;&#x4FDD;&#x7559;&#x7684;&#x5E95;&#x7DDA;&#x5728;&#x751F;&#x6548;&#x3002;</p>
+  </div>
+</section>
+
+<section>
+  <h2><span class="num">04 &#x2014; &#x63DB;&#x4E86;&#x6307;&#x6A19;&#xFF0C;&#x9078;&#x4E2D;&#x7684;&#x7279;&#x5FB5;&#x4E5F;&#x63DB;&#x4E86;&#x4E00;&#x6279;</span>15 &#x500B;&#x88E1;&#x6709; 6 &#x500B;&#x4E0D;&#x4E00;&#x6A23;&#xFF0C;2 &#x500B;&#x662F;&#x65B0;&#x52A0;&#x7684;&#x5FAE;&#x7D50;&#x69CB;&#x7279;&#x5FB5;</h2>
+  <p class="lede">&#x7528; mean pAUC &#x6392;&#x5E8F;&#x5F8C;&#x9078;&#x51FA;&#x7684; 15 &#x500B;&#x7279;&#x5FB5;&#xFF0C;&#x8DDF; Round 3 &#x7528;&#x5168;&#x57DF; AUC &#x9078;&#x51FA;&#x7684; 15 &#x500B;&#x6BD4;&#x8F03;&#xFF1A;9 &#x500B;&#x76F8;&#x540C;&#x3001;6 &#x500B;&#x4E0D;&#x540C;&#x3002;&#x9019;&#x662F;&#x9810;&#x671F;&#x4E2D;&#x7684;&#x6548;&#x679C;&#x2014;&#x2014;&#x4E0D;&#x540C;&#x6307;&#x6A19;&#x5C0D;&#x300C;&#x6392;&#x5E8F;&#x54C1;&#x8CEA;&#x300D;&#x7684;&#x5B9A;&#x7FA9;&#x4E0D;&#x540C;&#xFF0C;&#x9078;&#x51FA;&#x4F86;&#x7684;&#x8D0F;&#x5BB6;&#x81EA;&#x7136;&#x4E0D;&#x6703;&#x5B8C;&#x5168;&#x4E00;&#x6A23;&#xFF0C;&#x5169;&#x8F2A;&#x7684;&#x7279;&#x5FB5;&#x96C6;&#x5408;&#x56E0;&#x6B64;&#x4E0D;&#x53EF;&#x76F4;&#x63A5;&#x4E26;&#x5217;&#x6BD4;&#x8F03;&#x3002;</p>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>&#x5206;&#x985E;</th><th>&#x7279;&#x5FB5;</th></tr></thead>
+      <tbody>
+        <tr><td class="mono dim">&#x5169;&#x8F2A;&#x90FD;&#x9078;&#x4E2D;&#xFF08;9&#xFF09;</td><td class="mono">Stoch_D, VWAP_Dev, Stoch_K, CCI_20, OI_Chg_72, Taker_Ratio, RSI_30, RSI_14, TopTrader_Acct_LS</td></tr>
+        <tr><td class="mono dim">&#x53EA;&#x5728; R3&#xFF08;6&#xFF0C;&#x9019;&#x8F2A;&#x88AB;&#x63DB;&#x6389;&#xFF09;</td><td class="mono">ROC_30, BB_PB, TopTrader_Pos_LS, ATR_14, EMA_72, OBV</td></tr>
+        <tr class="hi"><td class="mono">&#x53EA;&#x5728; R4&#xFF08;6&#xFF0C;&#x9019;&#x8F2A;&#x65B0;&#x5165;&#x9078;&#xFF09;</td><td class="mono">MACD_Signal, ETH_RSI14, SOL_RSI14, <span class="pos">BarVWAP_Dev</span>, CMF_14, <span class="pos">HL_Range</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>&#x88AB;&#x63DB;&#x6389;&#x7684; 6 &#x500B;&#x88E1;&#x6709; 4 &#x500B;&#x662F;&#x539F;&#x59CB;&#x6C34;&#x4F4D;&#x578B;&#x7279;&#x5FB5;&#xFF08;<code>ATR_14</code>&#x3001;<code>EMA_72</code>&#x3001;<code>OBV</code> &#x53CA;&#x90E8;&#x5206;&#x4F9D;&#x8CF4;&#x5B83;&#x5011;&#x7684;&#x7D44;&#x5408;&#xFF09;&#x2014;&#x2014;&#x9019;&#x8DDF; pAUC &#x53EA;&#x770B;&#x982D;&#x90E8;&#x6392;&#x5E8F;&#x3001;&#x4E0D;&#x50CF;&#x5168;&#x57DF; AUC &#x90A3;&#x6A23;&#x5BB9;&#x6613;&#x88AB;&#x4E2D;&#x6BB5;&#x5927;&#x91CF;&#x6A23;&#x672C;&#x7684;&#x7C97;&#x7565;&#x8DA8;&#x52E2;&#x5E36;&#x52D5;&#x6709;&#x95DC;&#x3002;&#x65B0;&#x5165;&#x9078;&#x7684; <code>ETH_RSI14</code>&#xFF0F;<code>SOL_RSI14</code>&#xFF08;&#x8F14;&#x5E63;&#x52D5;&#x80FD;&#xFF09;&#x8DDF; <code>MACD_Signal</code>&#xFF0F;<code>CMF_14</code>&#xFF08;&#x65E2;&#x6709;&#x6307;&#x6A19;&#xFF0C;Round 3 &#x672A;&#x9032;&#x524D; 15&#xFF09;&#x5728;&#x982D;&#x90E8;&#x6392;&#x5E8F;&#x4E0A;&#x6BD4;&#x5728;&#x5168;&#x57DF;&#x6392;&#x5E8F;&#x4E0A;&#x66F4;&#x6709;&#x7528;&#x3002;6 &#x500B;&#x65B0;&#x5FAE;&#x7D50;&#x69CB;&#x7279;&#x5FB5;&#x88E1;&#xFF0C;<code>BarVWAP_Dev</code>&#xFF08;bar &#x5167;&#x6210;&#x4EA4;&#x5747;&#x50F9;&#x504F;&#x96E2;&#xFF09;&#x8207; <code>HL_Range</code>&#xFF08;&#x9AD8;&#x4F4E;&#x50F9;&#x76F8;&#x5C0D;&#x5340;&#x9593;&#xFF09;&#x5165;&#x9078;&#xFF0C;&#x5176;&#x9918; 4 &#x500B;&#xFF08;<code>OC_Ret</code>&#x3001;<code>Up_Wick</code>&#x3001;<code>Low_Wick</code>&#x3001;<code>ATR_Pct_14</code>&#xFF09;&#x672A;&#x9032;&#x524D; 15&#x3002;</p>
+</section>
+
+<section>
+  <h2><span class="num">05 &#x2014; &#x8A13;&#x7DF4;&#xFF1A;&#x540C;&#x6A23;&#x7684;&#x904E;&#x64EC;&#x5408;&#x6A21;&#x5F0F;&#xFF0C;epoch 1 &#x6700;&#x4F73;</span></h2>
+  <p class="lede">&#x6700;&#x7D42;&#x9078;&#x5B9A;&#x7D44;&#x5408;&#xFF1A;<code>iTransformer, e_layers=1, focal_g2, seq_len=512, patience=5</code>&#xFF0C;15 &#x500B; pAUC &#x9078;&#x51FA;&#x7684;&#x7279;&#x5FB5;&#x3002;&#x8A13;&#x7DF4;&#x904E;&#x7A0B;&#x9996;&#x6B21;&#x5B8C;&#x6574;&#x8A18;&#x9304;&#x9010; epoch loss&#xFF08;Round 1-3 &#x6C92;&#x6709;&#x9019;&#x4EFD;&#x7D00;&#x9304;&#xFF0C;&#x53EA;&#x80FD;&#x770B;&#x7D42;&#x7AEF;&#x6A5F;&#x7576;&#x4E0B;&#x8F38;&#x51FA;&#xFF09;&#xFF1A;</p>
+
+  <figure>
+    <div class="chart">
+      <div class="legend">
+        <span><i class="ln" style="background:var(--muted)"></i>&#x8A13;&#x7DF4;&#x640D;&#x5931;</span>
+        <span><i class="ln" style="background:var(--neg)"></i>&#x9A57;&#x8B49;&#x640D;&#x5931;</span>
+        <span><i class="ln" style="background:var(--accent)"></i>&#x6E2C;&#x8A66;&#x640D;&#x5931;</span>
+      </div>
+      <svg viewBox="0 0 940 300" xmlns="http://www.w3.org/2000/svg" role="img"
+           aria-label="Round 4 &#x8A13;&#x7DF4;/&#x9A57;&#x8B49;/&#x6E2C;&#x8A66;&#x640D;&#x5931;&#x96A8; epoch &#x8B8A;&#x5316;&#xFF0C;6 &#x500B; epoch &#x5F8C; early stop&#xFF0C;&#x6700;&#x4F73;&#x9EDE;&#x5728; epoch 1">
+        <g transform="translate(30,10)">
+          <line x1="0" y1="260.0" x2="900" y2="260.0" stroke="var(--grid)"/><text x="-6" y="263.0" text-anchor="end" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">0.084</text>
+          <line x1="0" y1="225.7" x2="900" y2="225.7" stroke="var(--grid)"/><text x="-6" y="228.7" text-anchor="end" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">0.085</text>
+          <line x1="0" y1="191.4" x2="900" y2="191.4" stroke="var(--grid)"/><text x="-6" y="194.4" text-anchor="end" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">0.086</text>
+          <line x1="0" y1="157.1" x2="900" y2="157.1" stroke="var(--grid)"/><text x="-6" y="160.1" text-anchor="end" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">0.087</text>
+          <line x1="0" y1="122.9" x2="900" y2="122.9" stroke="var(--grid)"/><text x="-6" y="125.9" text-anchor="end" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">0.088</text>
+          <line x1="0" y1="88.6" x2="900" y2="88.6" stroke="var(--grid)"/><text x="-6" y="91.6" text-anchor="end" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">0.089</text>
+          <line x1="0" y1="54.3" x2="900" y2="54.3" stroke="var(--grid)"/><text x="-6" y="57.3" text-anchor="end" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">0.090</text>
+          <line x1="0" y1="20.0" x2="900" y2="20.0" stroke="var(--grid)"/><text x="-6" y="23.0" text-anchor="end" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">0.091</text>
+
+          <polyline points="0.0,101.9 180.0,175.6 360.0,186.2 540.0,197.7 720.0,214.8 900.0,235.1" fill="none" stroke="var(--muted)" stroke-width="2.4"/>
+          <polyline points="0.0,170.9 180.0,164.8 360.0,151.5 540.0,113.8 720.0,78.5 900.0,57.6" fill="none" stroke="var(--neg)" stroke-width="1.8" stroke-dasharray="2 3"/>
+          <polyline points="0.0,157.4 180.0,142.3 360.0,133.6 540.0,100.6 720.0,50.3 900.0,24.3" fill="none" stroke="var(--accent)" stroke-width="1.8" stroke-dasharray="5 3"/>
+
+          <circle cx="0.0" cy="170.9" r="5.5" fill="var(--neg)"/>
+          <text x="0.0" y="170.9" dy="-12" text-anchor="start" font-family="ui-monospace,Menlo,monospace" font-size="10" fill="var(--neg)">&#x6700;&#x4F73;&#x9EDE;&#xFF08;epoch 1&#xFF0C;checkpoint &#x5B58;&#x6A94;&#xFF09;</text>
+          <circle cx="900.0" cy="57.6" r="5" fill="var(--neg)"/>
+          <text x="900.0" y="57.6" dy="-10" text-anchor="end" font-family="ui-monospace,Menlo,monospace" font-size="10" fill="var(--neg)">early stop&#xFF08;epoch 6&#xFF09;</text>
+
+          <text x="0.0" y="276" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">1</text>
+          <text x="180.0" y="276" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">2</text>
+          <text x="360.0" y="276" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">3</text>
+          <text x="540.0" y="276" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">4</text>
+          <text x="720.0" y="276" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">5</text>
+          <text x="900.0" y="276" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">6</text>
+          <text x="450" y="292" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="10" fill="var(--muted)">Epoch</text>
+        </g>
+      </svg>
+    </div>
+    <figcaption>&#x8A13;&#x7DF4;&#x640D;&#x5931;&#x6301;&#x7E8C;&#x4E0B;&#x964D;&#x5230; 0.0847&#xFF0C;&#x9A57;&#x8B49;&#x8207;&#x6E2C;&#x8A66;&#x640D;&#x5931;&#x5728; epoch 1 &#x5F8C;&#x540C;&#x6B65;&#x722C;&#x5347;&#x2014;&#x2014;&#x8DDF; Round 1-3 &#x4E00;&#x6A21;&#x4E00;&#x6A23;&#x7684;&#x904E;&#x64EC;&#x5408;&#x6A21;&#x5F0F;&#xFF1A;&#x52A0;&#x4E86;&#x65B0;&#x7279;&#x5FB5;&#x3001;&#x63DB;&#x4E86;&#x9078;&#x6A21;&#x6307;&#x6A19;&#xFF0C;&#x90FD;&#x6C92;&#x6709;&#x6539;&#x8B8A;&#x300C;&#x6A21;&#x578B;&#x4E00;&#x958B;&#x59CB;&#x8A13;&#x7DF4;&#x5C31;&#x5728;&#x8A18;&#x61B6;&#x8A13;&#x7DF4;&#x96C6;&#x300D;&#x9019;&#x500B;&#x5E95;&#x5C64;&#x4E8B;&#x5BE6;&#x3002;patience=5 &#x5728; epoch 6 &#x89F8;&#x767C; early stop&#xFF0C;&#x5BE6;&#x969B;&#x4FDD;&#x7559;&#x7684; checkpoint &#x662F;&#x9A57;&#x8B49;&#x640D;&#x5931;&#x6700;&#x4F4E;&#x7684; epoch 1&#x3002;&#x9019;&#x662F;&#x672C;&#x5C08;&#x6848;&#x7B2C;&#x4E00;&#x6B21;&#x6709;&#x5B8C;&#x6574;&#x7684;&#x9010; epoch &#x7D00;&#x9304;&#xFF08;<code>train_event.py</code> &#x8D77;&#x628A;&#x8A13;&#x7DF4; stdout tee &#x9032; <code>logs/{setting}.log</code> &#x4E26;&#x89E3;&#x6790;&#x5B58;&#x9032; <code>training_history.json</code>&#xFF09;&#xFF0C;Round 1-3 &#x6C92;&#x6709;&#x9019;&#x4EFD;&#x8CC7;&#x6599;&#xFF0C;&#x7121;&#x6CD5;&#x56DE;&#x6EAF;&#x756B;&#x51FA;&#x5C0D;&#x61C9;&#x5716;&#x8868;&#x3002;</figcaption>
+  </figure>
+</section>
+
+<section>
+  <h2><span class="num">06 &#x2014; &#x6700;&#x7D42;&#x6E2C;&#x8A66;&#x7D50;&#x679C;&#xFF1A;pAUC &#x5728;&#x8A13;&#x7DF4;&#x524D;&#x5C31;&#x6E96;&#x78BA;&#x9810;&#x544A;&#x4E86;&#x9019;&#x88E1;</span></h2>
+  <p class="lede">&#x9A57;&#x8B49;&#x96C6;&#x7528;&#x767E;&#x5206;&#x4F4D;&#x6383;&#x63CF;&#x9580;&#x6ABB;&#xFF08;<code>entry_at=1</code> &#x4E8B;&#x524D;&#x56FA;&#x5B9A;&#xFF0C;&#x4E0D;&#x505A;&#x4EFB;&#x4F55;&#x9078;&#x64C7;&#xFF09;&#xFF0C;&#x9019;&#x6B21;&#x9078;&#x51FA;&#x7684;&#x4E26;&#x975E;&#x7A84;&#x9580;&#x6ABB;&#xFF0C;&#x800C;&#x662F;&#x6700;&#x5BEC;&#x7684;&#x5019;&#x9078;&#x2014;&#x2014;&#x53CD;&#x6620;&#x9A57;&#x8B49;&#x96C6;&#x8A0A;&#x865F;&#x672C;&#x8EAB;&#x5C31;&#x5F88;&#x5E73;&#xFF1A;</p>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>&#x767E;&#x5206;&#x4F4D;</th><th class="num">&#x9580;&#x6ABB;</th><th class="num">&#x9A57;&#x8B49;&#x96C6;&#x4EA4;&#x6613;&#x6578;</th><th class="num">&#x9A57;&#x8B49;&#x96C6;&#x52DD;&#x7387;</th><th class="num">CI &#x4E0B;&#x754C;</th></tr></thead>
+      <tbody>
+        <tr class="hi"><td class="mono">30% &#x2190; &#x9396;&#x5B9A;</td><td class="num">0.5005</td><td class="num">340</td><td class="num">54.41%</td><td class="num">49.10%</td></tr>
+        <tr><td class="mono">20%</td><td class="num">0.5047</td><td class="num">296</td><td class="num">52.03%</td><td class="num">46.35%</td></tr>
+        <tr><td class="mono">10%</td><td class="num">0.5104</td><td class="num">206</td><td class="num">52.43%</td><td class="num">45.63%</td></tr>
+        <tr><td class="mono">5%</td><td class="num">0.5152</td><td class="num">138</td><td class="num">48.55%</td><td class="num">40.36%</td></tr>
+        <tr><td class="mono">3%</td><td class="num">0.5182</td><td class="num">106</td><td class="num">52.83%</td><td class="num">43.40%</td></tr>
+        <tr><td class="mono">2%</td><td class="num">0.5203</td><td class="num">83</td><td class="num">55.42%</td><td class="num">44.73%</td></tr>
+        <tr><td class="mono">1%</td><td class="num">0.5231</td><td class="num">51</td><td class="num">50.98%</td><td class="num">37.68%</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>&#x503C;&#x5F97;&#x6CE8;&#x610F;&#xFF1A;<strong>&#x5168;&#x90E8; 7 &#x500B;&#x767E;&#x5206;&#x4F4D;&#x5019;&#x9078;&#x7684; CI &#x4E0B;&#x754C;&#x90FD;&#x4F4E;&#x65BC; 50%</strong>&#x2014;&#x2014;&#x9A57;&#x8B49;&#x96C6;&#x672C;&#x8EAB;&#x5C31;&#x6C92;&#x6709;&#x7D66;&#x51FA;&#x4EFB;&#x4F55;&#x4E00;&#x500B;&#x300C;&#x6709;&#x628A;&#x63E1;&#x300D;&#x7684;&#x64CD;&#x4F5C;&#x9EDE;&#xFF0C;30% &#x53EA;&#x662F;&#x9019;&#x5806;&#x5F31;&#x5019;&#x9078;&#x88E1; CI &#x4E0B;&#x754C;&#x76F8;&#x5C0D;&#x6700;&#x9AD8;&#x7684;&#x4E00;&#x500B;&#xFF08;&#x56E0;&#x70BA;&#x4EA4;&#x6613;&#x6578;&#x6700;&#x591A;&#x3001;CI &#x6700;&#x7A84;&#xFF09;&#xFF0C;&#x4E0D;&#x662F;&#x8A0A;&#x865F;&#x7279;&#x5225;&#x5F37;&#x3002;&#x9019;&#x8DDF;&#x524D;&#x9762; GBDT &#x95DC;&#x5361;&#x300C;1&#x3C3; &#x901A;&#x904E;&#x6578;=0&#x300D;&#x7684;&#x8A0A;&#x865F;&#x7A00;&#x8584;&#x7A0B;&#x5EA6;&#x4E92;&#x76F8;&#x5370;&#x8B49;&#x3002;</p>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>&#x7D71;&#x8A08;</th><th class="num">&#x4EA4;&#x6613;&#x6578;</th><th class="num">&#x52DD;&#x7387;</th><th>95% CI</th><th>&#x7D50;&#x8AD6;</th></tr></thead>
+      <tbody>
+        <tr class="bad"><td class="mono">&#x4E3B;&#x8981;&#x6307;&#x6A19;&#xFF08;&#x53E2;&#x96C6;&#x898F;&#x5247;&#xFF09;</td><td class="num">661</td><td class="num neg">47.81%</td><td class="mono">[44.02%, 51.62%]</td><td class="neg">CI &#x6DB5;&#x84CB; 50%&#xFF0C;&#x672A;&#x8DE8;&#x904E;&#x640D;&#x76CA;&#x5169;&#x5E73;</td></tr>
+        <tr><td class="mono">busy_only &#x6B21;&#x8981;&#x53C3;&#x8003;</td><td class="num">2008</td><td class="num">48.80%</td><td class="mono dim">[46.62%, 50.99%]</td><td class="dim">&#x6A23;&#x672C;&#x66F4;&#x5927;&#xFF0C;CI &#x5E7E;&#x4E4E;&#x5168;&#x5728; 50% &#x4EE5;&#x4E0B;</td></tr>
+        <tr><td class="mono">always_up / &#x591A;&#x6578;&#x985E;&#x57FA;&#x6E96;</td><td class="num dim">--</td><td class="num dim">50.00%</td><td class="dim">--</td><td class="dim">&#x53C3;&#x8003;</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>&#x6E2C;&#x8A66;&#x96C6; AUC = 0.5024&#x3001;&#x5E73;&#x5747; pAUC = <strong>0.5013</strong>&#x2014;&#x2014;&#x8DDF;&#x672C;&#x8F2A;&#x81EA;&#x5DF1;&#x7684;&#x4E8B;&#x524D;&#x57FA;&#x6E96;&#xFF08;&#x9A57;&#x8B49;&#x96C6; 0.5048&#x3001;&#x6E2C;&#x8A66;&#x96C6;&#x671F;&#x671B;&#x503C;&#x8CBC;&#x8FD1; R3 &#x57FA;&#x6E96; 0.5004&#xFF09;&#x5E7E;&#x4E4E;&#x5B8C;&#x5168;&#x543B;&#x5408;&#x3002;661 &#x7B46;&#x4EA4;&#x6613;&#xFF08;&#x6BD4; Round 3 &#x7684; 416 &#x7B46;&#x591A;&#xFF0C;&#x56E0;&#x70BA;&#x9019;&#x6B21;&#x9078;&#x4E2D;&#x7684;&#x662F;&#x6700;&#x5BEC;&#x7684; 30% &#x9580;&#x6ABB;&#xFF09;&#xFF0C;95% CI [44.02%, 51.62%] &#x5B8C;&#x6574;&#x6DB5;&#x84CB; 50%&#xFF0C;&#x96E2;&#x640D;&#x76CA;&#x5169;&#x5E73; 54.05% &#x9084;&#x6709;&#x4E00;&#x6BB5;&#x8DDD;&#x96E2;&#x4F46;&#x6C92;&#x6709; Round 3 &#x90A3;&#x9EBC;&#x8A87;&#x5F35;&#x3002;</p>
+
+  <div class="note">
+    <p class="t">&#x9019;&#x662F;&#x672C;&#x8F2A;&#x6700;&#x91CD;&#x8981;&#x7684;&#x65B9;&#x6CD5;&#x8AD6;&#x6536;&#x7A6B;&#xFF1A;pAUC &#x4E8B;&#x524D;&#x5C31;&#x9810;&#x544A;&#x4E86;&#x7D50;&#x679C;</p>
+    <p>&#x5728;&#x8DD1;&#x4EFB;&#x4F55; Round 4 &#x7684;&#x8A13;&#x7DF4;&#x4E4B;&#x524D;&#xFF0C;Round 3 &#x51A0;&#x8ECD; checkpoint &#x91CD;&#x65B0;&#x8A08;&#x5206;&#x7684;&#x6E2C;&#x8A66;&#x96C6;&#x5E73;&#x5747; pAUC &#x5C31;&#x5DF2;&#x7D93;&#x662F; 0.5004&#xFF08;&#x898B;&#x7B2C; 01 &#x7BC0;&#xFF09;&#x3002;&#x9019;&#x8F2A;&#x63DB;&#x4E86;&#x7279;&#x5FB5;&#x3001;&#x63DB;&#x4E86;&#x9078;&#x6A21;&#x6307;&#x6A19;&#xFF0C;&#x6700;&#x7D42;&#x9A57;&#x8B49;&#x96C6;&#x5E73;&#x5747; pAUC &#x843D;&#x5728; 0.5048&#x3001;&#x6E2C;&#x8A66;&#x96C6; 0.5013&#x2014;&#x2014;&#x90FD;&#x8CBC;&#x8457;&#x540C;&#x4E00;&#x500B;&#x300C;&#x5E7E;&#x4E4E;&#x7CBE;&#x78BA;&#x7121;&#x6280;&#x5DE7;&#x300D;&#x7684;&#x91CF;&#x7D1A;&#x3002;<strong>&#x5982;&#x679C;&#x4E00;&#x958B;&#x59CB;&#x5C31;&#x7528; pAUC &#x8A55;&#x4F30; Round 3 &#x7684;&#x6A21;&#x578B;&#xFF0C;&#x672C;&#x53EF;&#x4EE5;&#x5728;&#x52D5;&#x624B;&#x505A;&#x4EFB;&#x4F55; Round 4 &#x7279;&#x5FB5;&#x5DE5;&#x7A0B;&#x4E4B;&#x524D;&#xFF0C;&#x5C31;&#x5C0D;&#x300C;&#x9019;&#x689D;&#x8DEF;&#x7DDA;&#x5F88;&#x53EF;&#x80FD;&#x9084;&#x662F;&#x4E0D;&#x6703;&#x904E;&#x95DC;&#x300D;&#x6709;&#x66F4;&#x6E96;&#x78BA;&#x7684;&#x9810;&#x671F;</strong>&#x2014;&#x2014;&#x9019;&#x6B63;&#x662F;&#x4F7F;&#x7528;&#x8005;&#x6700;&#x521D;&#x6279;&#x8A55;&#x300C;&#x5168;&#x57DF; AUC &#x9078;&#x6A21;&#x662F;&#x932F;&#x7684;&#x300D;&#x9019;&#x53E5;&#x8A71;&#x7684;&#x50F9;&#x503C;&#x6240;&#x5728;&#xFF1A;&#x63DB;&#x5C0D;&#x6307;&#x6A19;&#x4E4B;&#x5F8C;&#xFF0C;&#x6307;&#x6A19;&#x672C;&#x8EAB;&#x8B8A;&#x5F97;&#x66F4;&#x8AA0;&#x5BE6;&#x3001;&#x66F4;&#x80FD;&#x63D0;&#x524D;&#x9810;&#x8B66;&#xFF0C;&#x800C;&#x4E0D;&#x53EA;&#x662F;&#x6700;&#x5F8C;&#x7D50;&#x679C;&#x8B8A;&#x597D;&#x6216;&#x8B8A;&#x58DE;&#x3002;</p>
+  </div>
+</section>
+
+<section>
+  <h2><span class="num">07 &#x2014; &#x7D50;&#x8AD6;</span>&#x56DB;&#x8F2A;&#x88E1;&#x7B2C;&#x4E8C;&#x5DEE;&#xFF0C;&#x4F46;&#x65B9;&#x6CD5;&#x8AD6;&#x9019;&#x6B21;&#x662F;&#x6E05;&#x695A;&#x52DD;&#x51FA;&#x7684;</h2>
+  <ul>
+    <li><strong>&#x672A;&#x901A;&#x904E;&#x95DC;&#x5361;</strong>&#xFF1A;&#x6E2C;&#x8A66;&#x96C6;&#x52DD;&#x7387; 47.81%&#xFF0C;95% CI [44.02%, 51.62%]&#xFF0C;CI &#x6DB5;&#x84CB;&#x64F2;&#x786C;&#x5E63;&#x7684; 50%&#xFF0C;&#x672A;&#x8DE8;&#x904E;&#x640D;&#x76CA;&#x5169;&#x5E73; 54.05%&#x3002;&#x56DB;&#x8F2A;&#x6E2C;&#x8A66;&#x96C6;&#x52DD;&#x7387;&#xFF1A;51.32% &#x2192; 50.59% &#x2192; 42.79% &#x2192; <strong>47.81%</strong>&#x2014;&#x2014;&#x6BD4; Round 3 &#x597D;&#xFF0C;&#x4F46;&#x4ECD;&#x662F;&#x56DB;&#x8F2A;&#x88E1;&#x7B2C;&#x4E8C;&#x5DEE;&#xFF0C;&#x4E14;&#x8207; Round 3 &#x7684; CI &#x53EA;&#x5728;&#x908A;&#x7DE3;&#x91CD;&#x758A;&#xFF08;[38.12%,47.59%] vs [44.02%,51.62%]&#xFF09;&#xFF0C;&#x6539;&#x5584;&#x662F;&#x5426;&#x5177;&#x7D71;&#x8A08;&#x610F;&#x7FA9;&#x4ECD;&#x5B58;&#x7591;&#xFF0C;&#x4E0D;&#x5B9C;&#x904E;&#x5EA6;&#x89E3;&#x8B80;&#x6210;&#x300C;&#x627E;&#x5230;&#x65B9;&#x5411;&#x4E86;&#x300D;&#x3002;</li>
+    <li><strong>partial AUC &#x4FEE;&#x6B63;&#x4E86;&#x9078;&#x6A21;&#x6307;&#x6A19;&#x8207;&#x4EA4;&#x6613;&#x6C7A;&#x7B56;&#x7684;&#x932F;&#x4F4D;&#xFF0C;&#x4E14;&#x6B64;&#x7D50;&#x8AD6;&#x7AD9;&#x5F97;&#x4F4F;&#x8173;</strong>&#xFF1A;R3 &#x51A0;&#x8ECD; checkpoint &#x9A57;&#x8B49;&#x96C6;&#x5168;&#x57DF; AUC 0.5329 &#x770B;&#x8D77;&#x4F86;&#x50CF;&#x8A0A;&#x865F;&#xFF0C;&#x4F46;&#x6E2C;&#x8A66;&#x96C6;&#x5E73;&#x5747; pAUC &#x53EA;&#x6709; 0.5004&#x2014;&#x2014;&#x9019;&#x500B;&#x843D;&#x5DEE;&#x6B63;&#x662F; R3 &#x52DD;&#x7387;&#x5D29;&#x76E4;&#x7684;&#x6A5F;&#x5236;&#x89E3;&#x91CB;&#x3002;&#x672C;&#x8F2A;&#x63DB;&#x6307;&#x6A19;&#x5F8C;&#xFF0C;&#x6A21;&#x578B;&#x5728;&#x81EA;&#x5DF1;&#x7684;&#x9A57;&#x8B49;/&#x6E2C;&#x8A66;&#x96C6;&#x4E0A;&#x7684; pAUC&#xFF08;0.5048&#xFF0F;0.5013&#xFF09;&#x8207;&#x9019;&#x500B;&#x57FA;&#x6E96;&#x9AD8;&#x5EA6;&#x4E00;&#x81F4;&#xFF0C;&#x8B49;&#x660E; pAUC &#x662F;&#x6BD4;&#x5168;&#x57DF; AUC &#x66F4;&#x8AA0;&#x5BE6;&#x3001;&#x66F4;&#x80FD;&#x63D0;&#x524D;&#x53CD;&#x6620;&#x300C;&#x982D;&#x90E8;&#x8A0A;&#x865F;&#x5F37;&#x5EA6;&#x300D;&#x7684;&#x6307;&#x6A19;&#x3002;</li>
+    <li><strong>6 &#x500B;&#x5FAE;&#x7D50;&#x69CB;&#x7279;&#x5FB5;&#x6C92;&#x6709;&#x7121;&#x6548;&#xFF0C;&#x4F46;&#x4E5F;&#x6C92;&#x6709;&#x89E3;&#x9396;&#x8A0A;&#x865F;</strong>&#xFF1A;&#x7528;&#x540C;&#x4E00;&#x628A; pAUC &#x5C3A;&#x91CF; 53 vs 59 &#x500B;&#x5019;&#x9078;&#x7279;&#x5FB5;&#xFF0C;OOF &#x5E73;&#x5747; pAUC &#x5F9E; 0.5024 &#x5FAE;&#x5347;&#x5230; 0.5035&#xFF0C;95% CI &#x5927;&#x5E45;&#x91CD;&#x758A;&#x2014;&#x2014;&#x7D71;&#x8A08;&#x4E0A;&#x7121;&#x6CD5;&#x5340;&#x5206;&#x3002;2 &#x500B;&#x65B0;&#x7279;&#x5FB5;&#xFF08;<code>BarVWAP_Dev</code>&#x3001;<code>HL_Range</code>&#xFF09;&#x64E0;&#x9032;&#x4E86;&#x6700;&#x7D42; 15 &#x500B;&#xFF0C;&#x4F46;&#x6574;&#x9AD4;&#x8A0A;&#x865F;&#x91CF;&#x7D1A;&#x6C92;&#x6709;&#x5BE6;&#x8CEA;&#x6539;&#x8B8A;&#x3002;</li>
+    <li><strong>&#x63DB;&#x6307;&#x6A19;&#x8B93;&#x5165;&#x9078;&#x7279;&#x5FB5;&#x7D44;&#x5408;&#x63DB;&#x4E86; 6 &#x500B;</strong>&#xFF1A;15 &#x500B;&#x88E1; 9 &#x500B;&#x5169;&#x8F2A;&#x90FD;&#x9078;&#x4E2D;&#xFF0C;&#x88AB;&#x63DB;&#x6389;&#x7684; 6 &#x500B;&#x88E1;&#x6709; 4 &#x500B;&#x662F;&#x539F;&#x59CB;&#x6C34;&#x4F4D;&#x578B;&#x7279;&#x5FB5;&#xFF08;<code>ATR_14</code>/<code>EMA_72</code>/<code>OBV</code> &#x7B49;&#xFF09;&#x2014;&#x2014;pAUC &#x53EA;&#x770B;&#x982D;&#x90E8;&#x6392;&#x5E8F;&#xFF0C;&#x6BD4;&#x5168;&#x57DF; AUC &#x66F4;&#x4E0D;&#x5BB9;&#x6613;&#x88AB;&#x9019;&#x985E;&#x4E2D;&#x6BB5;&#x8DA8;&#x52E2;&#x5E36;&#x52D5;&#xFF0C;&#x9019;&#x672C;&#x8EAB;&#x662F;&#x9810;&#x671F;&#x4E2D;&#x3001;&#x4E5F;&#x662F;&#x5408;&#x7406;&#x7684;&#x6548;&#x679C;&#x3002;</li>
+    <li><strong>&#x6A19;&#x7C64;&#x91CD;&#x758A;&#x554F;&#x984C;&#x5728; GBDT &#x95DC;&#x5361;&#x7684;&#x4FE1;&#x8CF4;&#x5340;&#x9593;&#x4E0A;&#x9996;&#x6B21;&#x7CFB;&#x7D71;&#x6027;&#x4FEE;&#x6B63;</strong>&#xFF1A;block bootstrap&#xFF08;block_len=6&#xFF09;&#x6BD4;&#x820A;&#x7248; iid bootstrap &#x5BEC;&#x7D04; 1.5~1.6 &#x500D;&#xFF0C;&#x7528; R3 &#x8CC7;&#x6599;&#x56DE;&#x6E2C;&#x767C;&#x73FE; R3 &#x7576;&#x521D;&#x300C;&#x901A;&#x904E;&#x95DC;&#x5361;&#x300D;&#x7684;&#x9A57;&#x8B49;&#x96C6;&#x7D50;&#x679C;&#xFF0C;&#x5728;&#x8AA0;&#x5BE6;&#x7684; CI &#x4E0B;&#x5176;&#x5BE6;&#x6C92;&#x6709;&#x986F;&#x8457;&#x8D85;&#x904E; 0.50&#x2014;&#x2014;&#x9019;&#x4EF6;&#x4E8B;&#x4E5F;&#x4E00;&#x4F75;&#x8A18;&#x9304;&#x5728;&#x672C;&#x8F2A;&#xFF0C;&#x4F9B;&#x672A;&#x4F86;&#x8F2A;&#x6B21;&#x53C3;&#x8003;&#x3002;</li>
+    <li><strong>&#x9996;&#x6B21;&#x6709;&#x5B8C;&#x6574;&#x7684;&#x9010; epoch &#x8A13;&#x7DF4;&#x7D00;&#x9304;</strong>&#xFF1A;<code>train_event.py</code> &#x8D77;&#x628A;&#x8A13;&#x7DF4;&#x904E;&#x7A0B; tee &#x9032; log &#x4E26;&#x89E3;&#x6790;&#x51FA; <code>training_history.json</code>&#xFF0C;&#x672C;&#x8F2A;&#x8207;&#x672A;&#x4F86;&#x6240;&#x6709;&#x8F2A;&#x6B21;&#x90FD;&#x80FD;&#x56DE;&#x6EAF;&#x756B;&#x51FA; loss-epoch &#x5716;&#xFF1B;Round 1-3 &#x6C92;&#x6709;&#x9019;&#x4EFD;&#x8CC7;&#x6599;&#x3002;</li>
+  </ul>
+
+  <div class="good-box">
+    <p class="t">&#x4E0B;&#x4E00;&#x6B65;&#x5EFA;&#x8B70;&#xFF08;&#x50C5;&#x4F9B;&#x53C3;&#x8003;&#xFF0C;&#x975E;&#x65E2;&#x5B9A;&#x8A08;&#x756B;&#xFF09;</p>
+    <p>(1) &#x56DB;&#x8F2A;&#x4E0B;&#x4F86;&#xFF0C;&#x4E0D;&#x7BA1;&#x662F;&#x5168;&#x57DF; AUC &#x9084;&#x662F;&#x8AA0;&#x5BE6;&#x8A08;&#x7B97;&#x7684; pAUC&#xFF0C;&#x8A0A;&#x865F;&#x91CF;&#x7D1A;&#x90FD;&#x5728;&#x300C;&#x5E7E;&#x4E4E;&#x7121;&#x6280;&#x5DE7;&#x300D;&#x9644;&#x8FD1;&#x53CD;&#x8986;&#x9707;&#x76EA;&#xFF0C;&#x6C92;&#x6709;&#x4E00;&#x8F2A;&#x7684;&#x6E2C;&#x8A66;&#x96C6;&#x5E73;&#x5747; pAUC &#x660E;&#x986F;&#x8D85;&#x904E; 0.502&#x2014;&#x2014;&#x9019;&#x6BD4;&#x300C;&#x7279;&#x5FB5;&#x4E0D;&#x5920;&#x591A;&#x300D;&#x66F4;&#x50CF;&#x662F;&#x300C;5 &#x5206;&#x9418; K &#x7DDA; + 30 &#x5206;&#x9418;&#x65B9;&#x5411;&#x300D;&#x9019;&#x500B;&#x554F;&#x984C;&#x8A2D;&#x5B9A;&#x672C;&#x8EAB;&#x5728;&#x76EE;&#x524D;&#x9019;&#x985E;&#x7279;&#x5FB5;&#x4E0B;&#x5C31;&#x662F;&#x63A5;&#x8FD1;&#x96A8;&#x6A5F;&#x7684;&#xFF1B;(2) &#x65E2;&#x7136; pAUC &#x5DF2;&#x88AB;&#x9A57;&#x8B49;&#x662F;&#x66F4;&#x8AA0;&#x5BE6;&#x7684;&#x4E8B;&#x524D;&#x9810;&#x8B66;&#x6307;&#x6A19;&#xFF0C;&#x672A;&#x4F86;&#x4EFB;&#x4F55;&#x65B0;&#x4E00;&#x8F2A;&#x6539;&#x52D5;&#xFF0C;&#x5EFA;&#x8B70;&#x5148;&#x7528; GBDT &#x95DC;&#x5361;&#x7684; pAUC &#x7D50;&#x679C;&#x6C7A;&#x5B9A;&#x8981;&#x4E0D;&#x8981;&#x7E7C;&#x7E8C;&#x6295;&#x5165;&#x8A13;&#x7DF4; transformer &#x7684;&#x6642;&#x9593;&#xFF0C;&#x800C;&#x4E0D;&#x662F;&#x6BCF;&#x6B21;&#x90FD;&#x8DD1;&#x5B8C;&#x6574;&#x5957;&#x6D41;&#x7A0B;&#x624D;&#x77E5;&#x9053;&#x7D50;&#x679C;&#xFF1B;(3) 47.81% &#x7684;&#x6E2C;&#x8A66;&#x96C6;&#x52DD;&#x7387;&#x5728;&#x8CE0;&#x7387; 0.85 &#x4E0B;&#x671F;&#x671B;&#x503C;&#x4ECD;&#x70BA;&#x8CA0;&#xFF08;&#x6B0A;&#x76CA;&#x66F2;&#x7DDA;&#x6700;&#x7D42;&#x5269; 0.193&#xFF0C;&#x6700;&#x5927;&#x56DE;&#x64A4; &#x2212;84.7%&#xFF09;&#xFF0C;&#x4E0D;&#x5EFA;&#x8B70;&#x4F9D;&#x6B64;&#x7CFB;&#x7D71;&#x4E0B;&#x55AE;&#x3002;</p>
+  </div>
+</section>
+
+<footer>
+  <p>&#x8CC7;&#x6599;&#x6CBF;&#x7528; Round 3 &#x7684;&#x4E0B;&#x8F09;&#x7BC4;&#x570D;&#xFF08;BTCUSDT + ETHUSDT/BNBUSDT/SOLUSDT 5min&#xFF0C;2025-01-01 ~ 2026-07-31&#xFF0C;&#x7DAD;&#x6301; 5 &#x5206;&#x9418; K &#x7DDA;&#x3001;<code>lookahead=6</code>=30 &#x5206;&#x9418;&#x7D50;&#x7B97;&#xFF0C;&#x672A;&#x6539;&#x52D5;&#xFF09;&#xFF1B;&#x65B0;&#x589E; 6 &#x500B;&#x5FAE;&#x7D50;&#x69CB;&#x7279;&#x5FB5;&#xFF08;<code>HL_Range, OC_Ret, Up_Wick, Low_Wick, BarVWAP_Dev, ATR_Pct_14</code>&#xFF0C;&#x7531;&#x88AB;&#x4E1F;&#x68C4;&#x7684; <code>Open/High/Low/Quote_asset_volume</code> &#x884D;&#x751F;&#xFF0C;&#x9010;&#x6839; pointwise &#x8F49;&#x63DB;&#xFF0C;&#x96F6; warmup&#xFF09;&#xFF0C;&#x5019;&#x9078;&#x7279;&#x5FB5;&#x7E3D;&#x6578; 53+6=59&#x3002;&#x9078;&#x6A21;&#x6307;&#x6A19;&#x6539;&#x70BA; <code>toolbywi/event_common.py</code> &#x7684; <code>mean_partial_auc()</code>&#xFF08;<code>sklearn.roc_auc_score(max_fpr=f)</code>&#xFF0C;McClish &#x6A19;&#x6E96;&#x5316;&#xFF0C;no-skill=0.5&#xFF0C;&#x56DB;&#x500B;&#x64CD;&#x4F5C;&#x9EDE; 0.05/0.10/0.15/0.20 &#x5E73;&#x5747;&#xFF09;&#xFF0C;<code>permutation_importance</code> &#x7528;&#x5C0D;&#x61C9;&#x7684;&#x53EF; pickle scorer&#xFF08;<code>make_mean_pauc_scorer()</code>&#xFF09;&#xFF0C;&#x4FE1;&#x8CF4;&#x5340;&#x9593;&#x6539;&#x7528; <code>block_bootstrap_ci()</code>&#xFF08;block_len=lookahead=6&#xFF0C;&#x4FEE;&#x6B63;&#x6A19;&#x7C64;&#x91CD;&#x758A;&#x9020;&#x6210;&#x7684; iid bootstrap CI &#x865B;&#x5047;&#x7CBE;&#x78BA;&#xFF0C;&#x5BE6;&#x6E2C;&#x5BEC;&#x5EA6;&#x6BD4; block/iid&#x2248;1.5~1.6&#xFF09;&#x3002;GBDT &#x95DC;&#x5361;&#xFF08;<code>gbdt_probe.py --metric mean_pauc</code>&#xFF09;&#x5728; train+val&#xFF08;132,556 &#x5217;&#xFF09;&#x8DE8; 5 &#x6298; TimeSeriesSplit &#xD7; 5 &#x6B21;&#x91CD;&#x8907;&#x8A08;&#x7B97;&#xFF0C;top-k &#x898F;&#x5247; <code>k=max(15, 1sigma &#x901A;&#x904E;&#x6578;)=max(15,0)=15</code> &#x7BE9;&#x81F3; 15 &#x500B;&#x7279;&#x5FB5;&#x3002;&#x6A21;&#x578B;&#xFF1A;iTransformer&#xFF0C;<code>seq_len=512, label_len=48, pred_len=1, d_model=256, d_ff=512, e_layers=1, n_heads=8, dropout=0.2, batch_size=64, lr=1e-4, lradj=type3, focal_alpha=0.4985, patience=5</code>&#xFF0C;&#x640D;&#x5931;&#x51FD;&#x6578; <code>focal_g2</code>&#xFF08;&#x6CBF;&#x7528; Round 3 &#x52DD;&#x51FA;&#x7D44;&#x5408;&#xFF0C;&#x672C;&#x8F2A;&#x672A;&#x91CD;&#x65B0;&#x6BD4;&#x8F03;&#x640D;&#x5931;&#x51FD;&#x6578;/&#x6DF1;&#x5EA6;&#xFF09;&#xFF0C;Apple MPS &#x8A13;&#x7DF4;&#xFF0C;6 epoch &#x89F8;&#x767C; early stop&#xFF0C;checkpoint &#x53D6;&#x81EA; epoch 1&#x3002;&#x8A13;&#x7DF4;&#x904E;&#x7A0B;&#x9996;&#x6B21;&#x7528; <code>train_event.py</code> &#x7684; Popen-tee &#x5B8C;&#x6574;&#x8A18;&#x9304;&#x9010; epoch loss&#xFF0C;&#x5BEB;&#x5165; <code>logs/{setting}.log</code> &#x8207; <code>{data_dir}/training_history.json</code>&#xFF0C;&#x7531; <code>plot_training_curve.py</code> &#x7522;&#x5716;&#x3002;<code>entry_at</code> &#x4E8B;&#x524D;&#x56FA;&#x5B9A;&#x70BA; 1&#xFF0C;&#x4E0D;&#x505A;&#x4EFB;&#x4F55;&#x9078;&#x64C7;/&#x6383;&#x63CF;&#xFF1B;&#x8CE0;&#x7387;&#x56FA;&#x5B9A; 0.85&#xFF0C;&#x640D;&#x76CA;&#x5169;&#x5E73; 54.05%&#x3002;&#x9580;&#x6ABB;&#x7528;&#x9A57;&#x8B49;&#x96C6;&#x767E;&#x5206;&#x4F4D;&#xFF08;30/20/10/5/3/2/1%&#xFF09;&#xFF0C;&#x5728;&#x4E0B;&#x55AE;&#x6578; &gt;=100 &#x7684;&#x5019;&#x9078;&#x4E2D;&#x53D6; CI &#x4E0B;&#x754C;&#x6700;&#x9AD8;&#x8005;&#xFF08;30% &#x767E;&#x5206;&#x4F4D;&#xFF0C;&#x9580;&#x6ABB; 0.5005&#xFF09;&#xFF0C;&#x6E2C;&#x8A66;&#x96C6;&#x53EA;&#x8A55;&#x4F30;&#x4E00;&#x6B21;&#x3002;&#x53E2;&#x96C6;&#x9032;&#x5834;&#xFF08;<code>toolbywi/event_common.py</code> &#x7684; <code>cluster_entries()</code>/<code>cluster_step()</code>&#xFF09;&#x53EA;&#x8A8D;&#x8CB7;&#x6F32;&#x65B9;&#x5411;&#xFF0C;gap=6 &#x5C0D;&#x9F4A; 30 &#x5206;&#x9418;&#x7D50;&#x7B97;&#xFF0C;&#x4FDD;&#x8B49;&#x4EFB;&#x5169;&#x7B46;&#x4EA4;&#x6613; index &#x5DEE; &gt; gap&#xFF08;661 &#x7B46;&#x4EA4;&#x6613;&#xFF0C;&#x6700;&#x5C0F;&#x9593;&#x9694; 7 &#x6839; > gap 6&#xFF0C;&#x5DF2;&#x65B7;&#x8A00;&#x9A57;&#x8B49;&#xFF09;&#x3002;&#x56DE;&#x6B78;&#x9A57;&#x8B49;&#xFF1A;&#x672C;&#x8F2A;&#x65B0;&#x7522;&#x751F;&#x7684; <code>dataset/event30m_v4</code> &#x8207;&#x65E2;&#x6709; <code>dataset/event30m_v3</code> &#x5171;&#x6709;&#x7684; 53 &#x500B;&#x7279;&#x5FB5;&#x6B04;&#xFF0C;&#x5728;&#x5171;&#x540C;&#x65E5;&#x671F;&#x4E0A;&#x9010;&#x503C;&#x6BD4;&#x5C0D;&#x4E00;&#x81F4;&#xFF1B;&#x767C;&#x73FE;&#x7684;&#x552F;&#x4E00;&#x5DEE;&#x7570;&#x4F86;&#x81EA; Binance <code>metrics</code> &#x65E5;&#x5305;&#x5728;&#x5169;&#x6B21;&#x4E0B;&#x8F09;&#x6642;&#x9593;&#x9EDE;&#x5404;&#x7F3A; 1 &#x6839;&#x5FEB;&#x7167;&#xFF08;&#x5916;&#x90E8;&#x8CC7;&#x6599;&#x6E90;&#x975E;&#x78BA;&#x5B9A;&#x6027;&#xFF0C;&#x8207;&#x672C;&#x8F2A;&#x7A0B;&#x5F0F;&#x78BC;&#x6539;&#x52D5;&#x7121;&#x95DC;&#xFF0C;&#x5DF2;&#x500B;&#x5225;&#x6392;&#x67E5;&#x78BA;&#x8A8D;&#xFF09;&#x3002;&#x56E0;&#x679C;&#x6027;&#x6E2C;&#x8A66;&#x65B0;&#x589E; <code>test_microstructure_features_causal()</code>&#x3001;<code>test_zero_volume_bar()</code>&#xFF0C;&#x5168;&#x6578;&#x901A;&#x904E;&#x3002;&#x539F;&#x59CB;&#x6578;&#x64DA;&#x898B;&#x5C08;&#x6848; <code>dataset/event30m_v4/gbdt_probe_report.json</code>&#xFF08;59 &#x7279;&#x5FB5;&#x91CD;&#x8981;&#x5EA6;&#xFF09;&#x3001;<code>dataset/event30m_v4_sel/meta.json</code>&#x3001;<code>dataset/event30m_v4_sel/checkpoint_comparison.json</code>&#x3001;<code>dataset/event30m_v4_sel/evaluate_report.json</code>&#xFF08;&#x542B; <code>val_pauc_report</code>/<code>test_pauc_report</code>&#xFF09;&#x3001;<code>dataset/event30m_v4_sel/trades.csv</code>&#xFF08;661 &#x7B46;&#x9010;&#x7B46;&#x4EA4;&#x6613;&#x660E;&#x7D30;&#xFF09;&#x3001;<code>dataset/event30m_v4_sel/training_history.json</code>&#xFF08;&#x9010; epoch loss&#xFF09;&#x3002;</p>
+</footer>
+
+</div>

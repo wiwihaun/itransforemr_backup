@@ -18,6 +18,7 @@ exp/exp_long_term_forecasting.py 的 train()）。
 import argparse
 import json
 import os
+import textwrap
 
 import matplotlib
 matplotlib.use('Agg')
@@ -88,9 +89,10 @@ def main():
                     xytext=(4, -4), textcoords='offset points', fontsize=9, color='#68787C',
                     ha='left', va='top')
 
+    wrapped_setting = '\n'.join(textwrap.wrap(setting, width=60, break_long_words=True))
     ax.set_xlabel('Epoch')
     ax.set_ylabel('Loss')
-    ax.set_title(f'Loss vs Epoch\n{setting}', fontsize=10)
+    ax.set_title(f'Loss vs Epoch\n{wrapped_setting}', fontsize=8)
     ax.set_xticks(ep)
     ax.legend(loc='best', fontsize=9)
     ax.grid(True, alpha=0.25)
