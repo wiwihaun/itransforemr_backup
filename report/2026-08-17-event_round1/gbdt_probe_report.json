@@ -1,0 +1,225 @@
+{
+  "n_rows": 170460,
+  "n_features": 34,
+  "pos_rate": 0.5010500997301419,
+  "fold_reports": [
+    {
+      "fold": 1,
+      "train_size": 28410,
+      "val_size": 28410,
+      "auc": 0.5126244998920626,
+      "accuracy": 0.49736008447729674,
+      "majority_baseline": 0.5116508271735305
+    },
+    {
+      "fold": 2,
+      "train_size": 56820,
+      "val_size": 28410,
+      "auc": 0.5039469164516819,
+      "accuracy": 0.5011263639563533,
+      "majority_baseline": 0.504012671594509
+    },
+    {
+      "fold": 3,
+      "train_size": 85230,
+      "val_size": 28410,
+      "auc": 0.512601752689584,
+      "accuracy": 0.5057022175290391,
+      "majority_baseline": 0.5054910242872228
+    },
+    {
+      "fold": 4,
+      "train_size": 113640,
+      "val_size": 28410,
+      "auc": 0.5247697609659244,
+      "accuracy": 0.5107708553326293,
+      "majority_baseline": 0.5028159098908835
+    },
+    {
+      "fold": 5,
+      "train_size": 142050,
+      "val_size": 28410,
+      "auc": 0.5219666496430615,
+      "accuracy": 0.5136219640971489,
+      "majority_baseline": 0.5082013375571981
+    }
+  ],
+  "oof_auc": 0.5104742488244219,
+  "oof_auc_ci95": [
+    0.5074155231325655,
+    0.5133655007218657
+  ],
+  "passes_signal_check": true,
+  "feature_importance": [
+    {
+      "feature": "SOL_RSI14",
+      "importance_mean": 0.006674663220331811,
+      "importance_std": 0.0010217177333455975
+    },
+    {
+      "feature": "Close",
+      "importance_mean": 0.0037028234927496627,
+      "importance_std": 0.00046674209135737834
+    },
+    {
+      "feature": "Stoch_K",
+      "importance_mean": 0.003194850211375999,
+      "importance_std": 0.0011611149878833617
+    },
+    {
+      "feature": "EMA_95",
+      "importance_mean": 0.002538547797909163,
+      "importance_std": 0.0009562475692792523
+    },
+    {
+      "feature": "RSI_14",
+      "importance_mean": 0.001857054004710612,
+      "importance_std": 0.0006018523404350784
+    },
+    {
+      "feature": "RSI_30",
+      "importance_mean": 0.0008460467726659094,
+      "importance_std": 0.0005492139493915349
+    },
+    {
+      "feature": "MOM_30",
+      "importance_mean": 0.0008257808435425229,
+      "importance_std": 0.0004764103499287442
+    },
+    {
+      "feature": "VWAP_Dev",
+      "importance_mean": 0.000818829394883025,
+      "importance_std": 0.0009577696867410464
+    },
+    {
+      "feature": "ROC_30",
+      "importance_mean": 0.0008106302248889197,
+      "importance_std": 0.00021585585260641368
+    },
+    {
+      "feature": "ETH_RSI14",
+      "importance_mean": 0.0007545184565002528,
+      "importance_std": 0.000549678341379593
+    },
+    {
+      "feature": "OBV",
+      "importance_mean": 0.000588354890375653,
+      "importance_std": 0.001658779353285916
+    },
+    {
+      "feature": "MACD_Signal",
+      "importance_mean": 0.0005687913931676558,
+      "importance_std": 0.00037610558453582746
+    },
+    {
+      "feature": "CCI_20",
+      "importance_mean": 0.0004976231924796349,
+      "importance_std": 0.0002752146119246421
+    },
+    {
+      "feature": "BNB_RSI14",
+      "importance_mean": 0.0004823902846953887,
+      "importance_std": 0.0004247310399135173
+    },
+    {
+      "feature": "EMA_Cross",
+      "importance_mean": 0.00039030973906337694,
+      "importance_std": 0.0008279632000310618
+    },
+    {
+      "feature": "ETH_VolRatio",
+      "importance_mean": 0.00030842213982913426,
+      "importance_std": 0.00018155979563497167
+    },
+    {
+      "feature": "Taker_Ratio",
+      "importance_mean": 0.0002609884046882449,
+      "importance_std": 0.0001735313921257989
+    },
+    {
+      "feature": "SOL_Return",
+      "importance_mean": 2.868817206180818e-05,
+      "importance_std": 0.00017007105627977478
+    },
+    {
+      "feature": "Williams_R",
+      "importance_mean": 3.4442462587325195e-06,
+      "importance_std": 2.6352350476877005e-06
+    },
+    {
+      "feature": "BNB_Return",
+      "importance_mean": -1.1824848914154806e-05,
+      "importance_std": 0.00012021143156391127
+    },
+    {
+      "feature": "Volume_Ratio",
+      "importance_mean": -3.265639188054781e-05,
+      "importance_std": 6.394952897237501e-05
+    },
+    {
+      "feature": "BNB_VolRatio",
+      "importance_mean": -0.00024491426404544826,
+      "importance_std": 8.486613082847252e-05
+    },
+    {
+      "feature": "ETH_Return",
+      "importance_mean": -0.00024724810275962296,
+      "importance_std": 0.0001750565460299351
+    },
+    {
+      "feature": "Volume",
+      "importance_mean": -0.0002659143510141515,
+      "importance_std": 0.0002660803062323076
+    },
+    {
+      "feature": "MACD",
+      "importance_mean": -0.00028599488173506324,
+      "importance_std": 0.0011797951332292017
+    },
+    {
+      "feature": "CMF_14",
+      "importance_mean": -0.00028966715811451493,
+      "importance_std": 0.0010302252939857312
+    },
+    {
+      "feature": "ROC_10",
+      "importance_mean": -0.00029210856755959027,
+      "importance_std": 0.00020762368918708006
+    },
+    {
+      "feature": "SOL_VolRatio",
+      "importance_mean": -0.00032970627301340814,
+      "importance_std": 0.00039937092936309247
+    },
+    {
+      "feature": "BB_PB",
+      "importance_mean": -0.00035883464235180184,
+      "importance_std": 0.0004540101624431188
+    },
+    {
+      "feature": "EMA_72",
+      "importance_mean": -0.00044766724591600583,
+      "importance_std": 0.00036841754244793586
+    },
+    {
+      "feature": "Stoch_D",
+      "importance_mean": -0.0005814198003986748,
+      "importance_std": 0.0002103722751294565
+    },
+    {
+      "feature": "ATR_14",
+      "importance_mean": -0.0008262636725373084,
+      "importance_std": 0.0006854958763333035
+    },
+    {
+      "feature": "ADX_156",
+      "importance_mean": -0.0011743808992135563,
+      "importance_std": 0.0014768086676166588
+    },
+    {
+      "feature": "BB_Width",
+      "importance_mean": -0.0015422376028648931,
+      "importance_std": 0.0004884178481485684
+    }
+  ]
+}

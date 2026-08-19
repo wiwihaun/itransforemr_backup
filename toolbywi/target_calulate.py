@@ -1,6 +1,32 @@
 import numpy as np
 import pandas as pd
 
+def target_direction(df, lookahead=6):
+    """
+    滾動方向標籤（供固定時間結算的事件合約使用，例如 30 分鐘 = 5min K 線 × 6 根）。
+    target[i] = 1 若 Close[i+lookahead] > Close[i]，否則 0。
+    向量化實作（無雙層迴圈），並回傳有效遮罩：
+    尾端 lookahead 根因為看不到未來結算價，標籤無效，呼叫端必須依 valid 篩掉，
+    不能留著（會被當成 0 而混進訓練/評估）。
+
+    回傳
+    ----
+    targets : np.ndarray[int]，形狀與 df 同長
+    valid   : np.ndarray[bool]，True 代表該列標籤可用
+    """
+    close = df['Close'].values
+    n = len(df)
+
+    future_close = np.full(n, np.nan)
+    future_close[:n - lookahead] = close[lookahead:]
+
+    valid = ~np.isnan(future_close)
+    targets = np.zeros(n, dtype=int)
+    targets[valid] = (future_close[valid] > close[valid]).astype(int)
+
+    return targets, valid
+
+
 def target_long(df, lookahead=96, tp_pct=0.06, sl_pct=0.02):
     # 將需要運算的欄位轉換為純 NumPy 陣列以最大化效能
     closes = df['Close'].values

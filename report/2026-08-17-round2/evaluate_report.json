@@ -1,0 +1,265 @@
+{
+  "gap": 6,
+  "breakeven": 0.5405405405405405,
+  "min_trades": 100,
+  "val_grid": [
+    {
+      "threshold": 0.5,
+      "gap": 6,
+      "entry_at": 1,
+      "n_trades": 8,
+      "n_correct": 5,
+      "win_rate": 0.625,
+      "ci_lo": 0.30574239460262737,
+      "ci_hi": 0.8631557141764026
+    },
+    {
+      "threshold": 0.5,
+      "gap": 6,
+      "entry_at": 2,
+      "n_trades": 8,
+      "n_correct": 5,
+      "win_rate": 0.625,
+      "ci_lo": 0.30574239460262737,
+      "ci_hi": 0.8631557141764026
+    },
+    {
+      "threshold": 0.5,
+      "gap": 6,
+      "entry_at": 3,
+      "n_trades": 8,
+      "n_correct": 3,
+      "win_rate": 0.375,
+      "ci_lo": 0.13684428582359742,
+      "ci_hi": 0.6942576053973727
+    },
+    {
+      "threshold": 0.5,
+      "gap": 6,
+      "entry_at": 6,
+      "n_trades": 8,
+      "n_correct": 4,
+      "win_rate": 0.5,
+      "ci_lo": 0.21521606221387757,
+      "ci_hi": 0.7847839377861224
+    },
+    {
+      "threshold": 0.52,
+      "gap": 6,
+      "entry_at": 1,
+      "n_trades": 933,
+      "n_correct": 505,
+      "win_rate": 0.5412647374062165,
+      "ci_lo": 0.5091869834726818,
+      "ci_hi": 0.5730040844769887
+    },
+    {
+      "threshold": 0.52,
+      "gap": 6,
+      "entry_at": 2,
+      "n_trades": 665,
+      "n_correct": 357,
+      "win_rate": 0.5368421052631579,
+      "ci_lo": 0.4988401358381916,
+      "ci_hi": 0.574420872961109
+    },
+    {
+      "threshold": 0.52,
+      "gap": 6,
+      "entry_at": 3,
+      "n_trades": 474,
+      "n_correct": 271,
+      "win_rate": 0.5717299578059072,
+      "ci_lo": 0.5267825151083622,
+      "ci_hi": 0.6155240988213354
+    },
+    {
+      "threshold": 0.52,
+      "gap": 6,
+      "entry_at": 6,
+      "n_trades": 152,
+      "n_correct": 78,
+      "win_rate": 0.5131578947368421,
+      "ci_lo": 0.43435881801844656,
+      "ci_hi": 0.5913082928406881
+    },
+    {
+      "threshold": 0.54,
+      "gap": 6,
+      "entry_at": 1,
+      "n_trades": 157,
+      "n_correct": 72,
+      "win_rate": 0.4585987261146497,
+      "ci_lo": 0.38257508234352977,
+      "ci_hi": 0.5365999854821583
+    },
+    {
+      "threshold": 0.54,
+      "gap": 6,
+      "entry_at": 2,
+      "n_trades": 5,
+      "n_correct": 3,
+      "win_rate": 0.6,
+      "ci_lo": 0.2307242812760128,
+      "ci_hi": 0.882379225767352
+    },
+    {
+      "threshold": 0.54,
+      "gap": 6,
+      "entry_at": 3,
+      "n_trades": 0,
+      "n_correct": 0,
+      "win_rate": null,
+      "ci_lo": null,
+      "ci_hi": null
+    },
+    {
+      "threshold": 0.54,
+      "gap": 6,
+      "entry_at": 6,
+      "n_trades": 0,
+      "n_correct": 0,
+      "win_rate": null,
+      "ci_lo": null,
+      "ci_hi": null
+    },
+    {
+      "threshold": 0.56,
+      "gap": 6,
+      "entry_at": 1,
+      "n_trades": 0,
+      "n_correct": 0,
+      "win_rate": null,
+      "ci_lo": null,
+      "ci_hi": null
+    },
+    {
+      "threshold": 0.56,
+      "gap": 6,
+      "entry_at": 2,
+      "n_trades": 0,
+      "n_correct": 0,
+      "win_rate": null,
+      "ci_lo": null,
+      "ci_hi": null
+    },
+    {
+      "threshold": 0.56,
+      "gap": 6,
+      "entry_at": 3,
+      "n_trades": 0,
+      "n_correct": 0,
+      "win_rate": null,
+      "ci_lo": null,
+      "ci_hi": null
+    },
+    {
+      "threshold": 0.56,
+      "gap": 6,
+      "entry_at": 6,
+      "n_trades": 0,
+      "n_correct": 0,
+      "win_rate": null,
+      "ci_lo": null,
+      "ci_hi": null
+    },
+    {
+      "threshold": 0.58,
+      "gap": 6,
+      "entry_at": 1,
+      "n_trades": 0,
+      "n_correct": 0,
+      "win_rate": null,
+      "ci_lo": null,
+      "ci_hi": null
+    },
+    {
+      "threshold": 0.58,
+      "gap": 6,
+      "entry_at": 2,
+      "n_trades": 0,
+      "n_correct": 0,
+      "win_rate": null,
+      "ci_lo": null,
+      "ci_hi": null
+    },
+    {
+      "threshold": 0.58,
+      "gap": 6,
+      "entry_at": 3,
+      "n_trades": 0,
+      "n_correct": 0,
+      "win_rate": null,
+      "ci_lo": null,
+      "ci_hi": null
+    },
+    {
+      "threshold": 0.58,
+      "gap": 6,
+      "entry_at": 6,
+      "n_trades": 0,
+      "n_correct": 0,
+      "win_rate": null,
+      "ci_lo": null,
+      "ci_hi": null
+    },
+    {
+      "threshold": 0.6,
+      "gap": 6,
+      "entry_at": 1,
+      "n_trades": 0,
+      "n_correct": 0,
+      "win_rate": null,
+      "ci_lo": null,
+      "ci_hi": null
+    },
+    {
+      "threshold": 0.6,
+      "gap": 6,
+      "entry_at": 2,
+      "n_trades": 0,
+      "n_correct": 0,
+      "win_rate": null,
+      "ci_lo": null,
+      "ci_hi": null
+    },
+    {
+      "threshold": 0.6,
+      "gap": 6,
+      "entry_at": 3,
+      "n_trades": 0,
+      "n_correct": 0,
+      "win_rate": null,
+      "ci_lo": null,
+      "ci_hi": null
+    },
+    {
+      "threshold": 0.6,
+      "gap": 6,
+      "entry_at": 6,
+      "n_trades": 0,
+      "n_correct": 0,
+      "win_rate": null,
+      "ci_lo": null,
+      "ci_hi": null
+    }
+  ],
+  "chosen_threshold": 0.52,
+  "chosen_entry_at": 3,
+  "test": {
+    "threshold": 0.52,
+    "gap": 6,
+    "entry_at": 3,
+    "n_trades": 423,
+    "n_correct": 214,
+    "win_rate": 0.5059101654846335,
+    "ci_lo": 0.45842680039708694,
+    "ci_hi": 0.5532871507589566
+  },
+  "baselines": {
+    "always_up": 0.4957174703742814,
+    "majority": 0.5042825296257186
+  },
+  "passed": false,
+  "note": "叢集進場保證交易間隔 > gap，彼此不重疊，Wilson CI 不會像 Round 1 的逐根計算那樣因標籤重疊（lookahead=6 造成相鄰標籤 80%+ 一致）而失真。"
+}

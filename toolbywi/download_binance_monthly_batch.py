@@ -2,7 +2,6 @@ import pandas as pd
 import requests
 import zipfile
 import io
-from google.colab import files
 
 def download_binance_monthly_batch(symbol="BTCUSDT", interval="1h", start_year=2024, start_month=1, end_year=2026, end_month=2):
     print(f"🚀 開始下載 {symbol} {interval} 月包資料 ({start_year}-{start_month:02d} 到 {end_year}-{end_month:02d})...")
@@ -147,4 +146,62 @@ def binance_load_5min(symbol="BTCUSDT", start_year=2024, start_month=1,
     final_df.reset_index(inplace=True)
     final_df.rename(columns={'Open_time': 'date'}, inplace=True)
 
+    return final_df
+
+
+def binance_load_5min_fast(symbol="BTCUSDT", start_year=2025, start_month=1,
+                            end_year=2026, end_month=8):
+    """
+    5min 資料快速下載：優先用月包（快，一次一整月），月包 404 的部分
+    （通常是最近 1-2 個月尚未封存，或未來月份）自動改用日包
+    （binance_load_5min）逐日補齊，確保區間內完全不缺資料。
+
+    參數的 start/end 採「月包」慣例：inclusive，即 end_year-end_month
+    當月會被納入（與 download_binance_monthly_batch 一致）。
+
+    輸出格式與 binance_load_5min() 完全一致：
+    [date, Open, High, Low, Close, Volume, Quote_asset_volume, Taker_buy_quote_asset_volume]
+    """
+    print(f"🚀 [快速模式] {symbol} 5m：先嘗試月包 ({start_year}-{start_month:02d} ~ {end_year}-{end_month:02d})...")
+    df_monthly = download_binance_monthly_batch(
+        symbol=symbol, interval="5m",
+        start_year=start_year, start_month=start_month,
+        end_year=end_year, end_month=end_month,
+    )
+
+    expected_months = pd.date_range(
+        start=f"{start_year}-{start_month:02d}-01",
+        end=f"{end_year}-{end_month:02d}-01",
+        freq='MS',
+    )
+
+    got_months = set()
+    if df_monthly is not None and len(df_monthly) > 0:
+        got_months = set(pd.to_datetime(df_monthly['date']).dt.to_period('M'))
+
+    missing = [p for p in expected_months if p.to_period('M') not in got_months]
+
+    frames = [df_monthly] if df_monthly is not None else []
+
+    if missing:
+        print(f"⚠️ 月包缺 {len(missing)} 個月，改用日包補齊：{[str(p.to_period('M')) for p in missing]}")
+        for p in missing:
+            y, m = p.year, p.month
+            # binance_load_5min 的 end_year/end_month 只涵蓋到 end 月份第 1 天，
+            # 要 +1 個月才能抓到該月份完整資料。
+            end_y, end_m = (y, m + 1) if m < 12 else (y + 1, 1)
+            df_day = binance_load_5min(symbol=symbol,
+                                        start_year=y, start_month=m,
+                                        end_year=end_y, end_month=end_m)
+            if df_day is not None:
+                frames.append(df_day)
+
+    if not frames:
+        print("⚠️ 沒有抓到任何資料。")
+        return None
+
+    final_df = pd.concat(frames, ignore_index=True)
+    final_df = final_df.drop_duplicates(subset='date').sort_values('date').reset_index(drop=True)
+    print(f"🎉 [快速模式] 合併完成！總共 {len(final_df)} 筆 5 分鐘 K 線資料 "
+          f"({final_df['date'].min()} ~ {final_df['date'].max()})。")
     return final_df

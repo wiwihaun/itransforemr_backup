@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import joblib
 from sklearn.preprocessing import StandardScaler
 
 def features(df):
@@ -143,6 +144,58 @@ def features(df):
     return df
 
 
+def microstructure_features(df):
+    """
+    Round 4 新增：從被 prepare_event_data.py 丟棄的 5 個原始欄
+    （Open/High/Low/Quote_asset_volume/Taker_buy_quote_asset_volume）
+    衍生出的 6 個平穩微結構特徵。全部是逐根 pointwise 轉換（ATR_Pct_14
+    例外，重用 features() 已算好的 ATR_14），不新增 warmup。
+
+    設計依據（見 Round 4 plan）：
+    - Open/High/Low 原始值與 Close 相關 0.99997+，是非平穩價格水位的複本，
+      不可直接當特徵；轉成相對於 Close 的 %，實測 train->test 漂移全部
+      < 0.24 sd（對照 EMA_72 的 -2.51 sd、OBV 的 -2.84 sd）。
+    - QVol_Ratio（Quote_asset_volume 的滾動相對量）已剔除：與既有
+      Volume_Ratio 相關 0.99998（Quote_asset_volume ≈ Volume * Close，
+      20 根滾動比值把價格因子約掉了），加入只會讓兩者在 permutation
+      importance 裡互相瓜分。
+    - Gap_Open（跳空）已剔除：永續合約 24/7 無收盤，實測 51.8% 為精確 0，
+      std 僅 7e-4%，是把股票概念套到沒有交易時段的市場。
+    - Taker_buy_quote_asset_volume 已由既有 features() 的 Taker_Ratio 消化，
+      不重複處理。
+
+    要求 df 已經過 features()（需要 Open/High/Low/Close/Volume/
+    Quote_asset_volume、以及 ATR_14）。
+    """
+    print("🛠️ 開始計算 Round 4 微結構特徵（6 個）...")
+    df = df.copy()
+
+    df['HL_Range'] = (df['High'] - df['Low']) / df['Close'] * 100
+    df['OC_Ret'] = (df['Close'] - df['Open']) / df['Open'] * 100
+    df['Up_Wick'] = (df['High'] - df[['Open', 'Close']].max(axis=1)) / df['Close'] * 100
+    df['Low_Wick'] = (df[['Open', 'Close']].min(axis=1) - df['Low']) / df['Close'] * 100
+
+    # BarVWAP_Dev：bar 內成交均價（Quote_asset_volume / Volume）與 Close 的偏離。
+    # Volume==0（無成交的冷門 bar）時 Open==High==Low==Close，VWAP 未定義，
+    # 正確值是 0（不是 sentinel）——否則除以 0 產生 inf，會讓下游
+    # StandardScaler.fit() 炸掉（同 extra_features() 的 n_inf 守衛要防的問題）。
+    bar_vwap = df['Quote_asset_volume'] / df['Volume'].replace(0, np.nan)
+    df['BarVWAP_Dev'] = np.where(
+        df['Volume'] > 0,
+        (df['Close'] - bar_vwap) / df['Close'] * 100,
+        0.0,
+    )
+
+    # ATR_Pct_14：ATR_14（features() 已算好，R3 選中的 15 個特徵之一）是原始
+    # 美元水位、隨幣價漂移（實測 -0.611 sd）；轉成 % 是零成本的平穩替代
+    # （實測 -0.235 sd）。
+    df['ATR_Pct_14'] = df['ATR_14'] / df['Close'] * 100
+
+    feature_count = 6
+    print(f"✅ 微結構特徵完成！新增 {feature_count} 個特徵："
+          f"['HL_Range', 'OC_Ret', 'Up_Wick', 'Low_Wick', 'BarVWAP_Dev', 'ATR_Pct_14']")
+    return df
+
 
 def alt_features(btc_df, alt_dfs):
     """
@@ -195,7 +248,120 @@ def alt_features(btc_df, alt_dfs):
     return merged
 
 
-def scaler(df, train_ratio=0.7):
+def extra_features(df, metrics_df, funding_df, premium_df, mark_df):
+    """
+    Round 3 新特徵來源：未平倉量+多空比（metrics）、資金費率
+    （fundingRate）、溢價指數/標記價格（premium/mark），共 19 個新特徵。
+
+    對齊規則（因果性）：
+    - metrics / premium / mark 與 K 線同一個 5 分鐘網格，直接依 'date'
+      內連接（inner join）——任一來源缺某根就整根丟棄，不猜測補值。
+    - funding 每 8 小時才更新一次，用 merge_asof(backward) 只取「已結算」
+      的費率（calc_time <= date），嚴格因果。
+
+    Parameters
+    ----------
+    df          : pd.DataFrame，含 'date'、'Close' 欄（已經過 features()/alt_features()）
+    metrics_df  : toolbywi.binance_extra.load_metrics() 或
+                  toolbywi.binance_live.get_live_metrics() 的輸出
+    funding_df  : load_funding_rate() 或 get_live_funding() 的輸出
+    premium_df  : load_premium_index() 或 get_live_premium_index() 的輸出
+    mark_df     : load_mark_price() 或 get_live_mark_price() 的輸出
+
+    Returns
+    -------
+    pd.DataFrame，原 df 欄位 + 19 個新欄位
+    """
+    print("🛠️ 開始合併 Round 3 新特徵來源（metrics / funding / premium / mark）...")
+    merged = df.copy()
+    merged['date'] = pd.to_datetime(merged['date'])
+    n_before = len(merged)
+
+    # ── A. metrics（未平倉量 + 多空比，12 個）──────────────────
+    m = metrics_df.copy()
+    m['date'] = pd.to_datetime(m['date'])
+    merged = merged.merge(m, on='date', how='inner')
+
+    merged['OI'] = merged['sum_open_interest']
+    merged['OI_Value'] = merged['sum_open_interest_value']
+    merged['OI_Chg_1'] = merged['OI'].pct_change(1) * 100
+    merged['OI_Chg_6'] = merged['OI'].pct_change(6) * 100
+    merged['OI_Chg_72'] = merged['OI'].pct_change(72) * 100
+    merged['TopTrader_Pos_LS'] = merged['sum_toptrader_long_short_ratio']
+    merged['TopTrader_Acct_LS'] = merged['count_toptrader_long_short_ratio']
+    merged['Global_Acct_LS'] = merged['count_long_short_ratio']
+    merged['Taker_LS_Vol'] = merged['sum_taker_long_short_vol_ratio']
+    merged['TopTrader_Pos_LS_Chg6'] = merged['TopTrader_Pos_LS'].diff(6)
+    merged['Global_Acct_LS_Chg6'] = merged['Global_Acct_LS'].diff(6)
+    roc_6 = merged['Close'].pct_change(6) * 100
+    merged['OI_Price_Div'] = merged['OI_Chg_6'] * roc_6  # 多空擠壓：OI 與價格背離幅度
+
+    merged = merged.drop(columns=['sum_open_interest', 'sum_open_interest_value',
+                                   'count_toptrader_long_short_ratio', 'sum_toptrader_long_short_ratio',
+                                   'count_long_short_ratio', 'sum_taker_long_short_vol_ratio'])
+
+    # ── C. premiumIndex / markPrice（溢價與基差，4 個）───────────
+    p = premium_df.copy()
+    p['date'] = pd.to_datetime(p['date'])
+    mk = mark_df.copy()
+    mk['date'] = pd.to_datetime(mk['date'])
+    merged = merged.merge(p, on='date', how='inner').merge(mk, on='date', how='inner')
+
+    merged['Premium_Mean6'] = merged['Premium'].rolling(6).mean()
+    merged['Basis'] = (merged['Mark_Close'] - merged['Close']) / merged['Close'] * 100
+    merged['Basis_Chg6'] = merged['Basis'].diff(6)
+    merged = merged.drop(columns=['Mark_Close'])
+
+    # ── B. fundingRate（資金費率，3 個）──────────────────────────
+    f = funding_df.copy()
+    f['date'] = pd.to_datetime(f['date'])
+    f = f.sort_values('date').reset_index(drop=True)
+    merged = merged.sort_values('date').reset_index(drop=True)
+    merged = pd.merge_asof(
+        merged, f[['date', 'last_funding_rate', 'funding_interval_hours']],
+        on='date', direction='backward'
+    )
+    merged = merged.rename(columns={'last_funding_rate': 'Funding_Rate'})
+    merged['Funding_Rate'] = merged['Funding_Rate'].ffill()
+    # 相鄰結算差：ffill 後同一結算週期內都相同，只有換到新結算值那一刻才非零
+    merged['Funding_Chg'] = merged['Funding_Rate'].diff()
+
+    # Bars_To_Funding：由時鐘決定（不看任何未來資料），結算時刻的集合從
+    # funding_df 本身的歷史資料推導，不硬編 [0,8,16]，以防 Binance 改制。
+    funding_hours = sorted(pd.to_datetime(funding_df['date']).dt.hour.unique().tolist())
+    if not funding_hours:
+        funding_hours = [0, 8, 16]
+    funding_minutes = sorted(h * 60 for h in funding_hours)
+
+    # 用 >= 而非 >：結算那一根本身要算 0，不能跳到下一輪的 96
+    # （用 > 會讓 00:00/08:00/16:00 這幾根誤算成距下次結算 96 根）。
+    minutes_of_day = (merged['date'].dt.hour * 60 + merged['date'].dt.minute).values
+    bars_to_funding = np.empty(len(minutes_of_day), dtype=float)
+    for i, cur in enumerate(minutes_of_day):
+        nxt = [fm for fm in funding_minutes if fm >= cur]
+        delta = (min(nxt) - cur) if nxt else (1440 - cur + funding_minutes[0])
+        bars_to_funding[i] = delta // 5
+    merged['Bars_To_Funding'] = bars_to_funding
+
+    merged = merged.drop(columns=['funding_interval_hours'])
+
+    # metrics 資料極少數時間點會回報 sum_open_interest=0（交易所端回報缺口，
+    # 不是真實未平倉量歸零——BTCUSDT 這種主力合約不會真的變成 0），
+    # pct_change() 除以 0 會產生 inf，讓下游 StandardScaler.fit() 直接炸掉。
+    # 實測 165,719 列裡只有個位數列受影響，換成 NaN 後交給既有的
+    # dropna() 一起丟掉，不必為了這幾根改動特徵定義本身。
+    n_inf = int(np.isinf(merged.select_dtypes(include=[np.number]).values).sum())
+    if n_inf > 0:
+        merged = merged.replace([np.inf, -np.inf], np.nan)
+        print(f"⚠️ 偵測到 {n_inf} 個 inf 值（多半是 OI 資料缺口造成的除以 0），已轉成 NaN 交給 dropna() 處理")
+
+    merged = merged.dropna().reset_index(drop=True)
+    new_cols = [c for c in merged.columns if c not in df.columns]
+    print(f"✅ 新特徵來源合併完成！{n_before} → {len(merged)} 列，新增 {len(new_cols)} 個特徵：{new_cols}")
+    return merged
+
+
+def scaler(df, train_ratio=0.7, return_scaler=False):
     print("🛠️ 開始執行統一 Z-Score 縮放 (防未來洩漏機制啟動)...")
     df_scaled = df.copy()
 
@@ -207,6 +373,7 @@ def scaler(df, train_ratio=0.7):
     # ==========================================
     feature_cols = [c for c in df_scaled.columns if c not in ['date', 'target']]
 
+    sc = None
     if feature_cols:
         sc = StandardScaler()
         # 🚨 絕對關鍵：只用訓練集 (0 ~ train_end_idx) 來 fit 計算均值和標準差！
@@ -216,6 +383,36 @@ def scaler(df, train_ratio=0.7):
         df_scaled[feature_cols] = sc.transform(df_scaled[feature_cols])
 
     print(f"✅ 統一 Z-Score 完成！共縮放 {len(feature_cols)} 個特徵。")
+
+    if return_scaler:
+        return df_scaled, sc, feature_cols
+    return df_scaled
+
+
+def save_scaler(path, sc, feature_cols):
+    """持久化 fitted StandardScaler + 對應的特徵欄序，供即時推論重用。"""
+    joblib.dump({'scaler': sc, 'feature_cols': list(feature_cols)}, path)
+    print(f"💾 scaler 已存至 {path}")
+
+
+def load_scaler(path):
+    """讀回 save_scaler() 存的 (scaler, feature_cols)。"""
+    obj = joblib.load(path)
+    return obj['scaler'], obj['feature_cols']
+
+
+def apply_scaler(df, sc, feature_cols):
+    """
+    用已 fit 好的 scaler 套用到新資料（例如即時推論的最新視窗）。
+    要求 df 必須含 feature_cols 的全部欄位，欄位順序不需相同（內部依名稱取值），
+    但缺任何一欄會直接報錯，而不是靜默補值。
+    """
+    missing = [c for c in feature_cols if c not in df.columns]
+    if missing:
+        raise ValueError(f"apply_scaler: df 缺少欄位 {missing}，無法套用 scaler。")
+
+    df_scaled = df.copy()
+    df_scaled[feature_cols] = sc.transform(df_scaled[feature_cols])
     return df_scaled
 
 
