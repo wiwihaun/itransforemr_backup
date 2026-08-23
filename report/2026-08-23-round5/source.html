@@ -1,0 +1,386 @@
+<title>Round 5：1 小時預測 + 幅度門檻 + 連續段取中間</title>
+<style>
+  :root{
+    --paper:#F5F3EE; --ink:#151C20; --ink-2:#3A484D; --muted:#68787C;
+    --rule:#D9D5CC; --rule-2:#E8E5DE; --card:#FBFAF7;
+    --accent:#2E6B78; --accent-soft:#2E6B7815;
+    --pos:#3C7A5C; --neg:#AC4A2C; --warn:#AC4A2C; --warn-soft:#AC4A2C12;
+    --grid:#00000010;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --paper:#0E1417; --ink:#E4E6E3; --ink-2:#AEB9BB; --muted:#7C8B8F;
+      --rule:#25302F; --rule-2:#1B2427; --card:#141C1F;
+      --accent:#6FB3BF; --accent-soft:#6FB3BF18;
+      --pos:#6DBE92; --neg:#E08762; --warn:#E08762; --warn-soft:#E0876214;
+      --grid:#FFFFFF10;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#0E1417; --ink:#E4E6E3; --ink-2:#AEB9BB; --muted:#7C8B8F;
+    --rule:#25302F; --rule-2:#1B2427; --card:#141C1F;
+    --accent:#6FB3BF; --accent-soft:#6FB3BF18;
+    --pos:#6DBE92; --neg:#E08762; --warn:#E08762; --warn-soft:#E0876214;
+    --grid:#FFFFFF10;
+  }
+  :root[data-theme="light"]{
+    --paper:#F5F3EE; --ink:#151C20; --ink-2:#3A484D; --muted:#68787C;
+    --rule:#D9D5CC; --rule-2:#E8E5DE; --card:#FBFAF7;
+    --accent:#2E6B78; --accent-soft:#2E6B7815;
+    --pos:#3C7A5C; --neg:#AC4A2C; --warn:#AC4A2C; --warn-soft:#AC4A2C12;
+    --grid:#00000010;
+  }
+
+  html{background:var(--paper);}
+  body{background:var(--paper); color:var(--ink);
+    font-family:Georgia,"Iowan Old Style","Palatino Linotype","Songti TC","Times New Roman",serif;
+    font-size:17px; line-height:1.62; margin:0; -webkit-font-smoothing:antialiased;}
+  .wrap{max-width:1120px; margin:0 auto; padding:0 28px 120px;}
+  p{margin:0 0 1.1em;}
+  code{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:.87em; background:var(--accent-soft); padding:1px 5px; border-radius:2px;}
+  .mono{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;}
+  .eyebrow{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:11.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); margin:0 0 10px;}
+
+  header{padding:64px 0 40px; border-bottom:2px solid var(--ink);}
+  h1{font-size:clamp(28px,4.2vw,44px); line-height:1.16; margin:0 0 18px;
+    font-weight:400; letter-spacing:-.015em; text-wrap:balance; max-width:26ch;}
+  .dek{font-size:19px; color:var(--ink-2); max-width:62ch; margin:0 0 26px;}
+  .meta{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:12px; color:var(--muted); display:flex; flex-wrap:wrap; gap:6px 22px;}
+
+  .tiles{display:grid; grid-template-columns:repeat(auto-fit,minmax(168px,1fr));
+    gap:1px; background:var(--rule); border:1px solid var(--rule); margin:0 0 12px;}
+  .tile{background:var(--card); padding:20px 18px 18px;}
+  .tile .k{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin:0 0 10px;}
+  .tile .v{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:22px; font-variant-numeric:tabular-nums; letter-spacing:-.02em; line-height:1; margin:0 0 7px;}
+  .tile .n{font-size:13px; color:var(--muted); line-height:1.4;}
+  .v.pos{color:var(--pos);} .v.neg{color:var(--neg);} .v.acc{color:var(--accent);}
+
+  section{padding:56px 0 0;}
+  h2{font-size:26px; font-weight:400; letter-spacing:-.01em; line-height:1.25; margin:0 0 6px; text-wrap:balance;}
+  h2 .num{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:12px; color:var(--accent); letter-spacing:.1em; display:block; margin-bottom:9px;}
+  h3{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:12px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted);
+    font-weight:400; margin:34px 0 12px; padding-bottom:7px; border-bottom:1px solid var(--rule-2);}
+  .lede{font-size:18.5px; color:var(--ink-2); max-width:62ch;}
+
+  figure{margin:26px 0 0; padding:0;}
+  .chart{border:1px solid var(--rule); background:var(--card); padding:22px 20px 14px; overflow-x:auto;}
+  .chart svg{display:block; width:100%; height:auto; min-width:520px;}
+  figcaption{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:12px; color:var(--muted); line-height:1.55; margin-top:11px; max-width:84ch;}
+  .legend{display:flex; flex-wrap:wrap; gap:5px 20px; margin-bottom:14px;
+    font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:11.5px; color:var(--muted);}
+  .legend i{width:11px; height:11px; display:inline-block; margin-right:6px;
+    vertical-align:-1px; border-radius:1px;}
+  .legend .ln{width:16px; height:2px; display:inline-block; margin-right:6px; vertical-align:2px;}
+
+  .tbl-wrap{overflow-x:auto; margin:18px 0 0; border:1px solid var(--rule);}
+  table{border-collapse:collapse; width:100%; min-width:520px; background:var(--card);
+    font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:12.5px; font-variant-numeric:tabular-nums;}
+  th{text-align:left; font-weight:400; color:var(--muted); letter-spacing:.06em;
+    text-transform:uppercase; font-size:10.5px; padding:11px 14px;
+    border-bottom:1px solid var(--rule); white-space:nowrap;}
+  td{padding:10px 14px; border-bottom:1px solid var(--rule-2); white-space:nowrap;}
+  tr:last-child td{border-bottom:none;}
+  td.num,th.num{text-align:right;}
+  tr.hi td{background:var(--accent-soft);}
+  tr.hi td:first-child{box-shadow:inset 3px 0 0 var(--accent);}
+  tr.bad td{background:var(--warn-soft);}
+  tr.bad td:first-child{box-shadow:inset 3px 0 0 var(--warn);}
+  .pos{color:var(--pos);} .neg{color:var(--neg);} .dim{color:var(--muted);}
+
+  .flag{border-left:3px solid var(--warn); background:var(--warn-soft);
+    padding:18px 22px; margin:26px 0 0; max-width:660px;}
+  .flag .t{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--warn); margin:0 0 9px;}
+  .flag p:last-child{margin-bottom:0;}
+  .note{border-left:3px solid var(--accent); background:var(--accent-soft);
+    padding:18px 22px; margin:26px 0 0; max-width:660px;}
+  .note .t{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--accent); margin:0 0 9px;}
+  .note p:last-child{margin-bottom:0;}
+  .good-box{border-left:3px solid var(--pos); background:color-mix(in srgb, var(--pos) 8%, transparent);
+    padding:18px 22px; margin:26px 0 0; max-width:660px;}
+  .good-box .t{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--pos); margin:0 0 9px;}
+  .good-box p:last-child{margin-bottom:0;}
+
+  ul{margin:0 0 1.1em; padding-left:1.15em; max-width:62ch;}
+  li{margin-bottom:.55em;} li::marker{color:var(--accent);}
+
+  footer{margin-top:80px; padding-top:26px; border-top:1px solid var(--rule);
+    font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:11.5px; color:var(--muted); line-height:1.7; max-width:74ch;}
+  @media (max-width:640px){
+    body{font-size:16px;} .wrap{padding:0 18px 80px;} .tile .v{font-size:19px;}
+  }
+</style>
+
+<div class="wrap">
+
+<header>
+  <p class="eyebrow">BTCUSDT.P 5min · iTransformer · Round 5 · 1 小時 + 幅度門檻 + 連續段取中間</p>
+  <h1>驗證集上 pAUC 從 0.5048 升到 0.5092，是五輪最好的——然後在測試集上完整消失，掉回 0.4993。</h1>
+  <p class="dek">這輪改的是<strong>標籤定義本身</strong>：預測時長從 30 分鐘拉到 1 小時，只有漲幅達門檻才算正樣本，且連續段只取中間那幾根。目的是讓模型別再被貼近 0% 的擲硬幣雜訊淹沒。25 組參數網格全部在驗證集上比較，選出的 <code>0.2% / 連續 5 根</code> 在驗證集上拿到 pAUC <strong>0.5092</strong>（五輪最高，前四輪從沒超過 0.5050）。但測試集只有 <strong>0.4993</strong>——不只沒有進步，是低於無技巧基準。測試集勝率 <strong>44.59%</strong>（314 筆，95% CI [39.19%, 50.12%]），五輪最差。這是「驗證集過擬合」教科書等級的一次示範：25 組比較確實找出了在驗證集上最好看的那組，而那份好看沒有任何一分帶得到測試集。</p>
+  <div class="meta">
+    <span>lookahead 6 → 12（1 小時）</span>
+    <span>正樣本率 50% → 2.6%</span>
+    <span>25 組標籤網格</span>
+    <span>gap 6 → 12</span>
+    <span>賠率 0.85 → 損益兩平 54.05%</span>
+  </div>
+</header>
+
+<section style="padding-top:40px;">
+  <div class="tiles">
+    <div class="tile"><p class="k">網格搜尋（25 組，驗證集）</p><p class="v acc">0.5004~0.5046</p><p class="n">全距僅 0.0041，訊號極窄</p></div>
+    <div class="tile"><p class="k">選中的標籤</p><p class="v">0.2% / 5 根</p><p class="n">1-SE 平手規則選出，非最高分那組</p></div>
+    <div class="tile"><p class="k">驗證集 pAUC（vs 合約）</p><p class="v pos">0.5092</p><p class="n">五輪最高（R3 0.5050 / R4 0.5048）</p></div>
+    <div class="tile"><p class="k">測試集 pAUC（vs 合約）</p><p class="v neg">0.4993</p><p class="n">低於無技巧 0.50，驗證集優勢完全消失</p></div>
+    <div class="tile"><p class="k">測試集勝率</p><p class="v neg">44.59%</p><p class="n">314 筆，95% CI [39.19%, 50.12%]</p></div>
+    <div class="tile"><p class="k">關卡結論</p><p class="v neg">未通過</p><p class="n">五輪最差；需 59.6% 才過（交易數減半）</p></div>
+  </div>
+</section>
+
+<section>
+  <h2><span class="num">01 — 背景與本輪改動</span>不再調模型，改調「要模型學什麼」</h2>
+  <p class="lede">前四輪的標籤都是「N 根之後有沒有漲」，正樣本率約 50%，其中大量樣本是貼近 0% 的擲硬幣雜訊。Round 4 已經證實模型在實際交易區間的排序能力等同無技巧（測試集平均 pAUC 0.5013）。這輪換一個方向：不改模型、不改特徵，只改<strong>訓練目標</strong>，讓模型只學「強勁且持續的上漲」。</p>
+
+  <h3>取中間的精確規則</h3>
+  <p>對每個長度 <code>L &gt;= min_run</code> 的極大連續 1 段（起點 <code>s</code>）：<strong>L 為奇數</strong>只有 <code>s+(L−1)//2</code> 這 1 根設為 1；<strong>L 為偶數</strong>則 <code>s+L/2−1</code> 與 <code>s+L/2</code> 這 2 根都設為 1。兩個實例：<code>0011111010</code>（段長 5）→ <code>0000100000</code>；<code>011111100</code>（段長 6）→ <code>000110000</code>。偶數取兩根是刻意的——長度 6 的段落沒有單一中點，取中間兩根才對稱。這條規則已用 14 個手算案例、1000 組隨機序列的不變量測試、以及一份結構完全不同的獨立重寫實作（<code>np.diff</code> 找邊界 vs 雙指標掃描）逐位元比對驗證。</p>
+
+  <h3>「取中間」這個設計有實測依據</h3>
+  <p>在 0.3%／連續 5 根的設定下（2052 個合格段、3075 個正樣本），比較段落內三個位置的 1 小時報酬：</p>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>位置</th><th class="num">平均報酬</th><th class="num">中位數</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">run 起點</td><td class="num">+0.483%</td><td class="num">+0.429%</td></tr>
+        <tr class="hi"><td class="mono">run 中間</td><td class="num pos">+0.756%</td><td class="num pos">+0.617%</td></tr>
+        <tr><td class="mono">run 終點</td><td class="num">+0.471%</td><td class="num">+0.415%</td></tr>
+        <tr><td class="mono dim">全體 bar</td><td class="num dim">−0.0017%</td><td class="num dim">—</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>中間確實是整段最強的位置，比起點與終點高出約 0.27 個百分點，而且依定義 100% 都是合約獲勝。這個設計假設是成立的——問題不在標籤設計得好不好，而在模型能不能學到它（見第 05 節）。</p>
+
+  <div class="note">
+    <p class="t">最重要的結構決定：三個量必須分開</p>
+    <p>前四輪把「訓練目標／合約結果／評估真值」混成同一個 <code>target</code> 欄。本輪拆成三個：<code>target</code>（稀疏訓練標籤，只給損失函數用）、<code>contract_target</code>（<code>Close[t+12] &gt; Close[t]</code>，勝率/權益/通關一律用它）、<code>fwd_ret</code>（實際漲幅，供診斷）。<strong>後兩者絕對不可進入 <code>stock_features.csv</code></strong>——<code>data_provider/data_loader.py</code> 把「非 date、非 target」的每一欄都當模型輸入，iTransformer 的變量數是從 tensor 動態讀的，且只遮蔽最後一欄；多一欄會被靜默當成第 16 個特徵、不遮蔽、每根都含 <code>Close[t+12]</code>，完全洩漏而且不會報任何錯。程式裡用結構性斷言擋住，並接進 <code>train_event.py</code>/<code>evaluate_event.py</code>/<code>compare_checkpoints.py</code> 三個進入點。</p>
+  </div>
+</section>
+
+<section>
+  <h2><span class="num">02 — 25 組網格：全距只有 0.0041</span>訊號窄到參數選擇幾乎沒有著力點</h2>
+  <p class="lede">25 組全部共用同一份特徵表、同一組切分、同一份 scaler（由 <code>min_pct_floor</code> 尾端設限保證），所以比較是公平的。一律用 GBDT 在 train+val 上做 5 折 TimeSeriesSplit，OOF 分數<strong>對照真實合約結果</strong>評分——合約結果不隨訓練標籤改變，25 個數字才在同一把尺上。測試期全程未讀。</p>
+
+  <figure>
+    <div class="chart">
+      <svg viewBox="0 0 940 300" xmlns="http://www.w3.org/2000/svg" role="img"
+           aria-label="25 組標籤參數網格的 OOF 平均 pAUC 熱圖，全距僅 0.0041">
+        <text x="16" y="18" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--muted)">OOF 平均 pAUC（對照真實合約結算），外框 = 推進階段 2 的組合</text>
+        <text x="163" y="34" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--muted)">min_run=3</text>
+        <text x="315" y="34" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--muted)">min_run=4</text>
+        <text x="467" y="34" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--muted)">min_run=5</text>
+        <text x="619" y="34" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--muted)">min_run=6</text>
+        <text x="771" y="34" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--muted)">min_run=8</text>
+
+        <rect x="90" y="44" width="146" height="40" rx="3" fill="var(--accent)" opacity="0.35"/><text x="163" y="64" text-anchor="middle" dominant-baseline="central" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--ink)">0.5018</text>
+        <rect x="242" y="44" width="146" height="40" rx="3" fill="var(--accent)" opacity="0.20"/><text x="315" y="64" text-anchor="middle" dominant-baseline="central" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--ink)">0.5010</text>
+        <rect x="394" y="44" width="146" height="40" rx="3" fill="var(--accent)" opacity="0.47"/><text x="467" y="64" text-anchor="middle" dominant-baseline="central" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--ink)">0.5025</text>
+        <rect x="546" y="44" width="146" height="40" rx="3" fill="var(--accent)" opacity="0.28"/><text x="619" y="64" text-anchor="middle" dominant-baseline="central" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--ink)">0.5014</text>
+        <rect x="698" y="44" width="146" height="40" rx="3" fill="var(--accent)" opacity="0.38"/><text x="771" y="64" text-anchor="middle" dominant-baseline="central" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--ink)">0.5020</text>
+
+        <rect x="90" y="90" width="146" height="40" rx="3" fill="var(--accent)" opacity="0.67" stroke="var(--accent)" stroke-width="2"/><text x="163" y="110" text-anchor="middle" dominant-baseline="central" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--ink)">0.5036</text>
+        <rect x="242" y="90" width="146" height="40" rx="3" fill="var(--accent)" opacity="0.45"/><text x="315" y="110" text-anchor="middle" dominant-baseline="central" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--ink)">0.5023</text>
+        <rect x="394" y="90" width="146" height="40" rx="3" fill="var(--accent)" opacity="0.62" stroke="var(--accent)" stroke-width="2"/><text x="467" y="110" text-anchor="middle" dominant-baseline="central" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--ink)">0.5033</text>
+        <rect x="546" y="90" width="146" height="40" rx="3" fill="var(--accent)" opacity="0.46"/><text x="619" y="110" text-anchor="middle" dominant-baseline="central" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--ink)">0.5024</text>
+        <rect x="698" y="90" width="146" height="40" rx="3" fill="var(--accent)" opacity="0.48"/><text x="771" y="110" text-anchor="middle" dominant-baseline="central" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--ink)">0.5025</text>
+
+        <rect x="90" y="136" width="146" height="40" rx="3" fill="var(--accent)" opacity="0.55"/><text x="163" y="156" text-anchor="middle" dominant-baseline="central" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--ink)">0.5029</text>
+        <rect x="242" y="136" width="146" height="40" rx="3" fill="var(--accent)" opacity="0.66" stroke="var(--accent)" stroke-width="2"/><text x="315" y="156" text-anchor="middle" dominant-baseline="central" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--ink)">0.5035</text>
+        <rect x="394" y="136" width="146" height="40" rx="3" fill="var(--accent)" opacity="0.49" stroke="var(--accent)" stroke-width="2"/><text x="467" y="156" text-anchor="middle" dominant-baseline="central" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--ink)">0.5026</text>
+        <rect x="546" y="136" width="146" height="40" rx="3" fill="var(--accent)" opacity="0.75"/><text x="619" y="156" text-anchor="middle" dominant-baseline="central" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--ink)">0.5040</text>
+        <rect x="698" y="136" width="146" height="40" rx="3" fill="var(--accent)" opacity="0.41"/><text x="771" y="156" text-anchor="middle" dominant-baseline="central" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--ink)">0.5021</text>
+
+        <rect x="90" y="182" width="146" height="40" rx="3" fill="var(--accent)" opacity="0.62"/><text x="163" y="202" text-anchor="middle" dominant-baseline="central" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--ink)">0.5033</text>
+        <rect x="242" y="182" width="146" height="40" rx="3" fill="var(--accent)" opacity="0.54"/><text x="315" y="202" text-anchor="middle" dominant-baseline="central" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--ink)">0.5028</text>
+        <rect x="394" y="182" width="146" height="40" rx="3" fill="var(--accent)" opacity="0.50"/><text x="467" y="202" text-anchor="middle" dominant-baseline="central" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--ink)">0.5026</text>
+        <rect x="546" y="182" width="146" height="40" rx="3" fill="var(--accent)" opacity="0.52"/><text x="619" y="202" text-anchor="middle" dominant-baseline="central" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--ink)">0.5027</text>
+        <rect x="698" y="182" width="146" height="40" rx="3" fill="var(--accent)" opacity="0.42"/><text x="771" y="202" text-anchor="middle" dominant-baseline="central" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--ink)">0.5022</text>
+
+        <rect x="90" y="228" width="146" height="40" rx="3" fill="var(--accent)" opacity="0.85"/><text x="163" y="248" text-anchor="middle" dominant-baseline="central" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--ink)">0.5046</text>
+        <rect x="242" y="228" width="146" height="40" rx="3" fill="var(--accent)" opacity="0.40"/><text x="315" y="248" text-anchor="middle" dominant-baseline="central" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--ink)">0.5021</text>
+        <rect x="394" y="228" width="146" height="40" rx="3" fill="var(--accent)" opacity="0.25"/><text x="467" y="248" text-anchor="middle" dominant-baseline="central" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--ink)">0.5013</text>
+        <rect x="546" y="228" width="146" height="40" rx="3" fill="var(--accent)" opacity="0.20"/><text x="619" y="248" text-anchor="middle" dominant-baseline="central" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--ink)">0.5010</text>
+        <rect x="698" y="228" width="146" height="40" rx="3" fill="var(--accent)" opacity="0.10"/><text x="771" y="248" text-anchor="middle" dominant-baseline="central" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--ink)">0.5004</text>
+
+        <text x="82" y="64" text-anchor="end" dominant-baseline="central" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--muted)">0.1%</text>
+        <text x="82" y="110" text-anchor="end" dominant-baseline="central" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--muted)">0.2%</text>
+        <text x="82" y="156" text-anchor="end" dominant-baseline="central" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--muted)">0.3%</text>
+        <text x="82" y="202" text-anchor="end" dominant-baseline="central" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--muted)">0.4%</text>
+        <text x="82" y="248" text-anchor="end" dominant-baseline="central" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--muted)">0.5%</text>
+        <text x="30" y="156" text-anchor="middle" dominant-baseline="central" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--muted)">min_pct</text>
+        <text x="450" y="288" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="10" fill="var(--muted)">無技巧基準 = 0.5000；最佳 0.5046，最差 0.5004</text>
+      </svg>
+    </div>
+    <figcaption>25 組的 OOF 平均 pAUC 全部落在 0.5004~0.5046，全距只有 0.0041。最高的是 0.5%／3 根（0.5046），但依事前註冊的 1-SE 平手規則（1 SE ≈ 0.0013），有 5 組打平，此時取正樣本率最高者——所以推進階段 2 的是 0.2%/3、0.2%/5、0.3%/4，加上使用者原始指定的 0.3%/5 當事前註冊對照組。25 組裡有 15 組的 CI 下界 &gt; 0.50，所以空手門檻沒有觸發。依 min_pct 分組平均後呈倒 U 形（0.1% 0.5017 → 0.2% 0.5028 → 0.3% 0.5030 → 0.4% 0.5027 → 0.5% 0.5019），峰值落在 0.2~0.3%，正好是使用者指定的位置。</figcaption>
+  </figure>
+</section>
+
+<section>
+  <h2><span class="num">03 — 階段 2：四組 transformer</span>選中的不是分數最高那組，是規則指定的那組</h2>
+  <p class="lede">四組各訓練一次（<code>batch_size=256</code>，其餘超參數全部沿用 Round 4），在驗證集上用同一把尺比較。測試集全程未碰。</p>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>標籤組合</th><th class="num">正樣本率</th><th class="num">驗證 pAUC（合約）</th><th class="num">驗證 AUC（合約）</th><th class="num">前10%交易數</th><th class="num">勝率</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">0.2% / 3 根</td><td class="num">3.713%</td><td class="num">0.5026</td><td class="num">0.5020</td><td class="num">289</td><td class="num">48.79%</td></tr>
+        <tr class="hi"><td class="mono">0.2% / 5 根 ← 勝出</td><td class="num">2.595%</td><td class="num pos">0.5092</td><td class="num pos">0.5337</td><td class="num">265</td><td class="num">49.81%</td></tr>
+        <tr><td class="mono">0.3% / 4 根</td><td class="num">2.307%</td><td class="num">0.5054</td><td class="num">0.5081</td><td class="num">212</td><td class="num">52.83%</td></tr>
+        <tr><td class="mono">0.3% / 5 根（事前註冊對照組）</td><td class="num">1.825%</td><td class="num">0.5031</td><td class="num">0.5113</td><td class="num">265</td><td class="num">53.21%</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>贏家是 <code>0.2% / 5 根</code>，驗證集 pAUC <strong>0.5092</strong>——這是五輪以來驗證集最高的數字（Round 3 是 0.5050、Round 4 是 0.5048）。事前註冊的對照組（使用者原始指定的 0.3%/5）拿到 0.5031，所以「搜尋」相對「事前設定」多拿了 +0.0061。當下看起來，這輪的標籤重新設計是有效的。</p>
+
+  <div class="note">
+    <p class="t">為什麼一定要留一組事前註冊對照組</p>
+    <p>沒有它，報告只能說「我們挑了 25 組裡最好的」；有了它才能說「事前設定得幾分、搜出來的贏家得幾分、差距多少」。這是唯一能區分「搜尋真的找到東西」與「搜尋只是擬合驗證集雜訊」的做法。第 05 節會看到，這個對照組正好證明了是後者。</p>
+  </div>
+</section>
+
+<section>
+  <h2><span class="num">04 — 訓練過程：五輪來第一次不是 epoch 1 就過擬合</span></h2>
+  <figure>
+    <div class="chart">
+      <div class="legend">
+        <span><i class="ln" style="background:var(--muted)"></i>訓練損失</span>
+        <span><i class="ln" style="background:var(--neg)"></i>驗證損失</span>
+        <span><i class="ln" style="background:var(--accent)"></i>測試損失</span>
+      </div>
+      <svg viewBox="0 0 940 300" xmlns="http://www.w3.org/2000/svg" role="img"
+           aria-label="Round 5 勝出組合的訓練/驗證/測試損失，8 個 epoch 後 early stop，最佳點在 epoch 3">
+        <g transform="translate(30,10)">
+          <line x1="0" y1="242.9" x2="900" y2="242.9" stroke="var(--grid)"/><text x="-6" y="245.9" text-anchor="end" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">0.0080</text>
+          <line x1="0" y1="200.0" x2="900" y2="200.0" stroke="var(--grid)"/><text x="-6" y="203.0" text-anchor="end" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">0.0085</text>
+          <line x1="0" y1="157.1" x2="900" y2="157.1" stroke="var(--grid)"/><text x="-6" y="160.1" text-anchor="end" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">0.0090</text>
+          <line x1="0" y1="114.3" x2="900" y2="114.3" stroke="var(--grid)"/><text x="-6" y="117.3" text-anchor="end" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">0.0095</text>
+          <line x1="0" y1="71.4" x2="900" y2="71.4" stroke="var(--grid)"/><text x="-6" y="74.4" text-anchor="end" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">0.0100</text>
+          <line x1="0" y1="28.6" x2="900" y2="28.6" stroke="var(--grid)"/><text x="-6" y="31.6" text-anchor="end" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">0.0105</text>
+
+          <polyline points="0.0,122.6 128.6,178.0 257.1,185.8 385.7,195.1 514.3,209.9 642.9,221.1 771.4,235.2 900.0,248.6" fill="none" stroke="var(--muted)" stroke-width="2.4"/>
+          <polyline points="0.0,95.2 128.6,82.4 257.1,98.8 385.7,94.0 514.3,60.7 642.9,78.9 771.4,50.8 900.0,35.6" fill="none" stroke="var(--neg)" stroke-width="1.8" stroke-dasharray="2 3"/>
+          <polyline points="0.0,182.8 128.6,183.6 257.1,159.6 385.7,180.3 514.3,161.3 642.9,153.4 771.4,139.9 900.0,124.4" fill="none" stroke="var(--accent)" stroke-width="1.8" stroke-dasharray="5 3"/>
+
+          <circle cx="257.1" cy="98.8" r="5.5" fill="var(--neg)"/>
+          <text x="257.1" y="98.8" dy="-12" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="10" fill="var(--neg)">最佳點（epoch 3，checkpoint）</text>
+          <text x="900.0" y="35.6" dy="-10" text-anchor="end" font-family="ui-monospace,Menlo,monospace" font-size="10" fill="var(--neg)">early stop（epoch 8）</text>
+
+          <text x="0.0" y="276" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">1</text>
+          <text x="128.6" y="276" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">2</text>
+          <text x="257.1" y="276" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">3</text>
+          <text x="385.7" y="276" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">4</text>
+          <text x="514.3" y="276" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">5</text>
+          <text x="642.9" y="276" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">6</text>
+          <text x="771.4" y="276" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">7</text>
+          <text x="900.0" y="276" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">8</text>
+          <text x="450" y="292" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="10" fill="var(--muted)">Epoch</text>
+        </g>
+      </svg>
+    </div>
+    <figcaption>五輪來第一次，最佳 checkpoint 不在 epoch 1 而在 <strong>epoch 3</strong>——Round 1~4 都是第一個 epoch 就是最低驗證損失，之後單調惡化。稀疏標籤（正樣本率 2.6%）加上自動推導的 <code>focal_alpha=0.974</code> 讓模型多學了兩個 epoch 才開始過擬合，這是本輪在訓練動態上唯一確實的改善。注意損失絕對值（約 0.009）與前四輪（約 0.086）差一個數量級，那是類別比例改變造成的，不能跨輪比較。測試損失只畫來觀察，不參與任何決策（EarlyStopping 只看驗證損失）。</figcaption>
+  </figure>
+</section>
+
+<section>
+  <h2><span class="num">05 — 測試集：驗證集的優勢一分都沒帶過來</span></h2>
+  <p class="lede">門檻在驗證集上用百分位掃描鎖定（前 5%，絕對值 0.5988），<code>entry_at=1</code> 事前固定，測試集只評估一次。</p>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>指標</th><th class="num">驗證集</th><th class="num">測試集</th><th>落差</th></tr></thead>
+      <tbody>
+        <tr class="bad"><td class="mono">平均 pAUC（vs 合約）</td><td class="num pos">0.5092</td><td class="num neg">0.4993</td><td class="neg">−0.0099，掉到無技巧以下</td></tr>
+        <tr class="bad"><td class="mono">AUC（vs 合約）</td><td class="num pos">0.5337</td><td class="num neg">0.4986</td><td class="neg">−0.0351</td></tr>
+        <tr><td class="mono dim">平均 pAUC（vs 訓練標籤）</td><td class="num dim">0.5176</td><td class="num dim">0.5048</td><td class="dim">模型確實學到了一點稀疏標籤，但沒轉成合約優勢</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>統計</th><th class="num">交易數</th><th class="num">勝率</th><th>95% CI</th><th>結論</th></tr></thead>
+      <tbody>
+        <tr class="bad"><td class="mono">主要指標（叢集規則）</td><td class="num">314</td><td class="num neg">44.59%</td><td class="mono">[39.19%, 50.12%]</td><td class="neg">CI 完全低於 50%</td></tr>
+        <tr><td class="mono">busy_only 次要參考</td><td class="num">356</td><td class="num">46.07%</td><td class="mono dim">[40.96%, 51.26%]</td><td class="dim">同樣未過線</td></tr>
+        <tr><td class="mono dim">全押漲基準</td><td class="num dim">—</td><td class="num dim">49.97%</td><td class="dim">—</td><td class="dim">參考</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="flag">
+    <p class="t">這是「驗證集過擬合」的教科書示範</p>
+    <p>25 組在同一個驗證面上比較過，這個比較本身用掉了驗證集資訊，所以贏家的驗證數字是<strong>上界</strong>而非預期表現。實際數字說明了一切：驗證集 pAUC 0.5092（五輪最高）→ 測試集 0.4993（低於無技巧）。而事前註冊的對照組（0.3%/5，使用者原始指定）在驗證集只有 0.5031——搜尋多拿的那 +0.0061，測試集上一分都沒有。換句話說，<strong>那 +0.0061 完全是驗證集雜訊</strong>，不是訊號。若沒有事先留下對照組，這件事無法被證明。</p>
+  </div>
+
+  <p>次要診斷同樣不樂觀：314 筆進場裡只有 <strong>22.6%</strong> 實際漲幅達到訓練標籤要求的 0.2%；進場 bar 的 1 小時報酬平均 <strong>−0.047%</strong>，比全體 bar 的 −0.0028% 還差。模型選出來的並不是「強勁上漲的中段」，而是比隨機略差的一批 bar。</p>
+
+  <div class="note">
+    <p class="t">事前註冊的功效聲明（在跑測試集之前就寫明）</p>
+    <p><code>gap</code> 從 6 變成 12（對齊 1 小時結算），交易數從 Round 4 的 661 筆掉到 314 筆。這讓通關需要的觀測勝率從 57.87% 升到約 <strong>59.6%</strong>——<strong>Round 5 天生比 Round 4 難過關，與模型好壞無關</strong>。因此 <code>--min_trades</code> 維持 100 不下修：看到交易數減半才調規則，正是 <code>no-lookahead-bias</code> skill 警告的「換規則直到得到想要的答案」。不過這次差距太大（44.59% vs 需要的 59.6%），功效問題不是主因。</p>
+  </div>
+</section>
+
+<section>
+  <h2><span class="num">06 — 勘誤：Round 3 的開單時間分佈圖是錯的</span></h2>
+  <p class="lede">本輪順手發現並修掉一個從 Round 1 就存在的 bug。<code>evaluate_event.py</code> 用 <code>raw_ohlcv.csv</code> 的 <code>tail(n_test)</code> 取交易時間戳，但那份檔案與模型真正讀的 <code>stock_features.csv</code> 長度不同（170,778 vs 165,695）、結束時間不同（2026-08-16 vs 2026-07-31），且有 <strong>4,981 個內部日期缺口</strong>（<code>extra_features()</code> 的 inner join 丟掉的）。實測逐位對齊符合率 <strong>0.0000%</strong>。</p>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>受影響</th><th>舊（錯）</th><th>新（正確）</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">Round 3 交易時間範圍</td><td class="mono neg">2026-04-23 ~ 2026-08-16</td><td class="mono pos">2026-04-06 ~ 2026-07-31</td></tr>
+        <tr><td class="mono">Round 4 交易時間範圍</td><td class="mono neg">2026-04-23 ~ 2026-08-16</td><td class="mono pos">2026-04-06 ~ 2026-07-31</td></tr>
+        <tr class="bad"><td class="mono">Round 3 開單小時分佈</td><td class="mono">8~28 筆，峰值 22 時、谷值 20 時</td><td class="mono">11~31 筆，峰值 22 時、谷值 21 時</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p><strong>勝率、信賴區間、通關判定完全不受影響</strong>——那些用的是模型管線出來的陣列，對齊一直是正確的；只有「日期查表」用錯了檔案。已用既有 <code>trades.csv</code> 重新產生正確時間戳（<code>entry_idx</code> 本來就是對的，不需重訓），Round 4 的關卡數字重跑後逐位元相同（661 筆、47.81%、CI [0.4402, 0.5162]）。Round 3 報告的開單時間分佈圖與正確版的相關係數只有 <strong>0.577</strong>，是一張不同的圖；不過該圖的定性結論（沒有集中在單一交易時段）仍然成立——正確版的峰值/均值比是 1.79。修正方式是一律從 <code>stock_features.csv</code> 取日期，並把切分索引推導收斂到 <code>event_common.split_start_index()</code> 一個函式，用一份對照 <code>Dataset_Custom</code> 實際輸出的測試釘住。</p>
+</section>
+
+<section>
+  <h2><span class="num">07 — 結論</span>標籤設計是對的，但模型學不到，而且搜尋只找到雜訊</h2>
+  <ul>
+    <li><strong>未通過關卡，五輪最差</strong>：測試集勝率 44.59%（314 筆，95% CI [39.19%, 50.12%]），CI 完全低於 50%。五輪：51.32% → 50.59% → 42.79% → 47.81% → <strong>44.59%</strong>。</li>
+    <li><strong>「取中間」的設計假設本身是成立的</strong>：實測 run 中間那根的 1 小時報酬 +0.756%，明顯高於起點 +0.483% 與終點 +0.471%，且 100% 是合約獲勝。問題不在標籤設計，在模型學不到——測試集對訓練標籤的 pAUC 是 0.5048，只比無技巧高一點點。</li>
+    <li><strong>25 組搜尋找到的是雜訊，這點已被證明</strong>：驗證集 pAUC 0.5092（五輪最高）→ 測試集 0.4993（低於無技巧）。事前註冊的對照組（0.3%/5）驗證集只有 0.5031，搜尋多拿的 +0.0061 在測試集上完全消失。<strong>如果沒有事先留下對照組，這個結論無法成立</strong>——這是本輪方法論上最有價值的一件事。</li>
+    <li><strong>整個網格的訊號空間極窄</strong>：25 組 OOF pAUC 全距只有 0.0041（0.5004~0.5046）。在這種量級下，「參數搜尋」能挑出的差異本來就與抽樣雜訊同一個數量級，選出來的贏家不可能穩定。</li>
+    <li><strong>唯一確實的改善是訓練動態</strong>：五輪來第一次最佳 checkpoint 不在 epoch 1 而在 epoch 3。稀疏標籤 + 自動推導的 focal_alpha=0.974 確實讓模型多學了兩個 epoch，但沒有轉化成任何交易優勢。</li>
+    <li><strong>順手修掉一個從 Round 1 就存在的時間戳 bug</strong>：所有 <code>trades.csv</code> 的 <code>entry_time</code> 都是錯的（逐位對齊符合率 0%），Round 3 報告的開單時間分佈圖因此是錯的。勝率/CI/通關不受影響，已修正並附勘誤。</li>
+  </ul>
+
+  <div class="good-box">
+    <p class="t">下一步建議（僅供參考，非既定計畫）</p>
+    <p>(1) 五輪下來，換過特徵來源、換過架構深度、換過損失函數、換過選模指標、現在換過標籤定義本身，測試集的訊號量級始終貼著無技巧基準（pAUC 0.4993~0.5013）。這個一致性本身就是結論：<strong>問題不在「還沒找到對的設定」，而在 5 分鐘 K 線的價量/持倉衍生特徵，對 30~60 分鐘的方向預測就是接近沒有資訊</strong>；(2) 若要繼續，唯一還沒動過的維度是<strong>資訊來源本身</strong>——鏈上資料、跨交易所價差、訂單簿微結構（Round 3 已確認即時端無法重現，需自建 WebSocket 全額訂單簿），而不是在既有特徵上再換一種標籤或架構；(3) 本輪也再次示範了事前註冊對照組的價值，未來任何搜尋都應該保留一組，否則無法區分訊號與雜訊；(4) 44.59% 的勝率在賠率 0.85 下期望值明確為負（權益從 1.0 剩 0.315，最大回撤 −70.5%），不建議依此系統下單。</p>
+  </div>
+</section>
+
+<footer>
+  <p>資料：BTCUSDT + ETHUSDT/BNBUSDT/SOLUSDT 5min（2025-01-01 ~ 2026-07-31，165,697 列）。標籤：<code>lookahead=12</code>（1 小時），<code>target</code> = 幅度門檻（<code>Close[t+12] &gt;= Close[t]×(1+min_pct)</code>）後對連續段取中間（奇數段取中間 1 根、偶數段取中間 2 根），<code>contract_target</code> = <code>Close[t+12] &gt; Close[t]</code>（真實合約結算，勝率/權益/通關一律用它），<code>fwd_ret</code> = 實際漲幅（診斷用）。三者分開存放：<code>target</code> 在 <code>stock_features.csv</code>、另兩者在 <code>labels.csv</code>（與特徵表等長同序，對齊由建構方式保證而非事後 join），並用結構性斷言確保標籤欄絕不進入特徵表（否則會被 <code>Dataset_Custom</code> 當成額外模型輸入而完全洩漏）。尾端設限三規則：R1 視野尾端丟 12 根；R2 若剩餘序列尾端是連續 1 段則整段丟棄（右設限，真實長度與中點未知）；R3 用 <code>min_pct_floor=0.001</code>（網格最小門檻）設限一次以支配全部 25 組，保證共用同一組有效列與切分。本次實際砍掉 13 根。特徵：沿用 Round 4 選出的 15 個（<code>--features</code> 明確指定），本輪不重做特徵篩選，讓唯一變因是標籤。參數搜尋：<code>min_pct ∈ {0.1,0.2,0.3,0.4,0.5}%</code> × <code>min_run ∈ {3,4,5,6,8}</code> 共 25 組，GBDT（<code>HistGradientBoostingClassifier</code>, <code>class_weight='balanced'</code>, <code>early_stopping=False</code>）+ 落後堆疊（lag {1,3,6,12,24,48} + rolling mean/std {12,48,144}，共 195 個輸入欄，全部後看）在 train+val 132,558 列上跑 5 折 TimeSeriesSplit，OOF 分數對照 <code>contract_target</code> 評分，CI 用 block bootstrap（<code>block_len=12</code>，因 H=12 下相鄰標籤 lag-1 一致率達 0.8621）。事前註冊規則：1-SE 平手取正樣本率最高者；空手門檻（最佳 CI 下界 ≤ 0.50 則不推進，本次未觸發，最佳 CI 下界 0.5022）；訓練段正樣本 &lt; 500 標記 underpowered（本次無）。階段 2 訓練前三名 + 事前註冊對照組（0.3%/5）共 4 組。模型：iTransformer，<code>seq_len=512, label_len=48, pred_len=1, d_model=256, d_ff=512, e_layers=1, n_heads=8, dropout=0.2, lr=1e-4, lradj=type3, patience=5, loss=focal_g2</code>，<code>batch_size=256</code>（唯一刻意偏離 Round 4 的超參數：正樣本率 2.6% 下 batch=64 有 31% 的批次完全沒有正樣本，256 降到 0.95%；副作用是 steps/epoch 從 1805 降到 452，實際學習率排程與前四輪不同）。<code>focal_alpha</code> 由 <code>1−pos_rate</code> 自動推導為 0.974，未設上限——已驗證此規則讓退化常數解停在 p=0.5000（模型不會全猜 0，機率分佈仍置中，百分位門檻依然有意義），cap 反而會破壞這個抵銷。防呆：<code>pos_rate &lt; 10%</code> 時拒絕 <code>bce_ls</code>（smoothing 0.05 &gt; 基準率），無正樣本批次機率 &gt; 5% 時拒絕 <code>rank</code>（其 docstring 明講假設 ~50/50 標籤）；兩者在 <code>pos_rate≈0.5</code> 時不觸發，Rounds 1-4 不受影響。<code>gap=12</code>、<code>entry_at=1</code> 事前固定；賠率 0.85、損益兩平 54.05%；門檻用驗證集百分位（50/40/30/20/10/5/3/2/1%）在下單數 ≥100 的候選中取 CI 下界最高者（前 5%，0.5988），測試集只評估一次。驗證：新增 <code>toolbywi/test_labels.py</code> 10 項測試——取中間手算表（14 例含使用者提供的兩個原例）、1000 組隨機不變量、雙獨立實作逐位元比對、尾端設限三規則、標籤/合約分離、特徵表 schema（擋洩漏）、切分對齊（對照 <code>Dataset_Custom</code> 實際輸出）、<code>labels.csv</code> 對齊；既有 <code>test_causality.py</code> 與 <code>event_common.py</code> 自我測試全數回歸通過；<code>audit_lookahead.py</code> 掃描 6 個改動檔案 high 0 處、medium 0 處。Round 4 回歸：重跑後關卡數字逐位元相同。原始數據見 <code>dataset/event1h_v5_sel/label_grid_report.json</code>（25 組網格）、<code>stage2_comparison.json</code>（四組對照）、<code>dataset/event1h_v5_y_bp20_r5/</code>（<code>evaluate_report.json</code>、<code>trades.csv</code>、<code>training_history.json</code>）。已知問題：<code>feature_scale.scaler()</code> 的 <code>.loc[:k]</code> 是閉區間，多吃 1 列驗證資料（量級 116k 分之 1），維持不修以保 Rounds 1-4 可重現。</p>
+</footer>
+
+</div>

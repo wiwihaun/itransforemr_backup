@@ -17,6 +17,8 @@ import re
 import subprocess
 import sys
 
+import numpy as np
+
 REPO_ROOT = os.path.dirname(os.path.abspath(__file__))
 
 
@@ -65,7 +67,36 @@ def main():
     meta_path = os.path.join(data_dir, 'meta.json')
     meta = json.load(open(meta_path))
 
+    # 訓練前先擋一次：特徵表多出任何欄位都會被 Dataset_Custom 當成額外模型
+    # 輸入（不遮蔽），若那一欄含未來資訊就是完全洩漏且不會報錯
+    sys.path.insert(0, os.path.join(REPO_ROOT, 'toolbywi'))
+    from event_common import assert_feature_table_matches_meta
+    assert_feature_table_matches_meta(data_dir, meta)
+
     focal_alpha = args.focal_alpha if args.focal_alpha is not None else meta['suggested_focal_alpha']
+
+    # --- Round 5 防呆：兩個損失變體在極度類別不平衡下會靜默失效。
+    #     Round 3 是在 50/50 標籤下比較這 6 個變體的，那個前提在
+    #     run_center 標籤（正樣本率約 1.8%）下不再成立。
+    #     pos_rate≈0.5 時兩個檢查都不可能觸發，Rounds 1-4 完全不受影響。---
+    pos_rate = meta.get('pos_rate')
+    if pos_rate is not None:
+        if args.loss_variant == 'bce_ls' and pos_rate < 0.10:
+            raise SystemExit(
+                f"❌ 拒絕執行：loss_variant=bce_ls 在 pos_rate={pos_rate:.4f} 下已失效。\n"
+                f"   BCELabelSmoothLoss(smoothing=0.05) 會把負樣本目標推到 0.05，"
+                f"比基準率 {pos_rate:.4f} 還高，等於反過來把模型往「多猜正樣本」偏，"
+                f"不是正則化。請改用 focal_g2（alpha 會自動由類別比例推導）。")
+        if args.loss_variant == 'rank':
+            p_empty = (1 - pos_rate) ** args.batch_size
+            if p_empty > 0.05:
+                raise SystemExit(
+                    f"❌ 拒絕執行：loss_variant=rank 在 pos_rate={pos_rate:.4f}、"
+                    f"batch_size={args.batch_size} 下，整批沒有正樣本的機率是 "
+                    f"{p_empty:.1%}，那些 batch 會直接回傳零梯度（見 PairwiseRankLoss "
+                    f"的防禦分支，其 docstring 明講假設 ~50/50 標籤）。\n"
+                    f"   請改用 focal_g2，或把 batch_size 提高到 "
+                    f"{int(np.ceil(np.log(0.05) / np.log(1 - pos_rate)))} 以上。")
 
     # --- 固定值，不依賴 run.py 的 argparse 預設，全部在指令列上明確傳入 ---
     task_name = 'long_term_forecast'

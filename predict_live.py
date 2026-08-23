@@ -234,6 +234,17 @@ def main():
     print("=== 常駐監控啟動 ===")
     print(f"symbol={meta['symbol']}  seq_len={meta['seq_len']}  gap={gap}  "
           f"門檻={threshold:.2f}  entry_at={entry_at}")
+    print(f"結算週期：{meta['lookahead']} 根 = {meta['lookahead'] * 5} 分鐘")
+    # Round 5：模型可能是用「幅度門檻 + 連續段取中間」的稀疏標籤訓練的，
+    # 但合約仍然是漲跌二元結算。操作者從畫面上看不出這個差異，所以明講。
+    label_mode = meta.get('label_mode', 'direction')
+    if label_mode == 'run_center':
+        print(f"⚠️ 訓練標籤 = run_center（漲幅 >= {meta['min_pct']*100:.2f}%、"
+              f"連續段 >= {meta['min_run']} 根取中間，正樣本率 {meta.get('pos_rate', float('nan')):.4f}）")
+        print("   模型學的是「持續強勁上漲的中段」，但合約仍是漲跌二元結算——"
+              "兩者是刻意分開的，勝率一律以合約結算為準。")
+    else:
+        print(f"訓練標籤 = direction（漲就是 1，與合約結算相同）")
     print("只認買漲方向：p_up >= 門檻才算訊號，且需符合叢集/entry_at 條件才真的進場。")
 
     exp, model_args = build_and_load_model(meta, args.data_dir, setting=args.setting)

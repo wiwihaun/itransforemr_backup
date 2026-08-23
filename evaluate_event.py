@@ -31,7 +31,9 @@ from scipy.special import expit
 from torch.utils.data import DataLoader
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'toolbywi'))
-from event_common import load_meta, build_and_load_model, wilson_ci, cluster_entries, pauc_report
+from event_common import (load_meta, build_and_load_model, wilson_ci, cluster_entries,
+                           pauc_report, load_labels_slice, load_split_dates,
+                           assert_feature_table_matches_meta)
 
 
 def collect_predictions(exp, args, flag):
@@ -128,30 +130,42 @@ def evaluate_busy_only(proba, true_binary, threshold, gap):
             'ci_lo': ci_lo, 'ci_hi': ci_hi}
 
 
-def build_trades_csv(entries, proba, true_binary, dates, odds):
+def build_trades_csv(entries, proba, outcome_binary, dates, odds,
+                      fwd_ret=None, min_pct=None):
     """
     測試集逐筆交易明細，供報告畫開單時間圖、權益曲線/回撤圖。
-    entry_idx 是測試集陣列裡的 0-index，dates 是測試集對應的時間戳序列
-    （已用 df.tail(num_test) 對齊，見 main() 裡的推導）。
+
+    outcome_binary 必須是「真實合約結算」（漲就贏），不是訓練標籤——
+    Round 5 起兩者可能不同，用訓練標籤算損益會把「漲了 0.1% 但沒到 0.3%」
+    的交易記成整筆虧損，但真實合約其實是贏的。
+
+    dates 必須來自 stock_features.csv（模型真正讀的那份），由
+    event_common.load_split_dates() 取得；絕不可用 raw_ohlcv.csv 的
+    tail()——兩者長度、結束時間、內部缺口都不同（實測對齊符合率 0%）。
     """
     rows = []
     equity = 1.0
     peak = 1.0
     for idx in entries:
-        outcome = int(true_binary[idx])
+        outcome = int(outcome_binary[idx])
         pnl = odds if outcome == 1 else -1.0
         stake = 0.02 * equity  # 每筆固定 2% 權益
         equity = equity + stake * pnl
         peak = max(peak, equity)
         drawdown = (equity - peak) / peak if peak > 0 else 0.0
-        rows.append({
+        row = {
             'entry_idx': int(idx),
             'entry_time': str(dates.iloc[idx]),
             'p_up': float(proba[idx]),
             'outcome': outcome,
             'equity': equity,
             'drawdown': drawdown,
-        })
+        }
+        if fwd_ret is not None:
+            row['fwd_ret'] = float(fwd_ret[idx])
+            if min_pct is not None:
+                row['hit_min_pct'] = int(fwd_ret[idx] >= min_pct)
+        rows.append(row)
     return pd.DataFrame(rows)
 
 
@@ -171,41 +185,75 @@ def parse_args():
                     help='不給則用 meta.json 頂層 setting（= 最近一次 train_event.py 訓練的模型）；'
                          '同一份 meta.json 底下比較過多個超參數組合時（見 compare_checkpoints.py），'
                          '用這個明確指定要評估哪一個 checkpoint')
+    p.add_argument('--score_against', default='auto', choices=['auto', 'contract', 'label'],
+                    help='勝負對照哪個結果。auto（預設）= 有 labels.csv 就用 contract_target'
+                         '（真實合約結算），沒有就退回訓練標籤（Round 1-4 行為不變）。'
+                         'Round 5 的訓練標籤是稀疏的取中間標籤，用它算勝率會得到與'
+                         '損益兩平完全不可比的數字，所以一定要對照合約')
     return p.parse_args()
 
 
 def main():
     args = parse_args()
     meta = load_meta(args.data_dir)
+    assert_feature_table_matches_meta(args.data_dir, meta)
     exp, model_args = build_and_load_model(meta, args.data_dir, setting=args.setting)
 
     gap = args.gap if args.gap is not None else meta['lookahead']
     breakeven = 1.0 / (1.0 + args.odds)
     print(f"gap={gap}（對齊 lookahead={meta['lookahead']}）  entry_at={args.entry_at}（事前固定，非從測試集選出）")
-    print(f"損益兩平勝率（賠率 {args.odds}）= {breakeven:.4f}\n")
+    print(f"損益兩平勝率（賠率 {args.odds}）= {breakeven:.4f}")
 
-    print("=== 驗證集：門檻百分位掃描（門檻只能在這裡選）===")
-    val_proba, val_true, n_val = collect_predictions(exp, model_args, 'val')
-    print(f"驗證集樣本數: {n_val}，正樣本比例: {val_true.mean():.4f}")
+    print("\n=== 驗證集：門檻百分位掃描（門檻只能在這裡選）===")
+    val_proba, val_label, n_val = collect_predictions(exp, model_args, 'val')
+
+    # Round 5：勝負一律對照「真實合約結算」（漲就贏），不是訓練標籤。
+    # 訓練標籤可能是稀疏的取中間標籤（正樣本率 1.8%），用它算勝率會得到
+    # 與損益兩平 54.05% 完全不可比的數字。舊資料目錄沒有 labels.csv 時
+    # 自動退回舊行為（訓練標籤 == 合約結果），Round 1-4 因此不受影響。
+    val_labels = load_labels_slice(args.data_dir, meta, 'val', n_val)
+    if args.score_against == 'label' or val_labels is None:
+        val_true = val_label
+        score_src = 'label（無 labels.csv 或使用者指定，訓練標籤即合約結果）'
+    else:
+        val_true = val_labels['contract_target'].values.astype(int)
+        score_src = 'contract_target（真實合約結算）'
+        if meta.get('label_mode', 'direction') == 'direction':
+            assert np.array_equal(val_true, val_label), (
+                'direction 模式下 contract_target 必須與訓練標籤逐值相等，'
+                '不相等代表切分對齊被破壞')
+    print(f"勝負對照：{score_src}")
+    print(f"驗證集樣本數: {n_val}，合約正樣本比例: {val_true.mean():.4f}"
+          f"，訓練標籤正樣本比例: {val_label.mean():.4f}")
     print(f"驗證集機率分佈: min={val_proba.min():.4f} p50={np.percentile(val_proba,50):.4f} "
-          f"max={val_proba.max():.4f} std={val_proba.std():.4f}")
+          f"max={val_proba.max():.4f} std={val_proba.std():.4f} "
+          f"n_unique={len(np.unique(np.round(val_proba, 6)))}")
     val_pauc = pauc_report(val_true, val_proba)
-    print(f"驗證集 AUC={val_pauc['auc']:.4f}  平均 pAUC={val_pauc['mean_pauc']:.4f}  "
-          f"（純描述，不影響門檻選擇——門檻仍依 CI 下界，見 Round 4 plan）\n")
+    val_pauc_label = pauc_report(val_label, val_proba)
+    print(f"驗證集 pAUC(合約)={val_pauc['mean_pauc']:.4f} AUC(合約)={val_pauc['auc']:.4f}  |  "
+          f"pAUC(訓練標籤)={val_pauc_label['mean_pauc']:.4f}"
+          f"（純描述，不影響門檻選擇——門檻仍依 CI 下界）\n")
 
     percentiles = [float(q) for q in args.percentiles.split(',')]
     grid = []
-    print(f"{'前q%':>6} {'絕對門檻':>10} {'下單數':>8} {'勝率':>8} {'CI下界':>8} {'CI上界':>8}")
+    print(f"{'前q%':>6} {'絕對門檻':>10} {'實選比例':>9} {'下單數':>8} {'勝率':>8} {'CI下界':>8} {'CI上界':>8}")
     for q in percentiles:
         th = float(np.percentile(val_proba, 100 - q))
         r = evaluate_cluster(val_proba, val_true, th, gap, args.entry_at)
         r['percentile'] = q
+        # 並列偵測：機率擠成一團時，>= 門檻會選到遠多於 q% 的樣本
+        r['actual_selected_frac'] = float((val_proba >= th).mean())
         grid.append(r)
+        sel = r['actual_selected_frac'] * 100
         if r['n_trades'] == 0:
-            print(f"{q:>6.1f} {th:>10.4f} {0:>8} {'--':>8} {'--':>8} {'--':>8}")
+            print(f"{q:>6.1f} {th:>10.4f} {sel:>8.2f}% {0:>8} {'--':>8} {'--':>8} {'--':>8}")
         else:
-            print(f"{q:>6.1f} {th:>10.4f} {r['n_trades']:>8} {r['win_rate']:>8.4f} "
+            print(f"{q:>6.1f} {th:>10.4f} {sel:>8.2f}% {r['n_trades']:>8} {r['win_rate']:>8.4f} "
                   f"{r['ci_lo']:>8.4f} {r['ci_hi']:>8.4f}")
+    tie_warn = [r for r in grid if r['percentile'] <= 5 and r['actual_selected_frac'] > 2 * r['percentile'] / 100]
+    if tie_warn:
+        print(f"⚠️ 機率並列警告：{[r['percentile'] for r in tie_warn]} 這幾個百分位實際選中比例"
+              f"超過名目 2 倍，代表機率擠成一團、門檻落在並列堆上（事前註冊為不可選）")
 
     eligible = [r for r in grid if r['n_trades'] >= args.min_trades]
     if not eligible:
@@ -219,11 +267,24 @@ def main():
               f"CI 下界 {chosen['ci_lo']:.4f}）")
 
     print("\n=== 測試集：只評估這一次 ===")
-    test_proba, test_true, n_test = collect_predictions(exp, model_args, 'test')
-    print(f"測試集樣本數: {n_test}，正樣本比例: {test_true.mean():.4f}")  # noqa: lookahead - 純描述，決策已在驗證集鎖定
+    test_proba, test_label, n_test = collect_predictions(exp, model_args, 'test')
+    test_labels = load_labels_slice(args.data_dir, meta, 'test', n_test)
+    if args.score_against == 'label' or test_labels is None:
+        test_true = test_label
+        test_fwd = None
+    else:
+        test_true = test_labels['contract_target'].values.astype(int)
+        test_fwd = test_labels['fwd_ret'].values
+        if meta.get('label_mode', 'direction') == 'direction':
+            assert np.array_equal(test_true, test_label), \
+                'direction 模式下 contract_target 必須與訓練標籤逐值相等'
+    print(f"測試集樣本數: {n_test}，合約正樣本比例: {test_true.mean():.4f}"  # noqa: lookahead - 純描述，決策已在驗證集鎖定
+          f"，訓練標籤正樣本比例: {test_label.mean():.4f}")  # noqa: lookahead - 同上，純描述輸出
     test_pauc = pauc_report(test_true, test_proba)  # noqa: lookahead - 純描述，不影響任何決策
-    print(f"測試集 AUC={test_pauc['auc']:.4f}  平均 pAUC={test_pauc['mean_pauc']:.4f}  "
-          f"（Round 4：pAUC 與 AUC 不同尺度，不可跨輪直接比較數字，只能各自對照各自的事前基準）")
+    test_pauc_label = pauc_report(test_label, test_proba)  # noqa: lookahead - 同上
+    print(f"測試集 pAUC(合約)={test_pauc['mean_pauc']:.4f} AUC(合約)={test_pauc['auc']:.4f}  |  "
+          f"pAUC(訓練標籤)={test_pauc_label['mean_pauc']:.4f}")
+    print("（pAUC 與 AUC 不同尺度，不可跨輪直接比較數字，只能各自對照各自的事前基準）")
 
     always_up_win_rate = float(test_true.mean())  # noqa: lookahead - 描述性基準，非決策
     majority_baseline = float(max(test_true.mean(), 1 - test_true.mean()))  # noqa: lookahead - 同上
@@ -231,9 +292,14 @@ def main():
 
     result = {
         'gap': gap, 'entry_at': args.entry_at, 'breakeven': breakeven, 'min_trades': args.min_trades,
+        'score_against': 'label' if test_labels is None or args.score_against == 'label' else 'contract_target',
+        'label_mode': meta.get('label_mode', 'direction'),
+        'min_pct': meta.get('min_pct'), 'min_run': meta.get('min_run'),
         'val_grid': [{k: v for k, v in r.items() if k != 'entries'} for r in grid],
         'val_pauc_report': val_pauc,
+        'val_pauc_report_label': val_pauc_label,
         'test_pauc_report': test_pauc,
+        'test_pauc_report_label': test_pauc_label,
         'chosen_percentile': chosen['percentile'] if chosen else None,
         'chosen_threshold': chosen['threshold'] if chosen else None,
         'test': None,
@@ -284,12 +350,30 @@ def main():
                       f"95% CI [{busy_report['ci_lo']:.4f}, {busy_report['ci_hi']:.4f}]")
 
             # --- 逐筆交易明細，供報告畫圖 ---
-            raw = pd.read_csv(os.path.join(args.data_dir, meta['raw_ohlcv_path']))
-            test_dates = raw['date'].tail(n_test).reset_index(drop=True)
-            trades_df = build_trades_csv(entries, test_proba, test_true, test_dates, args.odds)
+            # 時間戳必須取自 stock_features.csv（模型真正讀的那份）。
+            # 舊版用 raw_ohlcv.csv 的 tail(n_test)，但兩者長度、結束時間、
+            # 內部缺口都不同（extra_features() 的 inner join 會丟列），
+            # 實測逐位對齊符合率 0%——每一筆 entry_time 都是錯的。
+            test_dates = load_split_dates(args.data_dir, meta, 'test', n_test)
+            trades_df = build_trades_csv(entries, test_proba, test_true, test_dates,
+                                          args.odds, fwd_ret=test_fwd,
+                                          min_pct=meta.get('min_pct'))
             trades_path = os.path.join(args.data_dir, 'trades.csv')
             trades_df.to_csv(trades_path, index=False)
             print(f"\n已存 {trades_path}（{len(trades_df)} 筆交易明細）")
+
+            # --- 次要診斷：實際漲幅有沒有達到訓練標籤要求的 min_pct ---
+            if test_fwd is not None and meta.get('min_pct'):
+                hit = float((test_fwd[entries] >= meta['min_pct']).mean())
+                result['min_pct_hit_rate'] = hit
+                result['entry_fwd_ret_mean'] = float(test_fwd[entries].mean())
+                result['entry_fwd_ret_median'] = float(np.median(test_fwd[entries]))
+                result['all_bars_fwd_ret_mean'] = float(np.nanmean(test_fwd))
+                print(f"[次要診斷] 進場的 {len(entries)} 筆裡，實際漲幅達 "
+                      f"{meta['min_pct']*100:.2f}% 的比例 = {hit:.4f}")
+                print(f"           進場 bar 的 1 小時報酬 mean={test_fwd[entries].mean()*100:+.3f}% "
+                      f"median={np.median(test_fwd[entries])*100:+.3f}%"
+                      f"（全體 bar {np.nanmean(test_fwd)*100:+.4f}%）")
 
     out_path = os.path.join(args.data_dir, 'evaluate_report.json')
     with open(out_path, 'w') as f:

@@ -1,0 +1,387 @@
+<meta charset="utf-8">
+<title>Round 5&#xFF1A;1 &#x5C0F;&#x6642;&#x9810;&#x6E2C; + &#x5E45;&#x5EA6;&#x9580;&#x6ABB; + &#x9023;&#x7E8C;&#x6BB5;&#x53D6;&#x4E2D;&#x9593;</title>
+<style>
+  :root{
+    --paper:#F5F3EE; --ink:#151C20; --ink-2:#3A484D; --muted:#68787C;
+    --rule:#D9D5CC; --rule-2:#E8E5DE; --card:#FBFAF7;
+    --accent:#2E6B78; --accent-soft:#2E6B7815;
+    --pos:#3C7A5C; --neg:#AC4A2C; --warn:#AC4A2C; --warn-soft:#AC4A2C12;
+    --grid:#00000010;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --paper:#0E1417; --ink:#E4E6E3; --ink-2:#AEB9BB; --muted:#7C8B8F;
+      --rule:#25302F; --rule-2:#1B2427; --card:#141C1F;
+      --accent:#6FB3BF; --accent-soft:#6FB3BF18;
+      --pos:#6DBE92; --neg:#E08762; --warn:#E08762; --warn-soft:#E0876214;
+      --grid:#FFFFFF10;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#0E1417; --ink:#E4E6E3; --ink-2:#AEB9BB; --muted:#7C8B8F;
+    --rule:#25302F; --rule-2:#1B2427; --card:#141C1F;
+    --accent:#6FB3BF; --accent-soft:#6FB3BF18;
+    --pos:#6DBE92; --neg:#E08762; --warn:#E08762; --warn-soft:#E0876214;
+    --grid:#FFFFFF10;
+  }
+  :root[data-theme="light"]{
+    --paper:#F5F3EE; --ink:#151C20; --ink-2:#3A484D; --muted:#68787C;
+    --rule:#D9D5CC; --rule-2:#E8E5DE; --card:#FBFAF7;
+    --accent:#2E6B78; --accent-soft:#2E6B7815;
+    --pos:#3C7A5C; --neg:#AC4A2C; --warn:#AC4A2C; --warn-soft:#AC4A2C12;
+    --grid:#00000010;
+  }
+
+  html{background:var(--paper);}
+  body{background:var(--paper); color:var(--ink);
+    font-family:Georgia,"Iowan Old Style","Palatino Linotype","Songti TC","Times New Roman",serif;
+    font-size:17px; line-height:1.62; margin:0; -webkit-font-smoothing:antialiased;}
+  .wrap{max-width:1120px; margin:0 auto; padding:0 28px 120px;}
+  p{margin:0 0 1.1em;}
+  code{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:.87em; background:var(--accent-soft); padding:1px 5px; border-radius:2px;}
+  .mono{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;}
+  .eyebrow{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:11.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); margin:0 0 10px;}
+
+  header{padding:64px 0 40px; border-bottom:2px solid var(--ink);}
+  h1{font-size:clamp(28px,4.2vw,44px); line-height:1.16; margin:0 0 18px;
+    font-weight:400; letter-spacing:-.015em; text-wrap:balance; max-width:26ch;}
+  .dek{font-size:19px; color:var(--ink-2); max-width:62ch; margin:0 0 26px;}
+  .meta{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:12px; color:var(--muted); display:flex; flex-wrap:wrap; gap:6px 22px;}
+
+  .tiles{display:grid; grid-template-columns:repeat(auto-fit,minmax(168px,1fr));
+    gap:1px; background:var(--rule); border:1px solid var(--rule); margin:0 0 12px;}
+  .tile{background:var(--card); padding:20px 18px 18px;}
+  .tile .k{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin:0 0 10px;}
+  .tile .v{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:22px; font-variant-numeric:tabular-nums; letter-spacing:-.02em; line-height:1; margin:0 0 7px;}
+  .tile .n{font-size:13px; color:var(--muted); line-height:1.4;}
+  .v.pos{color:var(--pos);} .v.neg{color:var(--neg);} .v.acc{color:var(--accent);}
+
+  section{padding:56px 0 0;}
+  h2{font-size:26px; font-weight:400; letter-spacing:-.01em; line-height:1.25; margin:0 0 6px; text-wrap:balance;}
+  h2 .num{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:12px; color:var(--accent); letter-spacing:.1em; display:block; margin-bottom:9px;}
+  h3{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:12px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted);
+    font-weight:400; margin:34px 0 12px; padding-bottom:7px; border-bottom:1px solid var(--rule-2);}
+  .lede{font-size:18.5px; color:var(--ink-2); max-width:62ch;}
+
+  figure{margin:26px 0 0; padding:0;}
+  .chart{border:1px solid var(--rule); background:var(--card); padding:22px 20px 14px; overflow-x:auto;}
+  .chart svg{display:block; width:100%; height:auto; min-width:520px;}
+  figcaption{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:12px; color:var(--muted); line-height:1.55; margin-top:11px; max-width:84ch;}
+  .legend{display:flex; flex-wrap:wrap; gap:5px 20px; margin-bottom:14px;
+    font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:11.5px; color:var(--muted);}
+  .legend i{width:11px; height:11px; display:inline-block; margin-right:6px;
+    vertical-align:-1px; border-radius:1px;}
+  .legend .ln{width:16px; height:2px; display:inline-block; margin-right:6px; vertical-align:2px;}
+
+  .tbl-wrap{overflow-x:auto; margin:18px 0 0; border:1px solid var(--rule);}
+  table{border-collapse:collapse; width:100%; min-width:520px; background:var(--card);
+    font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:12.5px; font-variant-numeric:tabular-nums;}
+  th{text-align:left; font-weight:400; color:var(--muted); letter-spacing:.06em;
+    text-transform:uppercase; font-size:10.5px; padding:11px 14px;
+    border-bottom:1px solid var(--rule); white-space:nowrap;}
+  td{padding:10px 14px; border-bottom:1px solid var(--rule-2); white-space:nowrap;}
+  tr:last-child td{border-bottom:none;}
+  td.num,th.num{text-align:right;}
+  tr.hi td{background:var(--accent-soft);}
+  tr.hi td:first-child{box-shadow:inset 3px 0 0 var(--accent);}
+  tr.bad td{background:var(--warn-soft);}
+  tr.bad td:first-child{box-shadow:inset 3px 0 0 var(--warn);}
+  .pos{color:var(--pos);} .neg{color:var(--neg);} .dim{color:var(--muted);}
+
+  .flag{border-left:3px solid var(--warn); background:var(--warn-soft);
+    padding:18px 22px; margin:26px 0 0; max-width:660px;}
+  .flag .t{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--warn); margin:0 0 9px;}
+  .flag p:last-child{margin-bottom:0;}
+  .note{border-left:3px solid var(--accent); background:var(--accent-soft);
+    padding:18px 22px; margin:26px 0 0; max-width:660px;}
+  .note .t{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--accent); margin:0 0 9px;}
+  .note p:last-child{margin-bottom:0;}
+  .good-box{border-left:3px solid var(--pos); background:color-mix(in srgb, var(--pos) 8%, transparent);
+    padding:18px 22px; margin:26px 0 0; max-width:660px;}
+  .good-box .t{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--pos); margin:0 0 9px;}
+  .good-box p:last-child{margin-bottom:0;}
+
+  ul{margin:0 0 1.1em; padding-left:1.15em; max-width:62ch;}
+  li{margin-bottom:.55em;} li::marker{color:var(--accent);}
+
+  footer{margin-top:80px; padding-top:26px; border-top:1px solid var(--rule);
+    font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:11.5px; color:var(--muted); line-height:1.7; max-width:74ch;}
+  @media (max-width:640px){
+    body{font-size:16px;} .wrap{padding:0 18px 80px;} .tile .v{font-size:19px;}
+  }
+</style>
+
+<div class="wrap">
+
+<header>
+  <p class="eyebrow">BTCUSDT.P 5min &#xB7; iTransformer &#xB7; Round 5 &#xB7; 1 &#x5C0F;&#x6642; + &#x5E45;&#x5EA6;&#x9580;&#x6ABB; + &#x9023;&#x7E8C;&#x6BB5;&#x53D6;&#x4E2D;&#x9593;</p>
+  <h1>&#x9A57;&#x8B49;&#x96C6;&#x4E0A; pAUC &#x5F9E; 0.5048 &#x5347;&#x5230; 0.5092&#xFF0C;&#x662F;&#x4E94;&#x8F2A;&#x6700;&#x597D;&#x7684;&#x2014;&#x2014;&#x7136;&#x5F8C;&#x5728;&#x6E2C;&#x8A66;&#x96C6;&#x4E0A;&#x5B8C;&#x6574;&#x6D88;&#x5931;&#xFF0C;&#x6389;&#x56DE; 0.4993&#x3002;</h1>
+  <p class="dek">&#x9019;&#x8F2A;&#x6539;&#x7684;&#x662F;<strong>&#x6A19;&#x7C64;&#x5B9A;&#x7FA9;&#x672C;&#x8EAB;</strong>&#xFF1A;&#x9810;&#x6E2C;&#x6642;&#x9577;&#x5F9E; 30 &#x5206;&#x9418;&#x62C9;&#x5230; 1 &#x5C0F;&#x6642;&#xFF0C;&#x53EA;&#x6709;&#x6F32;&#x5E45;&#x9054;&#x9580;&#x6ABB;&#x624D;&#x7B97;&#x6B63;&#x6A23;&#x672C;&#xFF0C;&#x4E14;&#x9023;&#x7E8C;&#x6BB5;&#x53EA;&#x53D6;&#x4E2D;&#x9593;&#x90A3;&#x5E7E;&#x6839;&#x3002;&#x76EE;&#x7684;&#x662F;&#x8B93;&#x6A21;&#x578B;&#x5225;&#x518D;&#x88AB;&#x8CBC;&#x8FD1; 0% &#x7684;&#x64F2;&#x786C;&#x5E63;&#x96DC;&#x8A0A;&#x6DF9;&#x6C92;&#x3002;25 &#x7D44;&#x53C3;&#x6578;&#x7DB2;&#x683C;&#x5168;&#x90E8;&#x5728;&#x9A57;&#x8B49;&#x96C6;&#x4E0A;&#x6BD4;&#x8F03;&#xFF0C;&#x9078;&#x51FA;&#x7684; <code>0.2% / &#x9023;&#x7E8C; 5 &#x6839;</code> &#x5728;&#x9A57;&#x8B49;&#x96C6;&#x4E0A;&#x62FF;&#x5230; pAUC <strong>0.5092</strong>&#xFF08;&#x4E94;&#x8F2A;&#x6700;&#x9AD8;&#xFF0C;&#x524D;&#x56DB;&#x8F2A;&#x5F9E;&#x6C92;&#x8D85;&#x904E; 0.5050&#xFF09;&#x3002;&#x4F46;&#x6E2C;&#x8A66;&#x96C6;&#x53EA;&#x6709; <strong>0.4993</strong>&#x2014;&#x2014;&#x4E0D;&#x53EA;&#x6C92;&#x6709;&#x9032;&#x6B65;&#xFF0C;&#x662F;&#x4F4E;&#x65BC;&#x7121;&#x6280;&#x5DE7;&#x57FA;&#x6E96;&#x3002;&#x6E2C;&#x8A66;&#x96C6;&#x52DD;&#x7387; <strong>44.59%</strong>&#xFF08;314 &#x7B46;&#xFF0C;95% CI [39.19%, 50.12%]&#xFF09;&#xFF0C;&#x4E94;&#x8F2A;&#x6700;&#x5DEE;&#x3002;&#x9019;&#x662F;&#x300C;&#x9A57;&#x8B49;&#x96C6;&#x904E;&#x64EC;&#x5408;&#x300D;&#x6559;&#x79D1;&#x66F8;&#x7B49;&#x7D1A;&#x7684;&#x4E00;&#x6B21;&#x793A;&#x7BC4;&#xFF1A;25 &#x7D44;&#x6BD4;&#x8F03;&#x78BA;&#x5BE6;&#x627E;&#x51FA;&#x4E86;&#x5728;&#x9A57;&#x8B49;&#x96C6;&#x4E0A;&#x6700;&#x597D;&#x770B;&#x7684;&#x90A3;&#x7D44;&#xFF0C;&#x800C;&#x90A3;&#x4EFD;&#x597D;&#x770B;&#x6C92;&#x6709;&#x4EFB;&#x4F55;&#x4E00;&#x5206;&#x5E36;&#x5F97;&#x5230;&#x6E2C;&#x8A66;&#x96C6;&#x3002;</p>
+  <div class="meta">
+    <span>lookahead 6 &#x2192; 12&#xFF08;1 &#x5C0F;&#x6642;&#xFF09;</span>
+    <span>&#x6B63;&#x6A23;&#x672C;&#x7387; 50% &#x2192; 2.6%</span>
+    <span>25 &#x7D44;&#x6A19;&#x7C64;&#x7DB2;&#x683C;</span>
+    <span>gap 6 &#x2192; 12</span>
+    <span>&#x8CE0;&#x7387; 0.85 &#x2192; &#x640D;&#x76CA;&#x5169;&#x5E73; 54.05%</span>
+  </div>
+</header>
+
+<section style="padding-top:40px;">
+  <div class="tiles">
+    <div class="tile"><p class="k">&#x7DB2;&#x683C;&#x641C;&#x5C0B;&#xFF08;25 &#x7D44;&#xFF0C;&#x9A57;&#x8B49;&#x96C6;&#xFF09;</p><p class="v acc">0.5004~0.5046</p><p class="n">&#x5168;&#x8DDD;&#x50C5; 0.0041&#xFF0C;&#x8A0A;&#x865F;&#x6975;&#x7A84;</p></div>
+    <div class="tile"><p class="k">&#x9078;&#x4E2D;&#x7684;&#x6A19;&#x7C64;</p><p class="v">0.2% / 5 &#x6839;</p><p class="n">1-SE &#x5E73;&#x624B;&#x898F;&#x5247;&#x9078;&#x51FA;&#xFF0C;&#x975E;&#x6700;&#x9AD8;&#x5206;&#x90A3;&#x7D44;</p></div>
+    <div class="tile"><p class="k">&#x9A57;&#x8B49;&#x96C6; pAUC&#xFF08;vs &#x5408;&#x7D04;&#xFF09;</p><p class="v pos">0.5092</p><p class="n">&#x4E94;&#x8F2A;&#x6700;&#x9AD8;&#xFF08;R3 0.5050 / R4 0.5048&#xFF09;</p></div>
+    <div class="tile"><p class="k">&#x6E2C;&#x8A66;&#x96C6; pAUC&#xFF08;vs &#x5408;&#x7D04;&#xFF09;</p><p class="v neg">0.4993</p><p class="n">&#x4F4E;&#x65BC;&#x7121;&#x6280;&#x5DE7; 0.50&#xFF0C;&#x9A57;&#x8B49;&#x96C6;&#x512A;&#x52E2;&#x5B8C;&#x5168;&#x6D88;&#x5931;</p></div>
+    <div class="tile"><p class="k">&#x6E2C;&#x8A66;&#x96C6;&#x52DD;&#x7387;</p><p class="v neg">44.59%</p><p class="n">314 &#x7B46;&#xFF0C;95% CI [39.19%, 50.12%]</p></div>
+    <div class="tile"><p class="k">&#x95DC;&#x5361;&#x7D50;&#x8AD6;</p><p class="v neg">&#x672A;&#x901A;&#x904E;</p><p class="n">&#x4E94;&#x8F2A;&#x6700;&#x5DEE;&#xFF1B;&#x9700; 59.6% &#x624D;&#x904E;&#xFF08;&#x4EA4;&#x6613;&#x6578;&#x6E1B;&#x534A;&#xFF09;</p></div>
+  </div>
+</section>
+
+<section>
+  <h2><span class="num">01 &#x2014; &#x80CC;&#x666F;&#x8207;&#x672C;&#x8F2A;&#x6539;&#x52D5;</span>&#x4E0D;&#x518D;&#x8ABF;&#x6A21;&#x578B;&#xFF0C;&#x6539;&#x8ABF;&#x300C;&#x8981;&#x6A21;&#x578B;&#x5B78;&#x4EC0;&#x9EBC;&#x300D;</h2>
+  <p class="lede">&#x524D;&#x56DB;&#x8F2A;&#x7684;&#x6A19;&#x7C64;&#x90FD;&#x662F;&#x300C;N &#x6839;&#x4E4B;&#x5F8C;&#x6709;&#x6C92;&#x6709;&#x6F32;&#x300D;&#xFF0C;&#x6B63;&#x6A23;&#x672C;&#x7387;&#x7D04; 50%&#xFF0C;&#x5176;&#x4E2D;&#x5927;&#x91CF;&#x6A23;&#x672C;&#x662F;&#x8CBC;&#x8FD1; 0% &#x7684;&#x64F2;&#x786C;&#x5E63;&#x96DC;&#x8A0A;&#x3002;Round 4 &#x5DF2;&#x7D93;&#x8B49;&#x5BE6;&#x6A21;&#x578B;&#x5728;&#x5BE6;&#x969B;&#x4EA4;&#x6613;&#x5340;&#x9593;&#x7684;&#x6392;&#x5E8F;&#x80FD;&#x529B;&#x7B49;&#x540C;&#x7121;&#x6280;&#x5DE7;&#xFF08;&#x6E2C;&#x8A66;&#x96C6;&#x5E73;&#x5747; pAUC 0.5013&#xFF09;&#x3002;&#x9019;&#x8F2A;&#x63DB;&#x4E00;&#x500B;&#x65B9;&#x5411;&#xFF1A;&#x4E0D;&#x6539;&#x6A21;&#x578B;&#x3001;&#x4E0D;&#x6539;&#x7279;&#x5FB5;&#xFF0C;&#x53EA;&#x6539;<strong>&#x8A13;&#x7DF4;&#x76EE;&#x6A19;</strong>&#xFF0C;&#x8B93;&#x6A21;&#x578B;&#x53EA;&#x5B78;&#x300C;&#x5F37;&#x52C1;&#x4E14;&#x6301;&#x7E8C;&#x7684;&#x4E0A;&#x6F32;&#x300D;&#x3002;</p>
+
+  <h3>&#x53D6;&#x4E2D;&#x9593;&#x7684;&#x7CBE;&#x78BA;&#x898F;&#x5247;</h3>
+  <p>&#x5C0D;&#x6BCF;&#x500B;&#x9577;&#x5EA6; <code>L &gt;= min_run</code> &#x7684;&#x6975;&#x5927;&#x9023;&#x7E8C; 1 &#x6BB5;&#xFF08;&#x8D77;&#x9EDE; <code>s</code>&#xFF09;&#xFF1A;<strong>L &#x70BA;&#x5947;&#x6578;</strong>&#x53EA;&#x6709; <code>s+(L&#x2212;1)//2</code> &#x9019; 1 &#x6839;&#x8A2D;&#x70BA; 1&#xFF1B;<strong>L &#x70BA;&#x5076;&#x6578;</strong>&#x5247; <code>s+L/2&#x2212;1</code> &#x8207; <code>s+L/2</code> &#x9019; 2 &#x6839;&#x90FD;&#x8A2D;&#x70BA; 1&#x3002;&#x5169;&#x500B;&#x5BE6;&#x4F8B;&#xFF1A;<code>0011111010</code>&#xFF08;&#x6BB5;&#x9577; 5&#xFF09;&#x2192; <code>0000100000</code>&#xFF1B;<code>011111100</code>&#xFF08;&#x6BB5;&#x9577; 6&#xFF09;&#x2192; <code>000110000</code>&#x3002;&#x5076;&#x6578;&#x53D6;&#x5169;&#x6839;&#x662F;&#x523B;&#x610F;&#x7684;&#x2014;&#x2014;&#x9577;&#x5EA6; 6 &#x7684;&#x6BB5;&#x843D;&#x6C92;&#x6709;&#x55AE;&#x4E00;&#x4E2D;&#x9EDE;&#xFF0C;&#x53D6;&#x4E2D;&#x9593;&#x5169;&#x6839;&#x624D;&#x5C0D;&#x7A31;&#x3002;&#x9019;&#x689D;&#x898F;&#x5247;&#x5DF2;&#x7528; 14 &#x500B;&#x624B;&#x7B97;&#x6848;&#x4F8B;&#x3001;1000 &#x7D44;&#x96A8;&#x6A5F;&#x5E8F;&#x5217;&#x7684;&#x4E0D;&#x8B8A;&#x91CF;&#x6E2C;&#x8A66;&#x3001;&#x4EE5;&#x53CA;&#x4E00;&#x4EFD;&#x7D50;&#x69CB;&#x5B8C;&#x5168;&#x4E0D;&#x540C;&#x7684;&#x7368;&#x7ACB;&#x91CD;&#x5BEB;&#x5BE6;&#x4F5C;&#xFF08;<code>np.diff</code> &#x627E;&#x908A;&#x754C; vs &#x96D9;&#x6307;&#x6A19;&#x6383;&#x63CF;&#xFF09;&#x9010;&#x4F4D;&#x5143;&#x6BD4;&#x5C0D;&#x9A57;&#x8B49;&#x3002;</p>
+
+  <h3>&#x300C;&#x53D6;&#x4E2D;&#x9593;&#x300D;&#x9019;&#x500B;&#x8A2D;&#x8A08;&#x6709;&#x5BE6;&#x6E2C;&#x4F9D;&#x64DA;</h3>
+  <p>&#x5728; 0.3%&#xFF0F;&#x9023;&#x7E8C; 5 &#x6839;&#x7684;&#x8A2D;&#x5B9A;&#x4E0B;&#xFF08;2052 &#x500B;&#x5408;&#x683C;&#x6BB5;&#x3001;3075 &#x500B;&#x6B63;&#x6A23;&#x672C;&#xFF09;&#xFF0C;&#x6BD4;&#x8F03;&#x6BB5;&#x843D;&#x5167;&#x4E09;&#x500B;&#x4F4D;&#x7F6E;&#x7684; 1 &#x5C0F;&#x6642;&#x5831;&#x916C;&#xFF1A;</p>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>&#x4F4D;&#x7F6E;</th><th class="num">&#x5E73;&#x5747;&#x5831;&#x916C;</th><th class="num">&#x4E2D;&#x4F4D;&#x6578;</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">run &#x8D77;&#x9EDE;</td><td class="num">+0.483%</td><td class="num">+0.429%</td></tr>
+        <tr class="hi"><td class="mono">run &#x4E2D;&#x9593;</td><td class="num pos">+0.756%</td><td class="num pos">+0.617%</td></tr>
+        <tr><td class="mono">run &#x7D42;&#x9EDE;</td><td class="num">+0.471%</td><td class="num">+0.415%</td></tr>
+        <tr><td class="mono dim">&#x5168;&#x9AD4; bar</td><td class="num dim">&#x2212;0.0017%</td><td class="num dim">&#x2014;</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>&#x4E2D;&#x9593;&#x78BA;&#x5BE6;&#x662F;&#x6574;&#x6BB5;&#x6700;&#x5F37;&#x7684;&#x4F4D;&#x7F6E;&#xFF0C;&#x6BD4;&#x8D77;&#x9EDE;&#x8207;&#x7D42;&#x9EDE;&#x9AD8;&#x51FA;&#x7D04; 0.27 &#x500B;&#x767E;&#x5206;&#x9EDE;&#xFF0C;&#x800C;&#x4E14;&#x4F9D;&#x5B9A;&#x7FA9; 100% &#x90FD;&#x662F;&#x5408;&#x7D04;&#x7372;&#x52DD;&#x3002;&#x9019;&#x500B;&#x8A2D;&#x8A08;&#x5047;&#x8A2D;&#x662F;&#x6210;&#x7ACB;&#x7684;&#x2014;&#x2014;&#x554F;&#x984C;&#x4E0D;&#x5728;&#x6A19;&#x7C64;&#x8A2D;&#x8A08;&#x5F97;&#x597D;&#x4E0D;&#x597D;&#xFF0C;&#x800C;&#x5728;&#x6A21;&#x578B;&#x80FD;&#x4E0D;&#x80FD;&#x5B78;&#x5230;&#x5B83;&#xFF08;&#x898B;&#x7B2C; 05 &#x7BC0;&#xFF09;&#x3002;</p>
+
+  <div class="note">
+    <p class="t">&#x6700;&#x91CD;&#x8981;&#x7684;&#x7D50;&#x69CB;&#x6C7A;&#x5B9A;&#xFF1A;&#x4E09;&#x500B;&#x91CF;&#x5FC5;&#x9808;&#x5206;&#x958B;</p>
+    <p>&#x524D;&#x56DB;&#x8F2A;&#x628A;&#x300C;&#x8A13;&#x7DF4;&#x76EE;&#x6A19;&#xFF0F;&#x5408;&#x7D04;&#x7D50;&#x679C;&#xFF0F;&#x8A55;&#x4F30;&#x771F;&#x503C;&#x300D;&#x6DF7;&#x6210;&#x540C;&#x4E00;&#x500B; <code>target</code> &#x6B04;&#x3002;&#x672C;&#x8F2A;&#x62C6;&#x6210;&#x4E09;&#x500B;&#xFF1A;<code>target</code>&#xFF08;&#x7A00;&#x758F;&#x8A13;&#x7DF4;&#x6A19;&#x7C64;&#xFF0C;&#x53EA;&#x7D66;&#x640D;&#x5931;&#x51FD;&#x6578;&#x7528;&#xFF09;&#x3001;<code>contract_target</code>&#xFF08;<code>Close[t+12] &gt; Close[t]</code>&#xFF0C;&#x52DD;&#x7387;/&#x6B0A;&#x76CA;/&#x901A;&#x95DC;&#x4E00;&#x5F8B;&#x7528;&#x5B83;&#xFF09;&#x3001;<code>fwd_ret</code>&#xFF08;&#x5BE6;&#x969B;&#x6F32;&#x5E45;&#xFF0C;&#x4F9B;&#x8A3A;&#x65B7;&#xFF09;&#x3002;<strong>&#x5F8C;&#x5169;&#x8005;&#x7D55;&#x5C0D;&#x4E0D;&#x53EF;&#x9032;&#x5165; <code>stock_features.csv</code></strong>&#x2014;&#x2014;<code>data_provider/data_loader.py</code> &#x628A;&#x300C;&#x975E; date&#x3001;&#x975E; target&#x300D;&#x7684;&#x6BCF;&#x4E00;&#x6B04;&#x90FD;&#x7576;&#x6A21;&#x578B;&#x8F38;&#x5165;&#xFF0C;iTransformer &#x7684;&#x8B8A;&#x91CF;&#x6578;&#x662F;&#x5F9E; tensor &#x52D5;&#x614B;&#x8B80;&#x7684;&#xFF0C;&#x4E14;&#x53EA;&#x906E;&#x853D;&#x6700;&#x5F8C;&#x4E00;&#x6B04;&#xFF1B;&#x591A;&#x4E00;&#x6B04;&#x6703;&#x88AB;&#x975C;&#x9ED8;&#x7576;&#x6210;&#x7B2C; 16 &#x500B;&#x7279;&#x5FB5;&#x3001;&#x4E0D;&#x906E;&#x853D;&#x3001;&#x6BCF;&#x6839;&#x90FD;&#x542B; <code>Close[t+12]</code>&#xFF0C;&#x5B8C;&#x5168;&#x6D29;&#x6F0F;&#x800C;&#x4E14;&#x4E0D;&#x6703;&#x5831;&#x4EFB;&#x4F55;&#x932F;&#x3002;&#x7A0B;&#x5F0F;&#x88E1;&#x7528;&#x7D50;&#x69CB;&#x6027;&#x65B7;&#x8A00;&#x64CB;&#x4F4F;&#xFF0C;&#x4E26;&#x63A5;&#x9032; <code>train_event.py</code>/<code>evaluate_event.py</code>/<code>compare_checkpoints.py</code> &#x4E09;&#x500B;&#x9032;&#x5165;&#x9EDE;&#x3002;</p>
+  </div>
+</section>
+
+<section>
+  <h2><span class="num">02 &#x2014; 25 &#x7D44;&#x7DB2;&#x683C;&#xFF1A;&#x5168;&#x8DDD;&#x53EA;&#x6709; 0.0041</span>&#x8A0A;&#x865F;&#x7A84;&#x5230;&#x53C3;&#x6578;&#x9078;&#x64C7;&#x5E7E;&#x4E4E;&#x6C92;&#x6709;&#x8457;&#x529B;&#x9EDE;</h2>
+  <p class="lede">25 &#x7D44;&#x5168;&#x90E8;&#x5171;&#x7528;&#x540C;&#x4E00;&#x4EFD;&#x7279;&#x5FB5;&#x8868;&#x3001;&#x540C;&#x4E00;&#x7D44;&#x5207;&#x5206;&#x3001;&#x540C;&#x4E00;&#x4EFD; scaler&#xFF08;&#x7531; <code>min_pct_floor</code> &#x5C3E;&#x7AEF;&#x8A2D;&#x9650;&#x4FDD;&#x8B49;&#xFF09;&#xFF0C;&#x6240;&#x4EE5;&#x6BD4;&#x8F03;&#x662F;&#x516C;&#x5E73;&#x7684;&#x3002;&#x4E00;&#x5F8B;&#x7528; GBDT &#x5728; train+val &#x4E0A;&#x505A; 5 &#x6298; TimeSeriesSplit&#xFF0C;OOF &#x5206;&#x6578;<strong>&#x5C0D;&#x7167;&#x771F;&#x5BE6;&#x5408;&#x7D04;&#x7D50;&#x679C;</strong>&#x8A55;&#x5206;&#x2014;&#x2014;&#x5408;&#x7D04;&#x7D50;&#x679C;&#x4E0D;&#x96A8;&#x8A13;&#x7DF4;&#x6A19;&#x7C64;&#x6539;&#x8B8A;&#xFF0C;25 &#x500B;&#x6578;&#x5B57;&#x624D;&#x5728;&#x540C;&#x4E00;&#x628A;&#x5C3A;&#x4E0A;&#x3002;&#x6E2C;&#x8A66;&#x671F;&#x5168;&#x7A0B;&#x672A;&#x8B80;&#x3002;</p>
+
+  <figure>
+    <div class="chart">
+      <svg viewBox="0 0 940 300" xmlns="http://www.w3.org/2000/svg" role="img"
+           aria-label="25 &#x7D44;&#x6A19;&#x7C64;&#x53C3;&#x6578;&#x7DB2;&#x683C;&#x7684; OOF &#x5E73;&#x5747; pAUC &#x71B1;&#x5716;&#xFF0C;&#x5168;&#x8DDD;&#x50C5; 0.0041">
+        <text x="16" y="18" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--muted)">OOF &#x5E73;&#x5747; pAUC&#xFF08;&#x5C0D;&#x7167;&#x771F;&#x5BE6;&#x5408;&#x7D04;&#x7D50;&#x7B97;&#xFF09;&#xFF0C;&#x5916;&#x6846; = &#x63A8;&#x9032;&#x968E;&#x6BB5; 2 &#x7684;&#x7D44;&#x5408;</text>
+        <text x="163" y="34" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--muted)">min_run=3</text>
+        <text x="315" y="34" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--muted)">min_run=4</text>
+        <text x="467" y="34" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--muted)">min_run=5</text>
+        <text x="619" y="34" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--muted)">min_run=6</text>
+        <text x="771" y="34" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--muted)">min_run=8</text>
+
+        <rect x="90" y="44" width="146" height="40" rx="3" fill="var(--accent)" opacity="0.35"/><text x="163" y="64" text-anchor="middle" dominant-baseline="central" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--ink)">0.5018</text>
+        <rect x="242" y="44" width="146" height="40" rx="3" fill="var(--accent)" opacity="0.20"/><text x="315" y="64" text-anchor="middle" dominant-baseline="central" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--ink)">0.5010</text>
+        <rect x="394" y="44" width="146" height="40" rx="3" fill="var(--accent)" opacity="0.47"/><text x="467" y="64" text-anchor="middle" dominant-baseline="central" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--ink)">0.5025</text>
+        <rect x="546" y="44" width="146" height="40" rx="3" fill="var(--accent)" opacity="0.28"/><text x="619" y="64" text-anchor="middle" dominant-baseline="central" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--ink)">0.5014</text>
+        <rect x="698" y="44" width="146" height="40" rx="3" fill="var(--accent)" opacity="0.38"/><text x="771" y="64" text-anchor="middle" dominant-baseline="central" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--ink)">0.5020</text>
+
+        <rect x="90" y="90" width="146" height="40" rx="3" fill="var(--accent)" opacity="0.67" stroke="var(--accent)" stroke-width="2"/><text x="163" y="110" text-anchor="middle" dominant-baseline="central" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--ink)">0.5036</text>
+        <rect x="242" y="90" width="146" height="40" rx="3" fill="var(--accent)" opacity="0.45"/><text x="315" y="110" text-anchor="middle" dominant-baseline="central" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--ink)">0.5023</text>
+        <rect x="394" y="90" width="146" height="40" rx="3" fill="var(--accent)" opacity="0.62" stroke="var(--accent)" stroke-width="2"/><text x="467" y="110" text-anchor="middle" dominant-baseline="central" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--ink)">0.5033</text>
+        <rect x="546" y="90" width="146" height="40" rx="3" fill="var(--accent)" opacity="0.46"/><text x="619" y="110" text-anchor="middle" dominant-baseline="central" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--ink)">0.5024</text>
+        <rect x="698" y="90" width="146" height="40" rx="3" fill="var(--accent)" opacity="0.48"/><text x="771" y="110" text-anchor="middle" dominant-baseline="central" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--ink)">0.5025</text>
+
+        <rect x="90" y="136" width="146" height="40" rx="3" fill="var(--accent)" opacity="0.55"/><text x="163" y="156" text-anchor="middle" dominant-baseline="central" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--ink)">0.5029</text>
+        <rect x="242" y="136" width="146" height="40" rx="3" fill="var(--accent)" opacity="0.66" stroke="var(--accent)" stroke-width="2"/><text x="315" y="156" text-anchor="middle" dominant-baseline="central" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--ink)">0.5035</text>
+        <rect x="394" y="136" width="146" height="40" rx="3" fill="var(--accent)" opacity="0.49" stroke="var(--accent)" stroke-width="2"/><text x="467" y="156" text-anchor="middle" dominant-baseline="central" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--ink)">0.5026</text>
+        <rect x="546" y="136" width="146" height="40" rx="3" fill="var(--accent)" opacity="0.75"/><text x="619" y="156" text-anchor="middle" dominant-baseline="central" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--ink)">0.5040</text>
+        <rect x="698" y="136" width="146" height="40" rx="3" fill="var(--accent)" opacity="0.41"/><text x="771" y="156" text-anchor="middle" dominant-baseline="central" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--ink)">0.5021</text>
+
+        <rect x="90" y="182" width="146" height="40" rx="3" fill="var(--accent)" opacity="0.62"/><text x="163" y="202" text-anchor="middle" dominant-baseline="central" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--ink)">0.5033</text>
+        <rect x="242" y="182" width="146" height="40" rx="3" fill="var(--accent)" opacity="0.54"/><text x="315" y="202" text-anchor="middle" dominant-baseline="central" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--ink)">0.5028</text>
+        <rect x="394" y="182" width="146" height="40" rx="3" fill="var(--accent)" opacity="0.50"/><text x="467" y="202" text-anchor="middle" dominant-baseline="central" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--ink)">0.5026</text>
+        <rect x="546" y="182" width="146" height="40" rx="3" fill="var(--accent)" opacity="0.52"/><text x="619" y="202" text-anchor="middle" dominant-baseline="central" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--ink)">0.5027</text>
+        <rect x="698" y="182" width="146" height="40" rx="3" fill="var(--accent)" opacity="0.42"/><text x="771" y="202" text-anchor="middle" dominant-baseline="central" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--ink)">0.5022</text>
+
+        <rect x="90" y="228" width="146" height="40" rx="3" fill="var(--accent)" opacity="0.85"/><text x="163" y="248" text-anchor="middle" dominant-baseline="central" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--ink)">0.5046</text>
+        <rect x="242" y="228" width="146" height="40" rx="3" fill="var(--accent)" opacity="0.40"/><text x="315" y="248" text-anchor="middle" dominant-baseline="central" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--ink)">0.5021</text>
+        <rect x="394" y="228" width="146" height="40" rx="3" fill="var(--accent)" opacity="0.25"/><text x="467" y="248" text-anchor="middle" dominant-baseline="central" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--ink)">0.5013</text>
+        <rect x="546" y="228" width="146" height="40" rx="3" fill="var(--accent)" opacity="0.20"/><text x="619" y="248" text-anchor="middle" dominant-baseline="central" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--ink)">0.5010</text>
+        <rect x="698" y="228" width="146" height="40" rx="3" fill="var(--accent)" opacity="0.10"/><text x="771" y="248" text-anchor="middle" dominant-baseline="central" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--ink)">0.5004</text>
+
+        <text x="82" y="64" text-anchor="end" dominant-baseline="central" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--muted)">0.1%</text>
+        <text x="82" y="110" text-anchor="end" dominant-baseline="central" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--muted)">0.2%</text>
+        <text x="82" y="156" text-anchor="end" dominant-baseline="central" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--muted)">0.3%</text>
+        <text x="82" y="202" text-anchor="end" dominant-baseline="central" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--muted)">0.4%</text>
+        <text x="82" y="248" text-anchor="end" dominant-baseline="central" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--muted)">0.5%</text>
+        <text x="30" y="156" text-anchor="middle" dominant-baseline="central" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="var(--muted)">min_pct</text>
+        <text x="450" y="288" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="10" fill="var(--muted)">&#x7121;&#x6280;&#x5DE7;&#x57FA;&#x6E96; = 0.5000&#xFF1B;&#x6700;&#x4F73; 0.5046&#xFF0C;&#x6700;&#x5DEE; 0.5004</text>
+      </svg>
+    </div>
+    <figcaption>25 &#x7D44;&#x7684; OOF &#x5E73;&#x5747; pAUC &#x5168;&#x90E8;&#x843D;&#x5728; 0.5004~0.5046&#xFF0C;&#x5168;&#x8DDD;&#x53EA;&#x6709; 0.0041&#x3002;&#x6700;&#x9AD8;&#x7684;&#x662F; 0.5%&#xFF0F;3 &#x6839;&#xFF08;0.5046&#xFF09;&#xFF0C;&#x4F46;&#x4F9D;&#x4E8B;&#x524D;&#x8A3B;&#x518A;&#x7684; 1-SE &#x5E73;&#x624B;&#x898F;&#x5247;&#xFF08;1 SE &#x2248; 0.0013&#xFF09;&#xFF0C;&#x6709; 5 &#x7D44;&#x6253;&#x5E73;&#xFF0C;&#x6B64;&#x6642;&#x53D6;&#x6B63;&#x6A23;&#x672C;&#x7387;&#x6700;&#x9AD8;&#x8005;&#x2014;&#x2014;&#x6240;&#x4EE5;&#x63A8;&#x9032;&#x968E;&#x6BB5; 2 &#x7684;&#x662F; 0.2%/3&#x3001;0.2%/5&#x3001;0.3%/4&#xFF0C;&#x52A0;&#x4E0A;&#x4F7F;&#x7528;&#x8005;&#x539F;&#x59CB;&#x6307;&#x5B9A;&#x7684; 0.3%/5 &#x7576;&#x4E8B;&#x524D;&#x8A3B;&#x518A;&#x5C0D;&#x7167;&#x7D44;&#x3002;25 &#x7D44;&#x88E1;&#x6709; 15 &#x7D44;&#x7684; CI &#x4E0B;&#x754C; &gt; 0.50&#xFF0C;&#x6240;&#x4EE5;&#x7A7A;&#x624B;&#x9580;&#x6ABB;&#x6C92;&#x6709;&#x89F8;&#x767C;&#x3002;&#x4F9D; min_pct &#x5206;&#x7D44;&#x5E73;&#x5747;&#x5F8C;&#x5448;&#x5012; U &#x5F62;&#xFF08;0.1% 0.5017 &#x2192; 0.2% 0.5028 &#x2192; 0.3% 0.5030 &#x2192; 0.4% 0.5027 &#x2192; 0.5% 0.5019&#xFF09;&#xFF0C;&#x5CF0;&#x503C;&#x843D;&#x5728; 0.2~0.3%&#xFF0C;&#x6B63;&#x597D;&#x662F;&#x4F7F;&#x7528;&#x8005;&#x6307;&#x5B9A;&#x7684;&#x4F4D;&#x7F6E;&#x3002;</figcaption>
+  </figure>
+</section>
+
+<section>
+  <h2><span class="num">03 &#x2014; &#x968E;&#x6BB5; 2&#xFF1A;&#x56DB;&#x7D44; transformer</span>&#x9078;&#x4E2D;&#x7684;&#x4E0D;&#x662F;&#x5206;&#x6578;&#x6700;&#x9AD8;&#x90A3;&#x7D44;&#xFF0C;&#x662F;&#x898F;&#x5247;&#x6307;&#x5B9A;&#x7684;&#x90A3;&#x7D44;</h2>
+  <p class="lede">&#x56DB;&#x7D44;&#x5404;&#x8A13;&#x7DF4;&#x4E00;&#x6B21;&#xFF08;<code>batch_size=256</code>&#xFF0C;&#x5176;&#x9918;&#x8D85;&#x53C3;&#x6578;&#x5168;&#x90E8;&#x6CBF;&#x7528; Round 4&#xFF09;&#xFF0C;&#x5728;&#x9A57;&#x8B49;&#x96C6;&#x4E0A;&#x7528;&#x540C;&#x4E00;&#x628A;&#x5C3A;&#x6BD4;&#x8F03;&#x3002;&#x6E2C;&#x8A66;&#x96C6;&#x5168;&#x7A0B;&#x672A;&#x78B0;&#x3002;</p>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>&#x6A19;&#x7C64;&#x7D44;&#x5408;</th><th class="num">&#x6B63;&#x6A23;&#x672C;&#x7387;</th><th class="num">&#x9A57;&#x8B49; pAUC&#xFF08;&#x5408;&#x7D04;&#xFF09;</th><th class="num">&#x9A57;&#x8B49; AUC&#xFF08;&#x5408;&#x7D04;&#xFF09;</th><th class="num">&#x524D;10%&#x4EA4;&#x6613;&#x6578;</th><th class="num">&#x52DD;&#x7387;</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">0.2% / 3 &#x6839;</td><td class="num">3.713%</td><td class="num">0.5026</td><td class="num">0.5020</td><td class="num">289</td><td class="num">48.79%</td></tr>
+        <tr class="hi"><td class="mono">0.2% / 5 &#x6839; &#x2190; &#x52DD;&#x51FA;</td><td class="num">2.595%</td><td class="num pos">0.5092</td><td class="num pos">0.5337</td><td class="num">265</td><td class="num">49.81%</td></tr>
+        <tr><td class="mono">0.3% / 4 &#x6839;</td><td class="num">2.307%</td><td class="num">0.5054</td><td class="num">0.5081</td><td class="num">212</td><td class="num">52.83%</td></tr>
+        <tr><td class="mono">0.3% / 5 &#x6839;&#xFF08;&#x4E8B;&#x524D;&#x8A3B;&#x518A;&#x5C0D;&#x7167;&#x7D44;&#xFF09;</td><td class="num">1.825%</td><td class="num">0.5031</td><td class="num">0.5113</td><td class="num">265</td><td class="num">53.21%</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>&#x8D0F;&#x5BB6;&#x662F; <code>0.2% / 5 &#x6839;</code>&#xFF0C;&#x9A57;&#x8B49;&#x96C6; pAUC <strong>0.5092</strong>&#x2014;&#x2014;&#x9019;&#x662F;&#x4E94;&#x8F2A;&#x4EE5;&#x4F86;&#x9A57;&#x8B49;&#x96C6;&#x6700;&#x9AD8;&#x7684;&#x6578;&#x5B57;&#xFF08;Round 3 &#x662F; 0.5050&#x3001;Round 4 &#x662F; 0.5048&#xFF09;&#x3002;&#x4E8B;&#x524D;&#x8A3B;&#x518A;&#x7684;&#x5C0D;&#x7167;&#x7D44;&#xFF08;&#x4F7F;&#x7528;&#x8005;&#x539F;&#x59CB;&#x6307;&#x5B9A;&#x7684; 0.3%/5&#xFF09;&#x62FF;&#x5230; 0.5031&#xFF0C;&#x6240;&#x4EE5;&#x300C;&#x641C;&#x5C0B;&#x300D;&#x76F8;&#x5C0D;&#x300C;&#x4E8B;&#x524D;&#x8A2D;&#x5B9A;&#x300D;&#x591A;&#x62FF;&#x4E86; +0.0061&#x3002;&#x7576;&#x4E0B;&#x770B;&#x8D77;&#x4F86;&#xFF0C;&#x9019;&#x8F2A;&#x7684;&#x6A19;&#x7C64;&#x91CD;&#x65B0;&#x8A2D;&#x8A08;&#x662F;&#x6709;&#x6548;&#x7684;&#x3002;</p>
+
+  <div class="note">
+    <p class="t">&#x70BA;&#x4EC0;&#x9EBC;&#x4E00;&#x5B9A;&#x8981;&#x7559;&#x4E00;&#x7D44;&#x4E8B;&#x524D;&#x8A3B;&#x518A;&#x5C0D;&#x7167;&#x7D44;</p>
+    <p>&#x6C92;&#x6709;&#x5B83;&#xFF0C;&#x5831;&#x544A;&#x53EA;&#x80FD;&#x8AAA;&#x300C;&#x6211;&#x5011;&#x6311;&#x4E86; 25 &#x7D44;&#x88E1;&#x6700;&#x597D;&#x7684;&#x300D;&#xFF1B;&#x6709;&#x4E86;&#x5B83;&#x624D;&#x80FD;&#x8AAA;&#x300C;&#x4E8B;&#x524D;&#x8A2D;&#x5B9A;&#x5F97;&#x5E7E;&#x5206;&#x3001;&#x641C;&#x51FA;&#x4F86;&#x7684;&#x8D0F;&#x5BB6;&#x5F97;&#x5E7E;&#x5206;&#x3001;&#x5DEE;&#x8DDD;&#x591A;&#x5C11;&#x300D;&#x3002;&#x9019;&#x662F;&#x552F;&#x4E00;&#x80FD;&#x5340;&#x5206;&#x300C;&#x641C;&#x5C0B;&#x771F;&#x7684;&#x627E;&#x5230;&#x6771;&#x897F;&#x300D;&#x8207;&#x300C;&#x641C;&#x5C0B;&#x53EA;&#x662F;&#x64EC;&#x5408;&#x9A57;&#x8B49;&#x96C6;&#x96DC;&#x8A0A;&#x300D;&#x7684;&#x505A;&#x6CD5;&#x3002;&#x7B2C; 05 &#x7BC0;&#x6703;&#x770B;&#x5230;&#xFF0C;&#x9019;&#x500B;&#x5C0D;&#x7167;&#x7D44;&#x6B63;&#x597D;&#x8B49;&#x660E;&#x4E86;&#x662F;&#x5F8C;&#x8005;&#x3002;</p>
+  </div>
+</section>
+
+<section>
+  <h2><span class="num">04 &#x2014; &#x8A13;&#x7DF4;&#x904E;&#x7A0B;&#xFF1A;&#x4E94;&#x8F2A;&#x4F86;&#x7B2C;&#x4E00;&#x6B21;&#x4E0D;&#x662F; epoch 1 &#x5C31;&#x904E;&#x64EC;&#x5408;</span></h2>
+  <figure>
+    <div class="chart">
+      <div class="legend">
+        <span><i class="ln" style="background:var(--muted)"></i>&#x8A13;&#x7DF4;&#x640D;&#x5931;</span>
+        <span><i class="ln" style="background:var(--neg)"></i>&#x9A57;&#x8B49;&#x640D;&#x5931;</span>
+        <span><i class="ln" style="background:var(--accent)"></i>&#x6E2C;&#x8A66;&#x640D;&#x5931;</span>
+      </div>
+      <svg viewBox="0 0 940 300" xmlns="http://www.w3.org/2000/svg" role="img"
+           aria-label="Round 5 &#x52DD;&#x51FA;&#x7D44;&#x5408;&#x7684;&#x8A13;&#x7DF4;/&#x9A57;&#x8B49;/&#x6E2C;&#x8A66;&#x640D;&#x5931;&#xFF0C;8 &#x500B; epoch &#x5F8C; early stop&#xFF0C;&#x6700;&#x4F73;&#x9EDE;&#x5728; epoch 3">
+        <g transform="translate(30,10)">
+          <line x1="0" y1="242.9" x2="900" y2="242.9" stroke="var(--grid)"/><text x="-6" y="245.9" text-anchor="end" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">0.0080</text>
+          <line x1="0" y1="200.0" x2="900" y2="200.0" stroke="var(--grid)"/><text x="-6" y="203.0" text-anchor="end" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">0.0085</text>
+          <line x1="0" y1="157.1" x2="900" y2="157.1" stroke="var(--grid)"/><text x="-6" y="160.1" text-anchor="end" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">0.0090</text>
+          <line x1="0" y1="114.3" x2="900" y2="114.3" stroke="var(--grid)"/><text x="-6" y="117.3" text-anchor="end" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">0.0095</text>
+          <line x1="0" y1="71.4" x2="900" y2="71.4" stroke="var(--grid)"/><text x="-6" y="74.4" text-anchor="end" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">0.0100</text>
+          <line x1="0" y1="28.6" x2="900" y2="28.6" stroke="var(--grid)"/><text x="-6" y="31.6" text-anchor="end" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">0.0105</text>
+
+          <polyline points="0.0,122.6 128.6,178.0 257.1,185.8 385.7,195.1 514.3,209.9 642.9,221.1 771.4,235.2 900.0,248.6" fill="none" stroke="var(--muted)" stroke-width="2.4"/>
+          <polyline points="0.0,95.2 128.6,82.4 257.1,98.8 385.7,94.0 514.3,60.7 642.9,78.9 771.4,50.8 900.0,35.6" fill="none" stroke="var(--neg)" stroke-width="1.8" stroke-dasharray="2 3"/>
+          <polyline points="0.0,182.8 128.6,183.6 257.1,159.6 385.7,180.3 514.3,161.3 642.9,153.4 771.4,139.9 900.0,124.4" fill="none" stroke="var(--accent)" stroke-width="1.8" stroke-dasharray="5 3"/>
+
+          <circle cx="257.1" cy="98.8" r="5.5" fill="var(--neg)"/>
+          <text x="257.1" y="98.8" dy="-12" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="10" fill="var(--neg)">&#x6700;&#x4F73;&#x9EDE;&#xFF08;epoch 3&#xFF0C;checkpoint&#xFF09;</text>
+          <text x="900.0" y="35.6" dy="-10" text-anchor="end" font-family="ui-monospace,Menlo,monospace" font-size="10" fill="var(--neg)">early stop&#xFF08;epoch 8&#xFF09;</text>
+
+          <text x="0.0" y="276" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">1</text>
+          <text x="128.6" y="276" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">2</text>
+          <text x="257.1" y="276" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">3</text>
+          <text x="385.7" y="276" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">4</text>
+          <text x="514.3" y="276" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">5</text>
+          <text x="642.9" y="276" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">6</text>
+          <text x="771.4" y="276" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">7</text>
+          <text x="900.0" y="276" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">8</text>
+          <text x="450" y="292" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="10" fill="var(--muted)">Epoch</text>
+        </g>
+      </svg>
+    </div>
+    <figcaption>&#x4E94;&#x8F2A;&#x4F86;&#x7B2C;&#x4E00;&#x6B21;&#xFF0C;&#x6700;&#x4F73; checkpoint &#x4E0D;&#x5728; epoch 1 &#x800C;&#x5728; <strong>epoch 3</strong>&#x2014;&#x2014;Round 1~4 &#x90FD;&#x662F;&#x7B2C;&#x4E00;&#x500B; epoch &#x5C31;&#x662F;&#x6700;&#x4F4E;&#x9A57;&#x8B49;&#x640D;&#x5931;&#xFF0C;&#x4E4B;&#x5F8C;&#x55AE;&#x8ABF;&#x60E1;&#x5316;&#x3002;&#x7A00;&#x758F;&#x6A19;&#x7C64;&#xFF08;&#x6B63;&#x6A23;&#x672C;&#x7387; 2.6%&#xFF09;&#x52A0;&#x4E0A;&#x81EA;&#x52D5;&#x63A8;&#x5C0E;&#x7684; <code>focal_alpha=0.974</code> &#x8B93;&#x6A21;&#x578B;&#x591A;&#x5B78;&#x4E86;&#x5169;&#x500B; epoch &#x624D;&#x958B;&#x59CB;&#x904E;&#x64EC;&#x5408;&#xFF0C;&#x9019;&#x662F;&#x672C;&#x8F2A;&#x5728;&#x8A13;&#x7DF4;&#x52D5;&#x614B;&#x4E0A;&#x552F;&#x4E00;&#x78BA;&#x5BE6;&#x7684;&#x6539;&#x5584;&#x3002;&#x6CE8;&#x610F;&#x640D;&#x5931;&#x7D55;&#x5C0D;&#x503C;&#xFF08;&#x7D04; 0.009&#xFF09;&#x8207;&#x524D;&#x56DB;&#x8F2A;&#xFF08;&#x7D04; 0.086&#xFF09;&#x5DEE;&#x4E00;&#x500B;&#x6578;&#x91CF;&#x7D1A;&#xFF0C;&#x90A3;&#x662F;&#x985E;&#x5225;&#x6BD4;&#x4F8B;&#x6539;&#x8B8A;&#x9020;&#x6210;&#x7684;&#xFF0C;&#x4E0D;&#x80FD;&#x8DE8;&#x8F2A;&#x6BD4;&#x8F03;&#x3002;&#x6E2C;&#x8A66;&#x640D;&#x5931;&#x53EA;&#x756B;&#x4F86;&#x89C0;&#x5BDF;&#xFF0C;&#x4E0D;&#x53C3;&#x8207;&#x4EFB;&#x4F55;&#x6C7A;&#x7B56;&#xFF08;EarlyStopping &#x53EA;&#x770B;&#x9A57;&#x8B49;&#x640D;&#x5931;&#xFF09;&#x3002;</figcaption>
+  </figure>
+</section>
+
+<section>
+  <h2><span class="num">05 &#x2014; &#x6E2C;&#x8A66;&#x96C6;&#xFF1A;&#x9A57;&#x8B49;&#x96C6;&#x7684;&#x512A;&#x52E2;&#x4E00;&#x5206;&#x90FD;&#x6C92;&#x5E36;&#x904E;&#x4F86;</span></h2>
+  <p class="lede">&#x9580;&#x6ABB;&#x5728;&#x9A57;&#x8B49;&#x96C6;&#x4E0A;&#x7528;&#x767E;&#x5206;&#x4F4D;&#x6383;&#x63CF;&#x9396;&#x5B9A;&#xFF08;&#x524D; 5%&#xFF0C;&#x7D55;&#x5C0D;&#x503C; 0.5988&#xFF09;&#xFF0C;<code>entry_at=1</code> &#x4E8B;&#x524D;&#x56FA;&#x5B9A;&#xFF0C;&#x6E2C;&#x8A66;&#x96C6;&#x53EA;&#x8A55;&#x4F30;&#x4E00;&#x6B21;&#x3002;</p>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>&#x6307;&#x6A19;</th><th class="num">&#x9A57;&#x8B49;&#x96C6;</th><th class="num">&#x6E2C;&#x8A66;&#x96C6;</th><th>&#x843D;&#x5DEE;</th></tr></thead>
+      <tbody>
+        <tr class="bad"><td class="mono">&#x5E73;&#x5747; pAUC&#xFF08;vs &#x5408;&#x7D04;&#xFF09;</td><td class="num pos">0.5092</td><td class="num neg">0.4993</td><td class="neg">&#x2212;0.0099&#xFF0C;&#x6389;&#x5230;&#x7121;&#x6280;&#x5DE7;&#x4EE5;&#x4E0B;</td></tr>
+        <tr class="bad"><td class="mono">AUC&#xFF08;vs &#x5408;&#x7D04;&#xFF09;</td><td class="num pos">0.5337</td><td class="num neg">0.4986</td><td class="neg">&#x2212;0.0351</td></tr>
+        <tr><td class="mono dim">&#x5E73;&#x5747; pAUC&#xFF08;vs &#x8A13;&#x7DF4;&#x6A19;&#x7C64;&#xFF09;</td><td class="num dim">0.5176</td><td class="num dim">0.5048</td><td class="dim">&#x6A21;&#x578B;&#x78BA;&#x5BE6;&#x5B78;&#x5230;&#x4E86;&#x4E00;&#x9EDE;&#x7A00;&#x758F;&#x6A19;&#x7C64;&#xFF0C;&#x4F46;&#x6C92;&#x8F49;&#x6210;&#x5408;&#x7D04;&#x512A;&#x52E2;</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>&#x7D71;&#x8A08;</th><th class="num">&#x4EA4;&#x6613;&#x6578;</th><th class="num">&#x52DD;&#x7387;</th><th>95% CI</th><th>&#x7D50;&#x8AD6;</th></tr></thead>
+      <tbody>
+        <tr class="bad"><td class="mono">&#x4E3B;&#x8981;&#x6307;&#x6A19;&#xFF08;&#x53E2;&#x96C6;&#x898F;&#x5247;&#xFF09;</td><td class="num">314</td><td class="num neg">44.59%</td><td class="mono">[39.19%, 50.12%]</td><td class="neg">CI &#x5B8C;&#x5168;&#x4F4E;&#x65BC; 50%</td></tr>
+        <tr><td class="mono">busy_only &#x6B21;&#x8981;&#x53C3;&#x8003;</td><td class="num">356</td><td class="num">46.07%</td><td class="mono dim">[40.96%, 51.26%]</td><td class="dim">&#x540C;&#x6A23;&#x672A;&#x904E;&#x7DDA;</td></tr>
+        <tr><td class="mono dim">&#x5168;&#x62BC;&#x6F32;&#x57FA;&#x6E96;</td><td class="num dim">&#x2014;</td><td class="num dim">49.97%</td><td class="dim">&#x2014;</td><td class="dim">&#x53C3;&#x8003;</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="flag">
+    <p class="t">&#x9019;&#x662F;&#x300C;&#x9A57;&#x8B49;&#x96C6;&#x904E;&#x64EC;&#x5408;&#x300D;&#x7684;&#x6559;&#x79D1;&#x66F8;&#x793A;&#x7BC4;</p>
+    <p>25 &#x7D44;&#x5728;&#x540C;&#x4E00;&#x500B;&#x9A57;&#x8B49;&#x9762;&#x4E0A;&#x6BD4;&#x8F03;&#x904E;&#xFF0C;&#x9019;&#x500B;&#x6BD4;&#x8F03;&#x672C;&#x8EAB;&#x7528;&#x6389;&#x4E86;&#x9A57;&#x8B49;&#x96C6;&#x8CC7;&#x8A0A;&#xFF0C;&#x6240;&#x4EE5;&#x8D0F;&#x5BB6;&#x7684;&#x9A57;&#x8B49;&#x6578;&#x5B57;&#x662F;<strong>&#x4E0A;&#x754C;</strong>&#x800C;&#x975E;&#x9810;&#x671F;&#x8868;&#x73FE;&#x3002;&#x5BE6;&#x969B;&#x6578;&#x5B57;&#x8AAA;&#x660E;&#x4E86;&#x4E00;&#x5207;&#xFF1A;&#x9A57;&#x8B49;&#x96C6; pAUC 0.5092&#xFF08;&#x4E94;&#x8F2A;&#x6700;&#x9AD8;&#xFF09;&#x2192; &#x6E2C;&#x8A66;&#x96C6; 0.4993&#xFF08;&#x4F4E;&#x65BC;&#x7121;&#x6280;&#x5DE7;&#xFF09;&#x3002;&#x800C;&#x4E8B;&#x524D;&#x8A3B;&#x518A;&#x7684;&#x5C0D;&#x7167;&#x7D44;&#xFF08;0.3%/5&#xFF0C;&#x4F7F;&#x7528;&#x8005;&#x539F;&#x59CB;&#x6307;&#x5B9A;&#xFF09;&#x5728;&#x9A57;&#x8B49;&#x96C6;&#x53EA;&#x6709; 0.5031&#x2014;&#x2014;&#x641C;&#x5C0B;&#x591A;&#x62FF;&#x7684;&#x90A3; +0.0061&#xFF0C;&#x6E2C;&#x8A66;&#x96C6;&#x4E0A;&#x4E00;&#x5206;&#x90FD;&#x6C92;&#x6709;&#x3002;&#x63DB;&#x53E5;&#x8A71;&#x8AAA;&#xFF0C;<strong>&#x90A3; +0.0061 &#x5B8C;&#x5168;&#x662F;&#x9A57;&#x8B49;&#x96C6;&#x96DC;&#x8A0A;</strong>&#xFF0C;&#x4E0D;&#x662F;&#x8A0A;&#x865F;&#x3002;&#x82E5;&#x6C92;&#x6709;&#x4E8B;&#x5148;&#x7559;&#x4E0B;&#x5C0D;&#x7167;&#x7D44;&#xFF0C;&#x9019;&#x4EF6;&#x4E8B;&#x7121;&#x6CD5;&#x88AB;&#x8B49;&#x660E;&#x3002;</p>
+  </div>
+
+  <p>&#x6B21;&#x8981;&#x8A3A;&#x65B7;&#x540C;&#x6A23;&#x4E0D;&#x6A02;&#x89C0;&#xFF1A;314 &#x7B46;&#x9032;&#x5834;&#x88E1;&#x53EA;&#x6709; <strong>22.6%</strong> &#x5BE6;&#x969B;&#x6F32;&#x5E45;&#x9054;&#x5230;&#x8A13;&#x7DF4;&#x6A19;&#x7C64;&#x8981;&#x6C42;&#x7684; 0.2%&#xFF1B;&#x9032;&#x5834; bar &#x7684; 1 &#x5C0F;&#x6642;&#x5831;&#x916C;&#x5E73;&#x5747; <strong>&#x2212;0.047%</strong>&#xFF0C;&#x6BD4;&#x5168;&#x9AD4; bar &#x7684; &#x2212;0.0028% &#x9084;&#x5DEE;&#x3002;&#x6A21;&#x578B;&#x9078;&#x51FA;&#x4F86;&#x7684;&#x4E26;&#x4E0D;&#x662F;&#x300C;&#x5F37;&#x52C1;&#x4E0A;&#x6F32;&#x7684;&#x4E2D;&#x6BB5;&#x300D;&#xFF0C;&#x800C;&#x662F;&#x6BD4;&#x96A8;&#x6A5F;&#x7565;&#x5DEE;&#x7684;&#x4E00;&#x6279; bar&#x3002;</p>
+
+  <div class="note">
+    <p class="t">&#x4E8B;&#x524D;&#x8A3B;&#x518A;&#x7684;&#x529F;&#x6548;&#x8072;&#x660E;&#xFF08;&#x5728;&#x8DD1;&#x6E2C;&#x8A66;&#x96C6;&#x4E4B;&#x524D;&#x5C31;&#x5BEB;&#x660E;&#xFF09;</p>
+    <p><code>gap</code> &#x5F9E; 6 &#x8B8A;&#x6210; 12&#xFF08;&#x5C0D;&#x9F4A; 1 &#x5C0F;&#x6642;&#x7D50;&#x7B97;&#xFF09;&#xFF0C;&#x4EA4;&#x6613;&#x6578;&#x5F9E; Round 4 &#x7684; 661 &#x7B46;&#x6389;&#x5230; 314 &#x7B46;&#x3002;&#x9019;&#x8B93;&#x901A;&#x95DC;&#x9700;&#x8981;&#x7684;&#x89C0;&#x6E2C;&#x52DD;&#x7387;&#x5F9E; 57.87% &#x5347;&#x5230;&#x7D04; <strong>59.6%</strong>&#x2014;&#x2014;<strong>Round 5 &#x5929;&#x751F;&#x6BD4; Round 4 &#x96E3;&#x904E;&#x95DC;&#xFF0C;&#x8207;&#x6A21;&#x578B;&#x597D;&#x58DE;&#x7121;&#x95DC;</strong>&#x3002;&#x56E0;&#x6B64; <code>--min_trades</code> &#x7DAD;&#x6301; 100 &#x4E0D;&#x4E0B;&#x4FEE;&#xFF1A;&#x770B;&#x5230;&#x4EA4;&#x6613;&#x6578;&#x6E1B;&#x534A;&#x624D;&#x8ABF;&#x898F;&#x5247;&#xFF0C;&#x6B63;&#x662F; <code>no-lookahead-bias</code> skill &#x8B66;&#x544A;&#x7684;&#x300C;&#x63DB;&#x898F;&#x5247;&#x76F4;&#x5230;&#x5F97;&#x5230;&#x60F3;&#x8981;&#x7684;&#x7B54;&#x6848;&#x300D;&#x3002;&#x4E0D;&#x904E;&#x9019;&#x6B21;&#x5DEE;&#x8DDD;&#x592A;&#x5927;&#xFF08;44.59% vs &#x9700;&#x8981;&#x7684; 59.6%&#xFF09;&#xFF0C;&#x529F;&#x6548;&#x554F;&#x984C;&#x4E0D;&#x662F;&#x4E3B;&#x56E0;&#x3002;</p>
+  </div>
+</section>
+
+<section>
+  <h2><span class="num">06 &#x2014; &#x52D8;&#x8AA4;&#xFF1A;Round 3 &#x7684;&#x958B;&#x55AE;&#x6642;&#x9593;&#x5206;&#x4F48;&#x5716;&#x662F;&#x932F;&#x7684;</span></h2>
+  <p class="lede">&#x672C;&#x8F2A;&#x9806;&#x624B;&#x767C;&#x73FE;&#x4E26;&#x4FEE;&#x6389;&#x4E00;&#x500B;&#x5F9E; Round 1 &#x5C31;&#x5B58;&#x5728;&#x7684; bug&#x3002;<code>evaluate_event.py</code> &#x7528; <code>raw_ohlcv.csv</code> &#x7684; <code>tail(n_test)</code> &#x53D6;&#x4EA4;&#x6613;&#x6642;&#x9593;&#x6233;&#xFF0C;&#x4F46;&#x90A3;&#x4EFD;&#x6A94;&#x6848;&#x8207;&#x6A21;&#x578B;&#x771F;&#x6B63;&#x8B80;&#x7684; <code>stock_features.csv</code> &#x9577;&#x5EA6;&#x4E0D;&#x540C;&#xFF08;170,778 vs 165,695&#xFF09;&#x3001;&#x7D50;&#x675F;&#x6642;&#x9593;&#x4E0D;&#x540C;&#xFF08;2026-08-16 vs 2026-07-31&#xFF09;&#xFF0C;&#x4E14;&#x6709; <strong>4,981 &#x500B;&#x5167;&#x90E8;&#x65E5;&#x671F;&#x7F3A;&#x53E3;</strong>&#xFF08;<code>extra_features()</code> &#x7684; inner join &#x4E1F;&#x6389;&#x7684;&#xFF09;&#x3002;&#x5BE6;&#x6E2C;&#x9010;&#x4F4D;&#x5C0D;&#x9F4A;&#x7B26;&#x5408;&#x7387; <strong>0.0000%</strong>&#x3002;</p>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>&#x53D7;&#x5F71;&#x97FF;</th><th>&#x820A;&#xFF08;&#x932F;&#xFF09;</th><th>&#x65B0;&#xFF08;&#x6B63;&#x78BA;&#xFF09;</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">Round 3 &#x4EA4;&#x6613;&#x6642;&#x9593;&#x7BC4;&#x570D;</td><td class="mono neg">2026-04-23 ~ 2026-08-16</td><td class="mono pos">2026-04-06 ~ 2026-07-31</td></tr>
+        <tr><td class="mono">Round 4 &#x4EA4;&#x6613;&#x6642;&#x9593;&#x7BC4;&#x570D;</td><td class="mono neg">2026-04-23 ~ 2026-08-16</td><td class="mono pos">2026-04-06 ~ 2026-07-31</td></tr>
+        <tr class="bad"><td class="mono">Round 3 &#x958B;&#x55AE;&#x5C0F;&#x6642;&#x5206;&#x4F48;</td><td class="mono">8~28 &#x7B46;&#xFF0C;&#x5CF0;&#x503C; 22 &#x6642;&#x3001;&#x8C37;&#x503C; 20 &#x6642;</td><td class="mono">11~31 &#x7B46;&#xFF0C;&#x5CF0;&#x503C; 22 &#x6642;&#x3001;&#x8C37;&#x503C; 21 &#x6642;</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p><strong>&#x52DD;&#x7387;&#x3001;&#x4FE1;&#x8CF4;&#x5340;&#x9593;&#x3001;&#x901A;&#x95DC;&#x5224;&#x5B9A;&#x5B8C;&#x5168;&#x4E0D;&#x53D7;&#x5F71;&#x97FF;</strong>&#x2014;&#x2014;&#x90A3;&#x4E9B;&#x7528;&#x7684;&#x662F;&#x6A21;&#x578B;&#x7BA1;&#x7DDA;&#x51FA;&#x4F86;&#x7684;&#x9663;&#x5217;&#xFF0C;&#x5C0D;&#x9F4A;&#x4E00;&#x76F4;&#x662F;&#x6B63;&#x78BA;&#x7684;&#xFF1B;&#x53EA;&#x6709;&#x300C;&#x65E5;&#x671F;&#x67E5;&#x8868;&#x300D;&#x7528;&#x932F;&#x4E86;&#x6A94;&#x6848;&#x3002;&#x5DF2;&#x7528;&#x65E2;&#x6709; <code>trades.csv</code> &#x91CD;&#x65B0;&#x7522;&#x751F;&#x6B63;&#x78BA;&#x6642;&#x9593;&#x6233;&#xFF08;<code>entry_idx</code> &#x672C;&#x4F86;&#x5C31;&#x662F;&#x5C0D;&#x7684;&#xFF0C;&#x4E0D;&#x9700;&#x91CD;&#x8A13;&#xFF09;&#xFF0C;Round 4 &#x7684;&#x95DC;&#x5361;&#x6578;&#x5B57;&#x91CD;&#x8DD1;&#x5F8C;&#x9010;&#x4F4D;&#x5143;&#x76F8;&#x540C;&#xFF08;661 &#x7B46;&#x3001;47.81%&#x3001;CI [0.4402, 0.5162]&#xFF09;&#x3002;Round 3 &#x5831;&#x544A;&#x7684;&#x958B;&#x55AE;&#x6642;&#x9593;&#x5206;&#x4F48;&#x5716;&#x8207;&#x6B63;&#x78BA;&#x7248;&#x7684;&#x76F8;&#x95DC;&#x4FC2;&#x6578;&#x53EA;&#x6709; <strong>0.577</strong>&#xFF0C;&#x662F;&#x4E00;&#x5F35;&#x4E0D;&#x540C;&#x7684;&#x5716;&#xFF1B;&#x4E0D;&#x904E;&#x8A72;&#x5716;&#x7684;&#x5B9A;&#x6027;&#x7D50;&#x8AD6;&#xFF08;&#x6C92;&#x6709;&#x96C6;&#x4E2D;&#x5728;&#x55AE;&#x4E00;&#x4EA4;&#x6613;&#x6642;&#x6BB5;&#xFF09;&#x4ECD;&#x7136;&#x6210;&#x7ACB;&#x2014;&#x2014;&#x6B63;&#x78BA;&#x7248;&#x7684;&#x5CF0;&#x503C;/&#x5747;&#x503C;&#x6BD4;&#x662F; 1.79&#x3002;&#x4FEE;&#x6B63;&#x65B9;&#x5F0F;&#x662F;&#x4E00;&#x5F8B;&#x5F9E; <code>stock_features.csv</code> &#x53D6;&#x65E5;&#x671F;&#xFF0C;&#x4E26;&#x628A;&#x5207;&#x5206;&#x7D22;&#x5F15;&#x63A8;&#x5C0E;&#x6536;&#x6582;&#x5230; <code>event_common.split_start_index()</code> &#x4E00;&#x500B;&#x51FD;&#x5F0F;&#xFF0C;&#x7528;&#x4E00;&#x4EFD;&#x5C0D;&#x7167; <code>Dataset_Custom</code> &#x5BE6;&#x969B;&#x8F38;&#x51FA;&#x7684;&#x6E2C;&#x8A66;&#x91D8;&#x4F4F;&#x3002;</p>
+</section>
+
+<section>
+  <h2><span class="num">07 &#x2014; &#x7D50;&#x8AD6;</span>&#x6A19;&#x7C64;&#x8A2D;&#x8A08;&#x662F;&#x5C0D;&#x7684;&#xFF0C;&#x4F46;&#x6A21;&#x578B;&#x5B78;&#x4E0D;&#x5230;&#xFF0C;&#x800C;&#x4E14;&#x641C;&#x5C0B;&#x53EA;&#x627E;&#x5230;&#x96DC;&#x8A0A;</h2>
+  <ul>
+    <li><strong>&#x672A;&#x901A;&#x904E;&#x95DC;&#x5361;&#xFF0C;&#x4E94;&#x8F2A;&#x6700;&#x5DEE;</strong>&#xFF1A;&#x6E2C;&#x8A66;&#x96C6;&#x52DD;&#x7387; 44.59%&#xFF08;314 &#x7B46;&#xFF0C;95% CI [39.19%, 50.12%]&#xFF09;&#xFF0C;CI &#x5B8C;&#x5168;&#x4F4E;&#x65BC; 50%&#x3002;&#x4E94;&#x8F2A;&#xFF1A;51.32% &#x2192; 50.59% &#x2192; 42.79% &#x2192; 47.81% &#x2192; <strong>44.59%</strong>&#x3002;</li>
+    <li><strong>&#x300C;&#x53D6;&#x4E2D;&#x9593;&#x300D;&#x7684;&#x8A2D;&#x8A08;&#x5047;&#x8A2D;&#x672C;&#x8EAB;&#x662F;&#x6210;&#x7ACB;&#x7684;</strong>&#xFF1A;&#x5BE6;&#x6E2C; run &#x4E2D;&#x9593;&#x90A3;&#x6839;&#x7684; 1 &#x5C0F;&#x6642;&#x5831;&#x916C; +0.756%&#xFF0C;&#x660E;&#x986F;&#x9AD8;&#x65BC;&#x8D77;&#x9EDE; +0.483% &#x8207;&#x7D42;&#x9EDE; +0.471%&#xFF0C;&#x4E14; 100% &#x662F;&#x5408;&#x7D04;&#x7372;&#x52DD;&#x3002;&#x554F;&#x984C;&#x4E0D;&#x5728;&#x6A19;&#x7C64;&#x8A2D;&#x8A08;&#xFF0C;&#x5728;&#x6A21;&#x578B;&#x5B78;&#x4E0D;&#x5230;&#x2014;&#x2014;&#x6E2C;&#x8A66;&#x96C6;&#x5C0D;&#x8A13;&#x7DF4;&#x6A19;&#x7C64;&#x7684; pAUC &#x662F; 0.5048&#xFF0C;&#x53EA;&#x6BD4;&#x7121;&#x6280;&#x5DE7;&#x9AD8;&#x4E00;&#x9EDE;&#x9EDE;&#x3002;</li>
+    <li><strong>25 &#x7D44;&#x641C;&#x5C0B;&#x627E;&#x5230;&#x7684;&#x662F;&#x96DC;&#x8A0A;&#xFF0C;&#x9019;&#x9EDE;&#x5DF2;&#x88AB;&#x8B49;&#x660E;</strong>&#xFF1A;&#x9A57;&#x8B49;&#x96C6; pAUC 0.5092&#xFF08;&#x4E94;&#x8F2A;&#x6700;&#x9AD8;&#xFF09;&#x2192; &#x6E2C;&#x8A66;&#x96C6; 0.4993&#xFF08;&#x4F4E;&#x65BC;&#x7121;&#x6280;&#x5DE7;&#xFF09;&#x3002;&#x4E8B;&#x524D;&#x8A3B;&#x518A;&#x7684;&#x5C0D;&#x7167;&#x7D44;&#xFF08;0.3%/5&#xFF09;&#x9A57;&#x8B49;&#x96C6;&#x53EA;&#x6709; 0.5031&#xFF0C;&#x641C;&#x5C0B;&#x591A;&#x62FF;&#x7684; +0.0061 &#x5728;&#x6E2C;&#x8A66;&#x96C6;&#x4E0A;&#x5B8C;&#x5168;&#x6D88;&#x5931;&#x3002;<strong>&#x5982;&#x679C;&#x6C92;&#x6709;&#x4E8B;&#x5148;&#x7559;&#x4E0B;&#x5C0D;&#x7167;&#x7D44;&#xFF0C;&#x9019;&#x500B;&#x7D50;&#x8AD6;&#x7121;&#x6CD5;&#x6210;&#x7ACB;</strong>&#x2014;&#x2014;&#x9019;&#x662F;&#x672C;&#x8F2A;&#x65B9;&#x6CD5;&#x8AD6;&#x4E0A;&#x6700;&#x6709;&#x50F9;&#x503C;&#x7684;&#x4E00;&#x4EF6;&#x4E8B;&#x3002;</li>
+    <li><strong>&#x6574;&#x500B;&#x7DB2;&#x683C;&#x7684;&#x8A0A;&#x865F;&#x7A7A;&#x9593;&#x6975;&#x7A84;</strong>&#xFF1A;25 &#x7D44; OOF pAUC &#x5168;&#x8DDD;&#x53EA;&#x6709; 0.0041&#xFF08;0.5004~0.5046&#xFF09;&#x3002;&#x5728;&#x9019;&#x7A2E;&#x91CF;&#x7D1A;&#x4E0B;&#xFF0C;&#x300C;&#x53C3;&#x6578;&#x641C;&#x5C0B;&#x300D;&#x80FD;&#x6311;&#x51FA;&#x7684;&#x5DEE;&#x7570;&#x672C;&#x4F86;&#x5C31;&#x8207;&#x62BD;&#x6A23;&#x96DC;&#x8A0A;&#x540C;&#x4E00;&#x500B;&#x6578;&#x91CF;&#x7D1A;&#xFF0C;&#x9078;&#x51FA;&#x4F86;&#x7684;&#x8D0F;&#x5BB6;&#x4E0D;&#x53EF;&#x80FD;&#x7A69;&#x5B9A;&#x3002;</li>
+    <li><strong>&#x552F;&#x4E00;&#x78BA;&#x5BE6;&#x7684;&#x6539;&#x5584;&#x662F;&#x8A13;&#x7DF4;&#x52D5;&#x614B;</strong>&#xFF1A;&#x4E94;&#x8F2A;&#x4F86;&#x7B2C;&#x4E00;&#x6B21;&#x6700;&#x4F73; checkpoint &#x4E0D;&#x5728; epoch 1 &#x800C;&#x5728; epoch 3&#x3002;&#x7A00;&#x758F;&#x6A19;&#x7C64; + &#x81EA;&#x52D5;&#x63A8;&#x5C0E;&#x7684; focal_alpha=0.974 &#x78BA;&#x5BE6;&#x8B93;&#x6A21;&#x578B;&#x591A;&#x5B78;&#x4E86;&#x5169;&#x500B; epoch&#xFF0C;&#x4F46;&#x6C92;&#x6709;&#x8F49;&#x5316;&#x6210;&#x4EFB;&#x4F55;&#x4EA4;&#x6613;&#x512A;&#x52E2;&#x3002;</li>
+    <li><strong>&#x9806;&#x624B;&#x4FEE;&#x6389;&#x4E00;&#x500B;&#x5F9E; Round 1 &#x5C31;&#x5B58;&#x5728;&#x7684;&#x6642;&#x9593;&#x6233; bug</strong>&#xFF1A;&#x6240;&#x6709; <code>trades.csv</code> &#x7684; <code>entry_time</code> &#x90FD;&#x662F;&#x932F;&#x7684;&#xFF08;&#x9010;&#x4F4D;&#x5C0D;&#x9F4A;&#x7B26;&#x5408;&#x7387; 0%&#xFF09;&#xFF0C;Round 3 &#x5831;&#x544A;&#x7684;&#x958B;&#x55AE;&#x6642;&#x9593;&#x5206;&#x4F48;&#x5716;&#x56E0;&#x6B64;&#x662F;&#x932F;&#x7684;&#x3002;&#x52DD;&#x7387;/CI/&#x901A;&#x95DC;&#x4E0D;&#x53D7;&#x5F71;&#x97FF;&#xFF0C;&#x5DF2;&#x4FEE;&#x6B63;&#x4E26;&#x9644;&#x52D8;&#x8AA4;&#x3002;</li>
+  </ul>
+
+  <div class="good-box">
+    <p class="t">&#x4E0B;&#x4E00;&#x6B65;&#x5EFA;&#x8B70;&#xFF08;&#x50C5;&#x4F9B;&#x53C3;&#x8003;&#xFF0C;&#x975E;&#x65E2;&#x5B9A;&#x8A08;&#x756B;&#xFF09;</p>
+    <p>(1) &#x4E94;&#x8F2A;&#x4E0B;&#x4F86;&#xFF0C;&#x63DB;&#x904E;&#x7279;&#x5FB5;&#x4F86;&#x6E90;&#x3001;&#x63DB;&#x904E;&#x67B6;&#x69CB;&#x6DF1;&#x5EA6;&#x3001;&#x63DB;&#x904E;&#x640D;&#x5931;&#x51FD;&#x6578;&#x3001;&#x63DB;&#x904E;&#x9078;&#x6A21;&#x6307;&#x6A19;&#x3001;&#x73FE;&#x5728;&#x63DB;&#x904E;&#x6A19;&#x7C64;&#x5B9A;&#x7FA9;&#x672C;&#x8EAB;&#xFF0C;&#x6E2C;&#x8A66;&#x96C6;&#x7684;&#x8A0A;&#x865F;&#x91CF;&#x7D1A;&#x59CB;&#x7D42;&#x8CBC;&#x8457;&#x7121;&#x6280;&#x5DE7;&#x57FA;&#x6E96;&#xFF08;pAUC 0.4993~0.5013&#xFF09;&#x3002;&#x9019;&#x500B;&#x4E00;&#x81F4;&#x6027;&#x672C;&#x8EAB;&#x5C31;&#x662F;&#x7D50;&#x8AD6;&#xFF1A;<strong>&#x554F;&#x984C;&#x4E0D;&#x5728;&#x300C;&#x9084;&#x6C92;&#x627E;&#x5230;&#x5C0D;&#x7684;&#x8A2D;&#x5B9A;&#x300D;&#xFF0C;&#x800C;&#x5728; 5 &#x5206;&#x9418; K &#x7DDA;&#x7684;&#x50F9;&#x91CF;/&#x6301;&#x5009;&#x884D;&#x751F;&#x7279;&#x5FB5;&#xFF0C;&#x5C0D; 30~60 &#x5206;&#x9418;&#x7684;&#x65B9;&#x5411;&#x9810;&#x6E2C;&#x5C31;&#x662F;&#x63A5;&#x8FD1;&#x6C92;&#x6709;&#x8CC7;&#x8A0A;</strong>&#xFF1B;(2) &#x82E5;&#x8981;&#x7E7C;&#x7E8C;&#xFF0C;&#x552F;&#x4E00;&#x9084;&#x6C92;&#x52D5;&#x904E;&#x7684;&#x7DAD;&#x5EA6;&#x662F;<strong>&#x8CC7;&#x8A0A;&#x4F86;&#x6E90;&#x672C;&#x8EAB;</strong>&#x2014;&#x2014;&#x93C8;&#x4E0A;&#x8CC7;&#x6599;&#x3001;&#x8DE8;&#x4EA4;&#x6613;&#x6240;&#x50F9;&#x5DEE;&#x3001;&#x8A02;&#x55AE;&#x7C3F;&#x5FAE;&#x7D50;&#x69CB;&#xFF08;Round 3 &#x5DF2;&#x78BA;&#x8A8D;&#x5373;&#x6642;&#x7AEF;&#x7121;&#x6CD5;&#x91CD;&#x73FE;&#xFF0C;&#x9700;&#x81EA;&#x5EFA; WebSocket &#x5168;&#x984D;&#x8A02;&#x55AE;&#x7C3F;&#xFF09;&#xFF0C;&#x800C;&#x4E0D;&#x662F;&#x5728;&#x65E2;&#x6709;&#x7279;&#x5FB5;&#x4E0A;&#x518D;&#x63DB;&#x4E00;&#x7A2E;&#x6A19;&#x7C64;&#x6216;&#x67B6;&#x69CB;&#xFF1B;(3) &#x672C;&#x8F2A;&#x4E5F;&#x518D;&#x6B21;&#x793A;&#x7BC4;&#x4E86;&#x4E8B;&#x524D;&#x8A3B;&#x518A;&#x5C0D;&#x7167;&#x7D44;&#x7684;&#x50F9;&#x503C;&#xFF0C;&#x672A;&#x4F86;&#x4EFB;&#x4F55;&#x641C;&#x5C0B;&#x90FD;&#x61C9;&#x8A72;&#x4FDD;&#x7559;&#x4E00;&#x7D44;&#xFF0C;&#x5426;&#x5247;&#x7121;&#x6CD5;&#x5340;&#x5206;&#x8A0A;&#x865F;&#x8207;&#x96DC;&#x8A0A;&#xFF1B;(4) 44.59% &#x7684;&#x52DD;&#x7387;&#x5728;&#x8CE0;&#x7387; 0.85 &#x4E0B;&#x671F;&#x671B;&#x503C;&#x660E;&#x78BA;&#x70BA;&#x8CA0;&#xFF08;&#x6B0A;&#x76CA;&#x5F9E; 1.0 &#x5269; 0.315&#xFF0C;&#x6700;&#x5927;&#x56DE;&#x64A4; &#x2212;70.5%&#xFF09;&#xFF0C;&#x4E0D;&#x5EFA;&#x8B70;&#x4F9D;&#x6B64;&#x7CFB;&#x7D71;&#x4E0B;&#x55AE;&#x3002;</p>
+  </div>
+</section>
+
+<footer>
+  <p>&#x8CC7;&#x6599;&#xFF1A;BTCUSDT + ETHUSDT/BNBUSDT/SOLUSDT 5min&#xFF08;2025-01-01 ~ 2026-07-31&#xFF0C;165,697 &#x5217;&#xFF09;&#x3002;&#x6A19;&#x7C64;&#xFF1A;<code>lookahead=12</code>&#xFF08;1 &#x5C0F;&#x6642;&#xFF09;&#xFF0C;<code>target</code> = &#x5E45;&#x5EA6;&#x9580;&#x6ABB;&#xFF08;<code>Close[t+12] &gt;= Close[t]&#xD7;(1+min_pct)</code>&#xFF09;&#x5F8C;&#x5C0D;&#x9023;&#x7E8C;&#x6BB5;&#x53D6;&#x4E2D;&#x9593;&#xFF08;&#x5947;&#x6578;&#x6BB5;&#x53D6;&#x4E2D;&#x9593; 1 &#x6839;&#x3001;&#x5076;&#x6578;&#x6BB5;&#x53D6;&#x4E2D;&#x9593; 2 &#x6839;&#xFF09;&#xFF0C;<code>contract_target</code> = <code>Close[t+12] &gt; Close[t]</code>&#xFF08;&#x771F;&#x5BE6;&#x5408;&#x7D04;&#x7D50;&#x7B97;&#xFF0C;&#x52DD;&#x7387;/&#x6B0A;&#x76CA;/&#x901A;&#x95DC;&#x4E00;&#x5F8B;&#x7528;&#x5B83;&#xFF09;&#xFF0C;<code>fwd_ret</code> = &#x5BE6;&#x969B;&#x6F32;&#x5E45;&#xFF08;&#x8A3A;&#x65B7;&#x7528;&#xFF09;&#x3002;&#x4E09;&#x8005;&#x5206;&#x958B;&#x5B58;&#x653E;&#xFF1A;<code>target</code> &#x5728; <code>stock_features.csv</code>&#x3001;&#x53E6;&#x5169;&#x8005;&#x5728; <code>labels.csv</code>&#xFF08;&#x8207;&#x7279;&#x5FB5;&#x8868;&#x7B49;&#x9577;&#x540C;&#x5E8F;&#xFF0C;&#x5C0D;&#x9F4A;&#x7531;&#x5EFA;&#x69CB;&#x65B9;&#x5F0F;&#x4FDD;&#x8B49;&#x800C;&#x975E;&#x4E8B;&#x5F8C; join&#xFF09;&#xFF0C;&#x4E26;&#x7528;&#x7D50;&#x69CB;&#x6027;&#x65B7;&#x8A00;&#x78BA;&#x4FDD;&#x6A19;&#x7C64;&#x6B04;&#x7D55;&#x4E0D;&#x9032;&#x5165;&#x7279;&#x5FB5;&#x8868;&#xFF08;&#x5426;&#x5247;&#x6703;&#x88AB; <code>Dataset_Custom</code> &#x7576;&#x6210;&#x984D;&#x5916;&#x6A21;&#x578B;&#x8F38;&#x5165;&#x800C;&#x5B8C;&#x5168;&#x6D29;&#x6F0F;&#xFF09;&#x3002;&#x5C3E;&#x7AEF;&#x8A2D;&#x9650;&#x4E09;&#x898F;&#x5247;&#xFF1A;R1 &#x8996;&#x91CE;&#x5C3E;&#x7AEF;&#x4E1F; 12 &#x6839;&#xFF1B;R2 &#x82E5;&#x5269;&#x9918;&#x5E8F;&#x5217;&#x5C3E;&#x7AEF;&#x662F;&#x9023;&#x7E8C; 1 &#x6BB5;&#x5247;&#x6574;&#x6BB5;&#x4E1F;&#x68C4;&#xFF08;&#x53F3;&#x8A2D;&#x9650;&#xFF0C;&#x771F;&#x5BE6;&#x9577;&#x5EA6;&#x8207;&#x4E2D;&#x9EDE;&#x672A;&#x77E5;&#xFF09;&#xFF1B;R3 &#x7528; <code>min_pct_floor=0.001</code>&#xFF08;&#x7DB2;&#x683C;&#x6700;&#x5C0F;&#x9580;&#x6ABB;&#xFF09;&#x8A2D;&#x9650;&#x4E00;&#x6B21;&#x4EE5;&#x652F;&#x914D;&#x5168;&#x90E8; 25 &#x7D44;&#xFF0C;&#x4FDD;&#x8B49;&#x5171;&#x7528;&#x540C;&#x4E00;&#x7D44;&#x6709;&#x6548;&#x5217;&#x8207;&#x5207;&#x5206;&#x3002;&#x672C;&#x6B21;&#x5BE6;&#x969B;&#x780D;&#x6389; 13 &#x6839;&#x3002;&#x7279;&#x5FB5;&#xFF1A;&#x6CBF;&#x7528; Round 4 &#x9078;&#x51FA;&#x7684; 15 &#x500B;&#xFF08;<code>--features</code> &#x660E;&#x78BA;&#x6307;&#x5B9A;&#xFF09;&#xFF0C;&#x672C;&#x8F2A;&#x4E0D;&#x91CD;&#x505A;&#x7279;&#x5FB5;&#x7BE9;&#x9078;&#xFF0C;&#x8B93;&#x552F;&#x4E00;&#x8B8A;&#x56E0;&#x662F;&#x6A19;&#x7C64;&#x3002;&#x53C3;&#x6578;&#x641C;&#x5C0B;&#xFF1A;<code>min_pct &#x2208; {0.1,0.2,0.3,0.4,0.5}%</code> &#xD7; <code>min_run &#x2208; {3,4,5,6,8}</code> &#x5171; 25 &#x7D44;&#xFF0C;GBDT&#xFF08;<code>HistGradientBoostingClassifier</code>, <code>class_weight='balanced'</code>, <code>early_stopping=False</code>&#xFF09;+ &#x843D;&#x5F8C;&#x5806;&#x758A;&#xFF08;lag {1,3,6,12,24,48} + rolling mean/std {12,48,144}&#xFF0C;&#x5171; 195 &#x500B;&#x8F38;&#x5165;&#x6B04;&#xFF0C;&#x5168;&#x90E8;&#x5F8C;&#x770B;&#xFF09;&#x5728; train+val 132,558 &#x5217;&#x4E0A;&#x8DD1; 5 &#x6298; TimeSeriesSplit&#xFF0C;OOF &#x5206;&#x6578;&#x5C0D;&#x7167; <code>contract_target</code> &#x8A55;&#x5206;&#xFF0C;CI &#x7528; block bootstrap&#xFF08;<code>block_len=12</code>&#xFF0C;&#x56E0; H=12 &#x4E0B;&#x76F8;&#x9130;&#x6A19;&#x7C64; lag-1 &#x4E00;&#x81F4;&#x7387;&#x9054; 0.8621&#xFF09;&#x3002;&#x4E8B;&#x524D;&#x8A3B;&#x518A;&#x898F;&#x5247;&#xFF1A;1-SE &#x5E73;&#x624B;&#x53D6;&#x6B63;&#x6A23;&#x672C;&#x7387;&#x6700;&#x9AD8;&#x8005;&#xFF1B;&#x7A7A;&#x624B;&#x9580;&#x6ABB;&#xFF08;&#x6700;&#x4F73; CI &#x4E0B;&#x754C; &#x2264; 0.50 &#x5247;&#x4E0D;&#x63A8;&#x9032;&#xFF0C;&#x672C;&#x6B21;&#x672A;&#x89F8;&#x767C;&#xFF0C;&#x6700;&#x4F73; CI &#x4E0B;&#x754C; 0.5022&#xFF09;&#xFF1B;&#x8A13;&#x7DF4;&#x6BB5;&#x6B63;&#x6A23;&#x672C; &lt; 500 &#x6A19;&#x8A18; underpowered&#xFF08;&#x672C;&#x6B21;&#x7121;&#xFF09;&#x3002;&#x968E;&#x6BB5; 2 &#x8A13;&#x7DF4;&#x524D;&#x4E09;&#x540D; + &#x4E8B;&#x524D;&#x8A3B;&#x518A;&#x5C0D;&#x7167;&#x7D44;&#xFF08;0.3%/5&#xFF09;&#x5171; 4 &#x7D44;&#x3002;&#x6A21;&#x578B;&#xFF1A;iTransformer&#xFF0C;<code>seq_len=512, label_len=48, pred_len=1, d_model=256, d_ff=512, e_layers=1, n_heads=8, dropout=0.2, lr=1e-4, lradj=type3, patience=5, loss=focal_g2</code>&#xFF0C;<code>batch_size=256</code>&#xFF08;&#x552F;&#x4E00;&#x523B;&#x610F;&#x504F;&#x96E2; Round 4 &#x7684;&#x8D85;&#x53C3;&#x6578;&#xFF1A;&#x6B63;&#x6A23;&#x672C;&#x7387; 2.6% &#x4E0B; batch=64 &#x6709; 31% &#x7684;&#x6279;&#x6B21;&#x5B8C;&#x5168;&#x6C92;&#x6709;&#x6B63;&#x6A23;&#x672C;&#xFF0C;256 &#x964D;&#x5230; 0.95%&#xFF1B;&#x526F;&#x4F5C;&#x7528;&#x662F; steps/epoch &#x5F9E; 1805 &#x964D;&#x5230; 452&#xFF0C;&#x5BE6;&#x969B;&#x5B78;&#x7FD2;&#x7387;&#x6392;&#x7A0B;&#x8207;&#x524D;&#x56DB;&#x8F2A;&#x4E0D;&#x540C;&#xFF09;&#x3002;<code>focal_alpha</code> &#x7531; <code>1&#x2212;pos_rate</code> &#x81EA;&#x52D5;&#x63A8;&#x5C0E;&#x70BA; 0.974&#xFF0C;&#x672A;&#x8A2D;&#x4E0A;&#x9650;&#x2014;&#x2014;&#x5DF2;&#x9A57;&#x8B49;&#x6B64;&#x898F;&#x5247;&#x8B93;&#x9000;&#x5316;&#x5E38;&#x6578;&#x89E3;&#x505C;&#x5728; p=0.5000&#xFF08;&#x6A21;&#x578B;&#x4E0D;&#x6703;&#x5168;&#x731C; 0&#xFF0C;&#x6A5F;&#x7387;&#x5206;&#x4F48;&#x4ECD;&#x7F6E;&#x4E2D;&#xFF0C;&#x767E;&#x5206;&#x4F4D;&#x9580;&#x6ABB;&#x4F9D;&#x7136;&#x6709;&#x610F;&#x7FA9;&#xFF09;&#xFF0C;cap &#x53CD;&#x800C;&#x6703;&#x7834;&#x58DE;&#x9019;&#x500B;&#x62B5;&#x92B7;&#x3002;&#x9632;&#x5446;&#xFF1A;<code>pos_rate &lt; 10%</code> &#x6642;&#x62D2;&#x7D55; <code>bce_ls</code>&#xFF08;smoothing 0.05 &gt; &#x57FA;&#x6E96;&#x7387;&#xFF09;&#xFF0C;&#x7121;&#x6B63;&#x6A23;&#x672C;&#x6279;&#x6B21;&#x6A5F;&#x7387; &gt; 5% &#x6642;&#x62D2;&#x7D55; <code>rank</code>&#xFF08;&#x5176; docstring &#x660E;&#x8B1B;&#x5047;&#x8A2D; ~50/50 &#x6A19;&#x7C64;&#xFF09;&#xFF1B;&#x5169;&#x8005;&#x5728; <code>pos_rate&#x2248;0.5</code> &#x6642;&#x4E0D;&#x89F8;&#x767C;&#xFF0C;Rounds 1-4 &#x4E0D;&#x53D7;&#x5F71;&#x97FF;&#x3002;<code>gap=12</code>&#x3001;<code>entry_at=1</code> &#x4E8B;&#x524D;&#x56FA;&#x5B9A;&#xFF1B;&#x8CE0;&#x7387; 0.85&#x3001;&#x640D;&#x76CA;&#x5169;&#x5E73; 54.05%&#xFF1B;&#x9580;&#x6ABB;&#x7528;&#x9A57;&#x8B49;&#x96C6;&#x767E;&#x5206;&#x4F4D;&#xFF08;50/40/30/20/10/5/3/2/1%&#xFF09;&#x5728;&#x4E0B;&#x55AE;&#x6578; &#x2265;100 &#x7684;&#x5019;&#x9078;&#x4E2D;&#x53D6; CI &#x4E0B;&#x754C;&#x6700;&#x9AD8;&#x8005;&#xFF08;&#x524D; 5%&#xFF0C;0.5988&#xFF09;&#xFF0C;&#x6E2C;&#x8A66;&#x96C6;&#x53EA;&#x8A55;&#x4F30;&#x4E00;&#x6B21;&#x3002;&#x9A57;&#x8B49;&#xFF1A;&#x65B0;&#x589E; <code>toolbywi/test_labels.py</code> 10 &#x9805;&#x6E2C;&#x8A66;&#x2014;&#x2014;&#x53D6;&#x4E2D;&#x9593;&#x624B;&#x7B97;&#x8868;&#xFF08;14 &#x4F8B;&#x542B;&#x4F7F;&#x7528;&#x8005;&#x63D0;&#x4F9B;&#x7684;&#x5169;&#x500B;&#x539F;&#x4F8B;&#xFF09;&#x3001;1000 &#x7D44;&#x96A8;&#x6A5F;&#x4E0D;&#x8B8A;&#x91CF;&#x3001;&#x96D9;&#x7368;&#x7ACB;&#x5BE6;&#x4F5C;&#x9010;&#x4F4D;&#x5143;&#x6BD4;&#x5C0D;&#x3001;&#x5C3E;&#x7AEF;&#x8A2D;&#x9650;&#x4E09;&#x898F;&#x5247;&#x3001;&#x6A19;&#x7C64;/&#x5408;&#x7D04;&#x5206;&#x96E2;&#x3001;&#x7279;&#x5FB5;&#x8868; schema&#xFF08;&#x64CB;&#x6D29;&#x6F0F;&#xFF09;&#x3001;&#x5207;&#x5206;&#x5C0D;&#x9F4A;&#xFF08;&#x5C0D;&#x7167; <code>Dataset_Custom</code> &#x5BE6;&#x969B;&#x8F38;&#x51FA;&#xFF09;&#x3001;<code>labels.csv</code> &#x5C0D;&#x9F4A;&#xFF1B;&#x65E2;&#x6709; <code>test_causality.py</code> &#x8207; <code>event_common.py</code> &#x81EA;&#x6211;&#x6E2C;&#x8A66;&#x5168;&#x6578;&#x56DE;&#x6B78;&#x901A;&#x904E;&#xFF1B;<code>audit_lookahead.py</code> &#x6383;&#x63CF; 6 &#x500B;&#x6539;&#x52D5;&#x6A94;&#x6848; high 0 &#x8655;&#x3001;medium 0 &#x8655;&#x3002;Round 4 &#x56DE;&#x6B78;&#xFF1A;&#x91CD;&#x8DD1;&#x5F8C;&#x95DC;&#x5361;&#x6578;&#x5B57;&#x9010;&#x4F4D;&#x5143;&#x76F8;&#x540C;&#x3002;&#x539F;&#x59CB;&#x6578;&#x64DA;&#x898B; <code>dataset/event1h_v5_sel/label_grid_report.json</code>&#xFF08;25 &#x7D44;&#x7DB2;&#x683C;&#xFF09;&#x3001;<code>stage2_comparison.json</code>&#xFF08;&#x56DB;&#x7D44;&#x5C0D;&#x7167;&#xFF09;&#x3001;<code>dataset/event1h_v5_y_bp20_r5/</code>&#xFF08;<code>evaluate_report.json</code>&#x3001;<code>trades.csv</code>&#x3001;<code>training_history.json</code>&#xFF09;&#x3002;&#x5DF2;&#x77E5;&#x554F;&#x984C;&#xFF1A;<code>feature_scale.scaler()</code> &#x7684; <code>.loc[:k]</code> &#x662F;&#x9589;&#x5340;&#x9593;&#xFF0C;&#x591A;&#x5403; 1 &#x5217;&#x9A57;&#x8B49;&#x8CC7;&#x6599;&#xFF08;&#x91CF;&#x7D1A; 116k &#x5206;&#x4E4B; 1&#xFF09;&#xFF0C;&#x7DAD;&#x6301;&#x4E0D;&#x4FEE;&#x4EE5;&#x4FDD; Rounds 1-4 &#x53EF;&#x91CD;&#x73FE;&#x3002;</p>
+</footer>
+
+</div>

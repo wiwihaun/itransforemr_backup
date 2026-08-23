@@ -26,7 +26,9 @@ import numpy as np
 from sklearn.metrics import roc_auc_score
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'toolbywi'))
-from event_common import load_meta, build_and_load_model, wilson_ci, cluster_entries, mean_partial_auc
+from event_common import (load_meta, build_and_load_model, wilson_ci, cluster_entries,
+                           mean_partial_auc, load_labels_slice,
+                           assert_feature_table_matches_meta)
 from evaluate_event import collect_predictions
 
 
@@ -57,6 +59,7 @@ def parse_args():
 def main():
     args = parse_args()
     meta = load_meta(args.data_dir)
+    assert_feature_table_matches_meta(args.data_dir, meta)
     gap = meta['lookahead']
     settings = [s.strip() for s in args.settings.split(',')]
     labels = [l.strip() for l in args.labels.split(',')]
@@ -67,7 +70,15 @@ def main():
           f"{'win_rate':>9s} {'ci_lo':>9s}")
     for label, setting in zip(labels, settings):
         exp, model_args = load_specific_checkpoint(meta, args.data_dir, setting)
-        val_proba, val_true, n_val = collect_predictions(exp, model_args, 'val')
+        val_proba, val_label, n_val = collect_predictions(exp, model_args, 'val')
+
+        # Round 5：一律對照真實合約結算選模。訓練標籤可能是稀疏的取中間
+        # 標籤，用它評分等於在選「最會預測自己那個標籤」的模型，而不是
+        # 「最會排序真實合約結果」的模型——後者才是我們要的。
+        val_labels = load_labels_slice(args.data_dir, meta, 'val', n_val)
+        val_true = val_label if val_labels is None else \
+            val_labels['contract_target'].values.astype(int)
+
         auc = float(roc_auc_score(val_true, val_proba))
         mean_pauc = float(mean_partial_auc(val_true, val_proba))
 

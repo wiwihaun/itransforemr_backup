@@ -21,10 +21,13 @@ import json
 import os
 import sys
 
+import numpy as np
+import pandas as pd
+
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'toolbywi'))
 from download_binance_monthly_batch import binance_load_5min_fast
 from binance_extra import load_metrics, load_funding_rate, load_premium_index, load_mark_price
-from target_calulate import target_direction
+from target_calulate import target_direction, target_pct_threshold, target_run_center
 from feature_scale import (features, microstructure_features, alt_features, extra_features,
                             scaler as zscore_scaler, save_scaler)
 
@@ -38,12 +41,27 @@ def parse_args():
     p.add_argument('--start_month', type=int, default=1)
     p.add_argument('--end_year', type=int, default=2026)
     p.add_argument('--end_month', type=int, default=8)
-    p.add_argument('--lookahead', type=int, default=6, help='30min / 5min = 6 根')
+    p.add_argument('--lookahead', type=int, default=6,
+                    help='結算視野（根）。Round 1-4 用 6（30 分鐘）；Round 5 起 1 小時用 12')
     p.add_argument('--seq_len', type=int, default=1024)
     p.add_argument('--train_ratio', type=float, default=0.7)
     p.add_argument('--out_dir', default='./dataset/event30m')
     p.add_argument('--with_extra_sources', action=argparse.BooleanOptionalAction, default=True,
                     help='是否加入 Round 3 新特徵來源（metrics/funding/premium/mark），預設開')
+    # --- Round 5 標籤選項（預設 direction，與 Round 1-4 行為完全相同）---
+    p.add_argument('--label_mode', default='direction', choices=['direction', 'run_center'],
+                    help="direction=Round 1-4 的漲跌標籤；run_center=幅度門檻 + 連續段取中間")
+    p.add_argument('--min_pct', type=float, default=0.003,
+                    help='run_center 模式：漲幅需 >= 此比例才算正樣本（0.003 = 0.3%%）')
+    p.add_argument('--min_run', type=int, default=5,
+                    help='run_center 模式：連續段長度下限，只有 >= 此值的段落才取中間')
+    p.add_argument('--min_pct_floor', type=float, default=0.001,
+                    help='尾端設限用的最寬鬆門檻（= 參數網格的最小 min_pct）。'
+                         '因為 y_pct 對 min_pct 單調，用最小門檻設限一次即可支配整個網格，'
+                         '讓所有組合共用同一組有效列與切分，比較才公平')
+    p.add_argument('--label_grid', default='0.001,0.002,0.003,0.004,0.005|3,4,5,6,8',
+                    help="run_center 模式額外輸出的參數網格標籤欄（'pct1,pct2|run1,run2'），"
+                         "寫進 labels.csv 供 label_grid_search.py 使用；設為空字串則不輸出")
     return p.parse_args()
 
 
@@ -69,16 +87,69 @@ def main():
         print(f"{sym}: {len(df_alt)} 根")
         alt_dfs[sym.replace('USDT', '')] = df_alt
 
-    # --- 標籤：在原始資料上算，Close 沒有指標 warmup 的 NaN，對齊最乾淨 ---
-    print(f"=== 建立 {args.lookahead} 根（{args.lookahead * 5} 分鐘）滾動方向標籤 ===")
-    target, valid = target_direction(df_btc, lookahead=args.lookahead)
+    # --- 標籤：在原始資料上算，Close 沒有指標 warmup 的 NaN、也沒有 join 造成的
+    #     內部缺口，是唯一能正確判定「連續」的網格（run_center 模式必須如此）---
+    print(f"=== 建立標籤（lookahead={args.lookahead} 根 = {args.lookahead * 5} 分鐘，"
+          f"mode={args.label_mode}）===")
     df_btc = df_btc.copy()
+
+    # contract_target 永遠是「漲就贏」的真實合約結算，與訓練標籤無關；
+    # fwd_ret 供報告診斷「實際漲幅有沒有達到 min_pct」。兩者都不可進入
+    # stock_features.csv（會被當成額外特徵而洩漏未來），稍後在
+    # LABEL_AUX_COLS 取出。
+    contract, valid_dir, fwd_ret = target_pct_threshold(
+        df_btc, lookahead=args.lookahead, min_pct=0.0)
+    contract = np.zeros(len(df_btc), dtype=int)
+    contract[valid_dir] = (fwd_ret[valid_dir] > 0).astype(int)  # 與 target_direction 同定義（嚴格 >）
+
+    if args.label_mode == 'direction':
+        target, valid = target_direction(df_btc, lookahead=args.lookahead)
+    else:
+        target, valid, fwd_ret = target_run_center(
+            df_btc, lookahead=args.lookahead, min_pct=args.min_pct,
+            min_run=args.min_run, min_pct_floor=args.min_pct_floor)
+        print(f"  幅度門檻 {args.min_pct*100:.2f}%、連續段下限 {args.min_run} 根"
+              f"（奇數取中間 1 根、偶數取中間 2 根）")
+
     df_btc['target'] = target
+    df_btc['contract_target'] = contract
+    df_btc['fwd_ret'] = fwd_ret
+
+    # run_center 模式額外算整個參數網格的標籤欄，全部共用同一個 min_pct_floor
+    # 設限（見 target_run_center 的 R3），所以 valid 遮罩完全一致
+    grid_cols = []
+    if args.label_mode == 'run_center' and args.label_grid.strip():
+        pct_s, run_s = args.label_grid.split('|')
+        pcts = [float(x) for x in pct_s.split(',')]
+        runs = [int(x) for x in run_s.split(',')]
+        print(f"  另外產生 {len(pcts)}x{len(runs)}={len(pcts)*len(runs)} 組網格標籤欄")
+        for p in pcts:
+            for r in runs:
+                col = f'y_bp{int(round(p*10000)):02d}_r{r}'
+                g_tgt, g_valid, _ = target_run_center(
+                    df_btc, lookahead=args.lookahead, min_pct=p, min_run=r,
+                    min_pct_floor=args.min_pct_floor)
+                assert np.array_equal(g_valid, valid), (
+                    f'{col} 的 valid 遮罩與主標籤不一致——min_pct_floor 設限應該讓整個'
+                    f'網格共用同一組有效列，不一致代表 R3 規則沒生效')
+                df_btc[col] = g_tgt
+                grid_cols.append(col)
+
     n_before = len(df_btc)
     df_btc = df_btc[valid].reset_index(drop=True)
-    print(f"丟棄尾端 {n_before - len(df_btc)} 根無效標籤（看不到未來結算價，對應洩漏路徑 L1）")
+    n_censored = n_before - len(df_btc)
+    print(f"丟棄尾端 {n_censored} 根無效標籤"
+          f"（看不到未來結算價／連續段被右設限，對應洩漏路徑 L1/L2）")
     pos_rate_raw = df_btc['target'].mean()
-    print(f"標籤分佈：正樣本比例 = {pos_rate_raw:.4f}")
+    print(f"標籤分佈：訓練標籤正樣本比例 = {pos_rate_raw:.4f}，"
+          f"合約正樣本比例 = {df_btc['contract_target'].mean():.4f}")
+    if args.label_mode == 'run_center':
+        n_pos_raw = int(df_btc['target'].sum())
+        hit = df_btc.loc[df_btc['target'] == 1, 'fwd_ret']
+        assert (df_btc.loc[df_btc['target'] == 1, 'contract_target'] == 1).all(), \
+            'target=1 必須 100% 蘊含 contract_target=1（漲幅達門檻必然是上漲）'
+        print(f"  訓練正樣本 {n_pos_raw} 個，其 1 小時報酬 "
+              f"mean={hit.mean()*100:+.3f}% median={hit.median()*100:+.3f}%")
 
     # --- 存原始（未縮放）OHLCV + target，供評估/回測/對齊使用 ---
     raw_path = os.path.join(args.out_dir, 'raw_ohlcv.csv')
@@ -129,6 +200,15 @@ def main():
     drop_cols = ['Open', 'High', 'Low', 'Quote_asset_volume', 'Taker_buy_quote_asset_volume']
     df_feat = df_feat.drop(columns=[c for c in drop_cols if c in df_feat.columns])
 
+    # --- 把標籤輔助欄取出來，絕對不能留到 zscore_scaler()。
+    #     scaler() 與 Dataset_Custom 都是「非 date/非 target 的每一欄都算特徵」，
+    #     contract_target/fwd_ret/網格欄留在裡面會被當成模型輸入、不遮蔽、
+    #     且每一根都含 Close[t+lookahead]——完全洩漏而且不會報錯。---
+    LABEL_AUX_COLS = ['contract_target', 'fwd_ret'] + grid_cols
+    aux_present = [c for c in LABEL_AUX_COLS if c in df_feat.columns]
+    df_aux = df_feat[['date'] + aux_present].copy().reset_index(drop=True)
+    df_feat = df_feat.drop(columns=aux_present)
+
     # --- Z-Score：只 fit 訓練段。train_ratio 必須與 Dataset_Custom 的切分公式一致 ---
     print("=== Z-Score 縮放 ===")
     df_scaled, sc, feature_cols = zscore_scaler(
@@ -138,6 +218,17 @@ def main():
     assert other_cols == feature_cols, "欄序與 scaler.feature_cols 不一致，不應發生"
     df_final = df_scaled[['date'] + other_cols + ['target']]
 
+    # --- 結構性斷言：擋住「多一欄靜默變成第 N+1 個特徵」的洩漏路徑 ---
+    for c in LABEL_AUX_COLS:
+        assert c not in feature_cols, f"{c} 混進了 feature_cols，這會造成未來資料洩漏！"
+        assert c not in df_final.columns, f"{c} 混進了 stock_features.csv，這會造成未來資料洩漏！"
+    assert set(df_final.columns) == {'date', 'target'} | set(feature_cols), \
+        "stock_features.csv 的欄位集合必須嚴格等於 {date, target} ∪ feature_cols"
+    assert len(df_final.columns) == len(feature_cols) + 2, "欄數必須是 n_features + 2"
+    assert len(df_aux) == len(df_final), "labels.csv 必須與 stock_features.csv 等長"
+    assert (df_aux['date'].values == df_final['date'].values).all(), \
+        "labels.csv 與 stock_features.csv 的 date 必須逐值相等（同序）"
+
     print(f"最終特徵表：{len(df_final)} 列 x {len(feature_cols)} 個特徵 + date + target")
 
     features_path = os.path.join(args.out_dir, 'stock_features.csv')
@@ -146,6 +237,17 @@ def main():
 
     scaler_path = os.path.join(args.out_dir, 'scaler.joblib')
     save_scaler(scaler_path, sc, feature_cols)
+
+    # --- labels.csv：與 stock_features.csv 等長同序，含合約結果與參數網格標籤。
+    #     刻意獨立成一個檔案而不是塞進特徵表，也不是事後用 raw_ohlcv.csv merge：
+    #     這兩欄是隨著 features()/alt_features()/extra_features() 的每一次
+    #     join 與 dropna 一起被篩掉的，對齊由「建構方式」保證，不靠事後對齊。---
+    df_aux = df_aux.copy()
+    df_aux.insert(1, 'target', df_final['target'].values)
+    labels_path = os.path.join(args.out_dir, 'labels.csv')
+    df_aux.to_csv(labels_path, index=False)
+    print(f"已存 {labels_path}（{len(df_aux)} 列 x {len(df_aux.columns)} 欄，"
+          f"含 contract_target/fwd_ret{' + ' + str(len(grid_cols)) + ' 個網格欄' if grid_cols else ''}）")
 
     # --- 類別比例 -> 建議 focal_alpha（沿用 experiment_runner.py 既有慣例）---
     n_pos = int(df_final['target'].sum())
@@ -186,6 +288,19 @@ def main():
         },
         'microstructure_features': ['HL_Range', 'OC_Ret', 'Up_Wick', 'Low_Wick',
                                      'BarVWAP_Dev', 'ATR_Pct_14'],
+        # --- Round 5 標籤設定 ---
+        'label_mode': args.label_mode,
+        'min_pct': args.min_pct if args.label_mode == 'run_center' else None,
+        'min_run': args.min_run if args.label_mode == 'run_center' else None,
+        'min_pct_floor': args.min_pct_floor if args.label_mode == 'run_center' else None,
+        'labels_path': 'labels.csv',
+        'label_grid_cols': grid_cols,
+        'contract_pos_rate': float(df_aux['contract_target'].mean()),
+        'censored_tail_bars': int(n_censored),
+        'label_note': (
+            'target 是訓練標籤，contract_target 才是真實合約結算（漲就贏）。'
+            '勝率/權益/通關一律用 contract_target，用 target 算勝率會得到與'
+            '損益兩平完全不可比的數字。'),
     }
     meta_path = os.path.join(args.out_dir, 'meta.json')
     with open(meta_path, 'w') as f:

@@ -14,6 +14,7 @@ import os
 import sys
 
 import numpy as np
+import pandas as pd
 import torch
 from sklearn.metrics import roc_auc_score, make_scorer
 
@@ -30,6 +31,102 @@ def load_meta(data_dir):
             f"請先跑過 train_event.py（哪怕只加 --dry_run）產生這些欄位。"
         )
     return meta
+
+
+# ══════════════════════════════════════════════════════════════
+# 切分對齊與標籤載入（Round 5）
+#
+# 修掉一個既有 bug：evaluate_event.py 原本用
+# `raw['date'].tail(n_test)` 取交易時間戳，但 raw_ohlcv.csv 與
+# stock_features.csv 長度、結束時間、內部缺口都不同（extra_features()
+# 的 inner join 會丟掉列），實測逐位對齊符合率 0.0000%——每一筆
+# entry_time 都是錯的。勝率/CI/通關不受影響（那些用的是模型管線出來
+# 的陣列，對齊正確），但畫「開單時間分佈」就會畫出錯的圖。
+#
+# 正確對齊由 data_provider/data_loader.py 的 Dataset_Custom 決定：
+#   border1s = [0, num_train - seq_len, n - num_test - seq_len]
+#   border2s = [num_train, num_train + num_vali, n]
+#   樣本 j 的預測目標 = data_y[j + seq_len]（在 data_x 座標）
+#                    = df_raw[border1 + j + seq_len]
+#                    = df_raw[border2 - n_samples + j]
+# 所以一律用 `border2 - n_samples + j`，且必須以
+# stock_features.csv（模型真正讀的那份）為準。
+# ══════════════════════════════════════════════════════════════
+def split_start_index(meta, flag, n_samples):
+    """
+    某個切分的第 0 個樣本，對應 stock_features.csv 的第幾列（全域 index）。
+    樣本 j 對應 split_start_index(...) + j。
+    """
+    n_rows = meta['n_rows']
+    num_train, num_vali, num_test = meta['num_train'], meta['num_vali'], meta['num_test']
+    border2 = {'train': num_train, 'val': num_train + num_vali, 'test': n_rows}
+    if flag not in border2:
+        raise ValueError(f"未知的 flag={flag}，只接受 train/val/test")
+    start = border2[flag] - n_samples
+    if start < 0:
+        raise ValueError(
+            f"flag={flag} 的 n_samples={n_samples} 超過該切分邊界 {border2[flag]}，"
+            f"meta.json 與實際資料可能不一致")
+    return start
+
+
+def load_labels_slice(data_dir, meta, flag, n_samples):
+    """
+    讀 labels.csv 並切出某個切分對應的列（含 date / contract_target / fwd_ret）。
+    回傳的 DataFrame 第 j 列就對應該切分的第 j 個樣本。
+
+    labels.csv 不存在時回傳 None——Round 1-4 的資料目錄沒有這個檔案，
+    呼叫端要能退回舊行為。
+    """
+    labels_path = os.path.join(data_dir, meta.get('labels_path', 'labels.csv'))
+    if not os.path.exists(labels_path):
+        return None
+    labels = pd.read_csv(labels_path)
+    if len(labels) != meta['n_rows']:
+        raise ValueError(
+            f"{labels_path} 有 {len(labels)} 列，但 meta['n_rows']={meta['n_rows']}。"
+            f"labels.csv 必須與 stock_features.csv 等長同序。")
+    start = split_start_index(meta, flag, n_samples)
+    return labels.iloc[start:start + n_samples].reset_index(drop=True)
+
+
+def load_split_dates(data_dir, meta, flag, n_samples):
+    """
+    某個切分的時間戳，取自 stock_features.csv（模型真正讀的那份），
+    絕不從 raw_ohlcv.csv 取——兩者長度與內部缺口都不同。
+    """
+    feat_path = os.path.join(data_dir, meta['data_path'])
+    dates = pd.read_csv(feat_path, usecols=['date'])['date']
+    if len(dates) != meta['n_rows']:
+        raise ValueError(
+            f"{feat_path} 有 {len(dates)} 列，但 meta['n_rows']={meta['n_rows']}。")
+    start = split_start_index(meta, flag, n_samples)
+    return dates.iloc[start:start + n_samples].reset_index(drop=True)
+
+
+def assert_feature_table_matches_meta(data_dir, meta):
+    """
+    斷言 stock_features.csv 的欄位集合嚴格等於 {date, target} ∪ feature_cols。
+
+    這是擋「多一欄靜默變成模型輸入」的唯一防線：
+    data_provider/data_loader.py 把非 date/非 target 的每一欄都當特徵，
+    models/iTransformer.py 的變量數是從 tensor 動態讀的（不是 configs.enc_in），
+    且只遮蔽最後一欄——多塞一個 contract_target 進去會被當成額外特徵、
+    不遮蔽、每根都含未來價格，完全洩漏且不會報任何錯。
+    """
+    feat_path = os.path.join(data_dir, meta['data_path'])
+    cols = list(pd.read_csv(feat_path, nrows=0).columns)
+    expected = {'date', 'target'} | set(meta['feature_cols'])
+    got = set(cols)
+    if got != expected:
+        raise AssertionError(
+            f"{feat_path} 欄位與 meta.json 不符——這可能是未來資料洩漏！\n"
+            f"  多出來的欄位: {sorted(got - expected)}\n"
+            f"  缺少的欄位:   {sorted(expected - got)}")
+    if len(cols) != len(meta['feature_cols']) + 2:
+        raise AssertionError(
+            f"{feat_path} 有 {len(cols)} 欄，應為 n_features+2="
+            f"{len(meta['feature_cols']) + 2}（有重複欄名？）")
 
 
 def build_args_namespace(meta, data_dir, setting=None):

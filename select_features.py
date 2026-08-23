@@ -32,6 +32,10 @@ def parse_args():
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument('--source_dir', default='./dataset/event30m')
     p.add_argument('--out_dir', default='./dataset/event30m_v2')
+    p.add_argument('--features', default=None,
+                    help='逗號分隔，直接指定要保留的特徵欄，略過 gbdt_probe_report.json。'
+                         'Round 5 用這個沿用 Round 4 選出的 15 個特徵，讓該輪只有'
+                         '「標籤」一個變因（H=12 下重新篩特徵留給之後的輪次）')
     return p.parse_args()
 
 
@@ -59,20 +63,31 @@ def main():
     args = parse_args()
     os.makedirs(args.out_dir, exist_ok=True)
 
-    report_path = os.path.join(args.source_dir, 'gbdt_probe_report.json')
-    if not os.path.exists(report_path):
-        raise FileNotFoundError(
-            f"{report_path} 不存在。請先跑 gbdt_probe.py --data_dir {args.source_dir}"
-            f"（會用 train+val 算出 selected_features，測試期不會被碰）。"
-        )
-    gbdt_report = json.load(open(report_path))
-    selected_features = gbdt_report['selected_features']
-    if not selected_features:
-        raise RuntimeError("gbdt_probe_report.json 裡 selected_features 是空的，無法繼續。")
+    if args.features:
+        selected_features = [f.strip() for f in args.features.split(',') if f.strip()]
+        selection_rule = f'由 --features 明確指定（{len(selected_features)} 個）'
+        n_features_before = None
+        print(f"=== 特徵篩選：{args.source_dir} → {args.out_dir} ===")
+        print(f"篩選規則：{selection_rule}")
+        print(f"保留 {len(selected_features)} 個特徵：{selected_features}\n")
+    else:
+        report_path = os.path.join(args.source_dir, 'gbdt_probe_report.json')
+        if not os.path.exists(report_path):
+            raise FileNotFoundError(
+                f"{report_path} 不存在。請先跑 gbdt_probe.py --data_dir {args.source_dir}"
+                f"（會用 train+val 算出 selected_features，測試期不會被碰），"
+                f"或用 --features 直接指定。"
+            )
+        gbdt_report = json.load(open(report_path))
+        selected_features = gbdt_report['selected_features']
+        if not selected_features:
+            raise RuntimeError("gbdt_probe_report.json 裡 selected_features 是空的，無法繼續。")
+        selection_rule = gbdt_report['selection_rule']
+        n_features_before = gbdt_report['n_features']
 
-    print(f"=== 特徵篩選：{args.source_dir} → {args.out_dir} ===")
-    print(f"篩選規則：{gbdt_report['selection_rule']}")
-    print(f"保留 {len(selected_features)} 個特徵：{selected_features}\n")
+        print(f"=== 特徵篩選：{args.source_dir} → {args.out_dir} ===")
+        print(f"篩選規則：{selection_rule}")
+        print(f"保留 {len(selected_features)} 個特徵：{selected_features}\n")
 
     meta = json.load(open(os.path.join(args.source_dir, 'meta.json')))
     df = pd.read_csv(os.path.join(args.source_dir, meta['data_path']))
@@ -91,6 +106,17 @@ def main():
     shutil.copyfile(raw_src, raw_dst)
     print(f"已複製 {raw_dst}")
 
+    # labels.csv（Round 5 起）：只做欄位子集、從不動列，所以直接複製仍與
+    # stock_features.csv 逐列對齊
+    labels_src = os.path.join(args.source_dir, meta.get('labels_path', 'labels.csv'))
+    if os.path.exists(labels_src):
+        labels_dst = os.path.join(args.out_dir, 'labels.csv')
+        shutil.copyfile(labels_src, labels_dst)
+        n_labels = sum(1 for _ in open(labels_dst)) - 1
+        assert n_labels == len(df_new), (
+            f"labels.csv 有 {n_labels} 列但特徵表有 {len(df_new)} 列，對齊被破壞")
+        print(f"已複製 {labels_dst}（{n_labels} 列，與特徵表對齊）")
+
     sc, feature_cols = load_scaler(os.path.join(args.source_dir, meta['scaler_path']))
     new_sc = subset_scaler(sc, feature_cols, selected_features)
     scaler_path = os.path.join(args.out_dir, 'scaler.joblib')
@@ -104,8 +130,8 @@ def main():
     new_meta['scaler_path'] = 'scaler.joblib'
     new_meta['feature_selection'] = {
         'source_dir': args.source_dir,
-        'rule': gbdt_report['selection_rule'],
-        'n_features_before': gbdt_report['n_features'],
+        'rule': selection_rule,
+        'n_features_before': n_features_before,
         'n_features_after': len(selected_features),
         'note': '重要度只用 train+val 計算（gbdt_probe.py），測試期未被讀取。',
     }
