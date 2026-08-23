@@ -139,6 +139,13 @@ if __name__ == '__main__':
     parser.add_argument('--focal_alpha', type=float, default=0.77,
                         help='Focal loss alpha for positive class weighting (e.g. 0.93 for 6.6%% positive rate)')
 
+    # Round 3：損失函數比較實驗 + iTransformerRes 的 DropPath 深度正則化
+    parser.add_argument('--loss_variant', type=str, default='focal_g2',
+                        choices=['focal_g2', 'focal_g05', 'bce', 'bce_ls', 'brier', 'rank'],
+                        help='見 exp/exp_long_term_forecasting.py 的 build_loss_criterion()')
+    parser.add_argument('--drop_path', type=float, default=0.1,
+                        help='只有 --model iTransformerRes 會用到；DropPath 在最後一層的機率')
+
     # TimeXer
     parser.add_argument('--patch_len', type=int, default=16, help='patch length')
 
@@ -240,7 +247,7 @@ if __name__ == '__main__':
             exp.test(setting)
             if args.use_gpu:
                 if args.gpu_type == 'mps':
-                    torch.backends.mps.empty_cache()
+                    torch.mps.empty_cache()
                 elif args.gpu_type == 'cuda':
                     torch.cuda.empty_cache()
     else:
@@ -278,6 +285,6 @@ if __name__ == '__main__':
         exp.test(setting, test=1)
         if args.use_gpu:
             if args.gpu_type == 'mps':
-                torch.backends.mps.empty_cache()
+                torch.mps.empty_cache()
             elif args.gpu_type == 'cuda':
                 torch.cuda.empty_cache()

@@ -33,20 +33,106 @@ class StockFocalLoss(nn.Module):
     def forward(self, logits, true):
         # 1. 將真實標籤還原為乾淨的 0 和 1
         true_binary = (true > 0).float()
-        
+
         # 🚨 2. 最關鍵的一步：使用帶有 Logits 的 BCE！
         # 這裡的函數內建了極度穩定的 Sigmoid，我們不需要 (也不可以) 自己做 clamp 或 sigmoid
         bce_loss = F.binary_cross_entropy_with_logits(logits, true_binary, reduction='none')
-        
+
         # 3. 數學黑魔法：反推真實機率 pt
         # 因為 bce_loss = -log(pt)，所以用 exp(-bce_loss) 就可以完美還原 pt，且絕對不會有極限值報錯
         pt = torch.exp(-bce_loss)
-        
+
         # 4. Focal Loss 核心加權
         alpha_factor = true_binary * self.alpha + (1 - true_binary) * (1 - self.alpha)
         focal_loss = alpha_factor * (1 - pt) ** self.gamma * bce_loss
-        
+
         return focal_loss.mean()
+
+
+# ══════════════════════════════════════════════════════════════
+# Round 3 損失函數比較實驗（見計畫文件）。
+#
+# 現行 StockFocalLoss 是為極端類別不平衡設計的（RetinaNet 原始場景 1:1000），
+# 我們的標籤是 50.1/49.9，focal_alpha≈0.5 讓 α 項幾乎是 no-op，又因為
+# pt≈0.5 幾乎處處成立，(1-pt)^gamma 近乎均勻縮放——主要效果是把模型答對
+# 樣本的梯度壓掉，弱訊號問題上等於丟掉本來就稀少的可用訊號。以下變體用來
+# 實測哪個訓練目標最適合這個問題，全部只用 train_event.py 的 --loss_variant
+# 切換，預設值 'focal_g2' 與既有行為完全相同，不影響 Round 1/2 的可重現性。
+# ══════════════════════════════════════════════════════════════
+class BCELoss(nn.Module):
+    """標準 logistic 回歸，等於 StockFocalLoss(alpha=0.5, gamma=0)——
+    移除 focal 的梯度抑制，直接測試「不加任何加權」的基準。"""
+    def forward(self, logits, true):
+        true_binary = (true > 0).float()
+        return F.binary_cross_entropy_with_logits(logits, true_binary)
+
+
+class BCELabelSmoothLoss(nn.Module):
+    """BCE + label smoothing：把 0/1 標籤軟化成 [smoothing, 1-smoothing]，
+    金融標籤本身雜訊大，抑制模型對單一根 K 棒過度自信。"""
+    def __init__(self, smoothing=0.05):
+        super().__init__()
+        self.smoothing = smoothing
+
+    def forward(self, logits, true):
+        true_binary = (true > 0).float()
+        target = true_binary * (1 - 2 * self.smoothing) + self.smoothing
+        return F.binary_cross_entropy_with_logits(logits, target)
+
+
+class BrierLoss(nn.Module):
+    """Brier score（proper scoring rule）：直接在機率空間算均方誤差，
+    通常比 BCE 校準更好、機率不容易被壓縮到極窄範圍。"""
+    def forward(self, logits, true):
+        true_binary = (true > 0).float()
+        prob = torch.sigmoid(logits)
+        return F.mse_loss(prob, true_binary)
+
+
+class PairwiseRankLoss(nn.Module):
+    """
+    Pairwise logistic ranking loss（RankNet 核心項）：對 batch 內每一組
+    (正樣本, 負樣本)，懲罰「正樣本 logit 沒有比負樣本 logit 高」的程度。
+
+    這是六個變體裡最貼合關卡目標的一個——叢集進場關卡衡量的是「機率排序
+    前段的勝率」，本質是排序品質而非逐點校準品質，用排序損失直接優化這件
+    事，比用分類損失間接優化更貼近實際被評估的指標。
+
+    若某個 batch 剛好全是同一類別（正樣本或負樣本數為 0），回傳 0（不提供
+    梯度但不報錯）——在 ~50/50 標籤、batch_size>=32 下機率趨近於零，只是
+    防禦性處理。
+    """
+    def forward(self, logits, true):
+        true_binary = (true > 0).float().reshape(-1)
+        logits = logits.reshape(-1)
+
+        pos = logits[true_binary == 1]
+        neg = logits[true_binary == 0]
+        if pos.numel() == 0 or neg.numel() == 0:
+            return logits.sum() * 0.0
+
+        diff = pos.unsqueeze(1) - neg.unsqueeze(0)  # [P, Q]
+        return F.softplus(-diff).mean()
+
+
+def build_loss_criterion(args):
+    """依 args.loss_variant 選損失函數，預設 'focal_g2' 與既有行為完全相同。"""
+    variant = getattr(args, 'loss_variant', 'focal_g2')
+    alpha = getattr(args, 'focal_alpha', 0.77)
+
+    if variant == 'focal_g2':
+        return StockFocalLoss(alpha=alpha, gamma=2.0)
+    if variant == 'focal_g05':
+        return StockFocalLoss(alpha=alpha, gamma=0.5)
+    if variant == 'bce':
+        return BCELoss()
+    if variant == 'bce_ls':
+        return BCELabelSmoothLoss(smoothing=0.05)
+    if variant == 'brier':
+        return BrierLoss()
+    if variant == 'rank':
+        return PairwiseRankLoss()
+    raise ValueError(f"不支援的 loss_variant: {variant}")
 
 
 class Exp_Long_Term_Forecast(Exp_Basic):
@@ -69,10 +155,8 @@ class Exp_Long_Term_Forecast(Exp_Basic):
         return model_optim
 
     def _select_criterion(self):
-        alpha = getattr(self.args, 'focal_alpha', 0.77)
-        criterion = StockFocalLoss(alpha=alpha, gamma=2.0)
-        return criterion
- 
+        return build_loss_criterion(self.args)
+
 
     def vali(self, vali_data, vali_loader, criterion):
         total_loss = []

@@ -1,0 +1,267 @@
+{
+  "n_rows_trainval": 136368,
+  "n_features": 34,
+  "pos_rate": 0.5023832570691071,
+  "fold_reports": [
+    {
+      "fold": 1,
+      "train_size": 22728,
+      "val_size": 22728,
+      "auc": 0.5084174594799491,
+      "accuracy": 0.4980640619500176,
+      "majority_baseline": 0.508051742344245
+    },
+    {
+      "fold": 2,
+      "train_size": 45456,
+      "val_size": 22728,
+      "auc": 0.5011394308418797,
+      "accuracy": 0.5029039070749736,
+      "majority_baseline": 0.5005279831045406
+    },
+    {
+      "fold": 3,
+      "train_size": 68184,
+      "val_size": 22728,
+      "auc": 0.5035094104436079,
+      "accuracy": 0.5010119676170363,
+      "majority_baseline": 0.5005279831045406
+    },
+    {
+      "fold": 4,
+      "train_size": 90912,
+      "val_size": 22728,
+      "auc": 0.513026160913762,
+      "accuracy": 0.5117916226680747,
+      "majority_baseline": 0.5053678282294967
+    },
+    {
+      "fold": 5,
+      "train_size": 113640,
+      "val_size": 22728,
+      "auc": 0.5306592364513034,
+      "accuracy": 0.5106476592749032,
+      "majority_baseline": 0.5003079901443154
+    }
+  ],
+  "oof_auc": 0.5080965231862343,
+  "oof_auc_ci95": [
+    0.5048550089889293,
+    0.5112355886780132
+  ],
+  "passes_signal_check": true,
+  "feature_importance": [
+    {
+      "feature": "BB_PB",
+      "importance_mean": 0.0030329645780121386,
+      "importance_std": 0.0032996433676296937,
+      "n_samples": 25
+    },
+    {
+      "feature": "ROC_30",
+      "importance_mean": 0.0020403421372384113,
+      "importance_std": 0.002073485808556759,
+      "n_samples": 25
+    },
+    {
+      "feature": "RSI_14",
+      "importance_mean": 0.0018568276602380785,
+      "importance_std": 0.0023736523884703518,
+      "n_samples": 25
+    },
+    {
+      "feature": "Stoch_D",
+      "importance_mean": 0.0017340670713641515,
+      "importance_std": 0.0010910045085502586,
+      "n_samples": 25
+    },
+    {
+      "feature": "RSI_30",
+      "importance_mean": 0.0015352986053310436,
+      "importance_std": 0.001446332716069849,
+      "n_samples": 25
+    },
+    {
+      "feature": "Stoch_K",
+      "importance_mean": 0.001529457400344718,
+      "importance_std": 0.0014142799931425019,
+      "n_samples": 25
+    },
+    {
+      "feature": "MOM_30",
+      "importance_mean": 0.0012212600599963651,
+      "importance_std": 0.0012040272566925707,
+      "n_samples": 25
+    },
+    {
+      "feature": "MACD_Signal",
+      "importance_mean": 0.0011207185693241973,
+      "importance_std": 0.002183150214510374,
+      "n_samples": 25
+    },
+    {
+      "feature": "Close",
+      "importance_mean": 0.0010552215848805301,
+      "importance_std": 0.0021303121336889684,
+      "n_samples": 25
+    },
+    {
+      "feature": "BNB_RSI14",
+      "importance_mean": 0.0009356130606370883,
+      "importance_std": 0.0034774035017550464,
+      "n_samples": 25
+    },
+    {
+      "feature": "EMA_Cross",
+      "importance_mean": 0.00044381590557716064,
+      "importance_std": 0.0018575143351560878,
+      "n_samples": 25
+    },
+    {
+      "feature": "ETH_VolRatio",
+      "importance_mean": 0.00038752806294541477,
+      "importance_std": 0.0004657573517537276,
+      "n_samples": 25
+    },
+    {
+      "feature": "SOL_RSI14",
+      "importance_mean": 0.00036715540967118264,
+      "importance_std": 0.001185477678973247,
+      "n_samples": 25
+    },
+    {
+      "feature": "SOL_VolRatio",
+      "importance_mean": 0.00017757960540840668,
+      "importance_std": 0.0005884453546244293,
+      "n_samples": 25
+    },
+    {
+      "feature": "ATR_14",
+      "importance_mean": 0.00016487925326444942,
+      "importance_std": 0.0026350580436010585,
+      "n_samples": 25
+    },
+    {
+      "feature": "SOL_Return",
+      "importance_mean": 0.00015694225700086718,
+      "importance_std": 0.0006304965313024942,
+      "n_samples": 25
+    },
+    {
+      "feature": "CCI_20",
+      "importance_mean": 0.00013099528910333281,
+      "importance_std": 0.000758780055667319,
+      "n_samples": 25
+    },
+    {
+      "feature": "CMF_14",
+      "importance_mean": 9.567695499313356e-05,
+      "importance_std": 0.001349885154995203,
+      "n_samples": 25
+    },
+    {
+      "feature": "BNB_VolRatio",
+      "importance_mean": 7.659943133649261e-05,
+      "importance_std": 0.0008472762100145679,
+      "n_samples": 25
+    },
+    {
+      "feature": "Williams_R",
+      "importance_mean": 1.0184336501080082e-05,
+      "importance_std": 1.4912704053014662e-05,
+      "n_samples": 25
+    },
+    {
+      "feature": "Taker_Ratio",
+      "importance_mean": -2.7562919667989406e-06,
+      "importance_std": 0.0009536857282870456,
+      "n_samples": 25
+    },
+    {
+      "feature": "EMA_72",
+      "importance_mean": -6.335864207565045e-06,
+      "importance_std": 0.0016534685104698185,
+      "n_samples": 25
+    },
+    {
+      "feature": "EMA_95",
+      "importance_mean": -6.22665594057592e-05,
+      "importance_std": 0.0013803216452265732,
+      "n_samples": 25
+    },
+    {
+      "feature": "ETH_Return",
+      "importance_mean": -9.248946061873208e-05,
+      "importance_std": 0.0003879001436330164,
+      "n_samples": 25
+    },
+    {
+      "feature": "Volume_Ratio",
+      "importance_mean": -0.00012038890350401843,
+      "importance_std": 0.0006291463834118674,
+      "n_samples": 25
+    },
+    {
+      "feature": "Volume",
+      "importance_mean": -0.0002816277354161656,
+      "importance_std": 0.0009222454222186824,
+      "n_samples": 25
+    },
+    {
+      "feature": "BNB_Return",
+      "importance_mean": -0.0003775916956229386,
+      "importance_std": 0.0009693175067701463,
+      "n_samples": 25
+    },
+    {
+      "feature": "MACD",
+      "importance_mean": -0.00048163943705567205,
+      "importance_std": 0.001818229900033519,
+      "n_samples": 25
+    },
+    {
+      "feature": "OBV",
+      "importance_mean": -0.000601282534736447,
+      "importance_std": 0.002637660648912012,
+      "n_samples": 25
+    },
+    {
+      "feature": "BB_Width",
+      "importance_mean": -0.0006500519520106129,
+      "importance_std": 0.0019145861739961571,
+      "n_samples": 25
+    },
+    {
+      "feature": "ROC_10",
+      "importance_mean": -0.0007065018980348636,
+      "importance_std": 0.0009053093995469134,
+      "n_samples": 25
+    },
+    {
+      "feature": "ETH_RSI14",
+      "importance_mean": -0.0011313521811836403,
+      "importance_std": 0.0016252408202296195,
+      "n_samples": 25
+    },
+    {
+      "feature": "ADX_156",
+      "importance_mean": -0.0012721669401456602,
+      "importance_std": 0.002644703587136997,
+      "n_samples": 25
+    },
+    {
+      "feature": "VWAP_Dev",
+      "importance_mean": -0.0020122908826432397,
+      "importance_std": 0.0036989360582531166,
+      "n_samples": 25
+    }
+  ],
+  "selected_features": [
+    "Stoch_D",
+    "RSI_30",
+    "Stoch_K",
+    "MOM_30"
+  ],
+  "selection_rule": "importance_mean - importance_std > 0",
+  "note": "全部計算只用 train+val（前 num_train+num_vali 列），測試期未被讀取。"
+}

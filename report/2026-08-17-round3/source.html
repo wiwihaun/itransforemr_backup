@@ -1,0 +1,489 @@
+<title>Round 3：新特徵來源 + 殘差深度 + 損失函數比較</title>
+<style>
+  :root{
+    --paper:#F5F3EE; --ink:#151C20; --ink-2:#3A484D; --muted:#68787C;
+    --rule:#D9D5CC; --rule-2:#E8E5DE; --card:#FBFAF7;
+    --accent:#2E6B78; --accent-soft:#2E6B7815;
+    --pos:#3C7A5C; --neg:#AC4A2C; --warn:#AC4A2C; --warn-soft:#AC4A2C12;
+    --grid:#00000010;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --paper:#0E1417; --ink:#E4E6E3; --ink-2:#AEB9BB; --muted:#7C8B8F;
+      --rule:#25302F; --rule-2:#1B2427; --card:#141C1F;
+      --accent:#6FB3BF; --accent-soft:#6FB3BF18;
+      --pos:#6DBE92; --neg:#E08762; --warn:#E08762; --warn-soft:#E0876214;
+      --grid:#FFFFFF10;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#0E1417; --ink:#E4E6E3; --ink-2:#AEB9BB; --muted:#7C8B8F;
+    --rule:#25302F; --rule-2:#1B2427; --card:#141C1F;
+    --accent:#6FB3BF; --accent-soft:#6FB3BF18;
+    --pos:#6DBE92; --neg:#E08762; --warn:#E08762; --warn-soft:#E0876214;
+    --grid:#FFFFFF10;
+  }
+  :root[data-theme="light"]{
+    --paper:#F5F3EE; --ink:#151C20; --ink-2:#3A484D; --muted:#68787C;
+    --rule:#D9D5CC; --rule-2:#E8E5DE; --card:#FBFAF7;
+    --accent:#2E6B78; --accent-soft:#2E6B7815;
+    --pos:#3C7A5C; --neg:#AC4A2C; --warn:#AC4A2C; --warn-soft:#AC4A2C12;
+    --grid:#00000010;
+  }
+
+  html{background:var(--paper);}
+  body{background:var(--paper); color:var(--ink);
+    font-family:Georgia,"Iowan Old Style","Palatino Linotype","Songti TC","Times New Roman",serif;
+    font-size:17px; line-height:1.62; margin:0; -webkit-font-smoothing:antialiased;}
+  .wrap{max-width:1120px; margin:0 auto; padding:0 28px 120px;}
+  .col{max-width:660px;}
+  p{margin:0 0 1.1em;}
+  code{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:.87em; background:var(--accent-soft); padding:1px 5px; border-radius:2px;}
+  .mono{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;}
+  .eyebrow{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:11.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); margin:0 0 10px;}
+
+  header{padding:64px 0 40px; border-bottom:2px solid var(--ink);}
+  h1{font-size:clamp(28px,4.2vw,44px); line-height:1.16; margin:0 0 18px;
+    font-weight:400; letter-spacing:-.015em; text-wrap:balance; max-width:26ch;}
+  .dek{font-size:19px; color:var(--ink-2); max-width:62ch; margin:0 0 26px;}
+  .meta{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:12px; color:var(--muted); display:flex; flex-wrap:wrap; gap:6px 22px;}
+
+  .tiles{display:grid; grid-template-columns:repeat(auto-fit,minmax(168px,1fr));
+    gap:1px; background:var(--rule); border:1px solid var(--rule); margin:0 0 12px;}
+  .tile{background:var(--card); padding:20px 18px 18px;}
+  .tile .k{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin:0 0 10px;}
+  .tile .v{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:22px; font-variant-numeric:tabular-nums; letter-spacing:-.02em; line-height:1; margin:0 0 7px;}
+  .tile .n{font-size:13px; color:var(--muted); line-height:1.4;}
+  .v.pos{color:var(--pos);} .v.neg{color:var(--neg);} .v.acc{color:var(--accent);}
+
+  section{padding:56px 0 0;}
+  h2{font-size:26px; font-weight:400; letter-spacing:-.01em; line-height:1.25; margin:0 0 6px; text-wrap:balance;}
+  h2 .num{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:12px; color:var(--accent); letter-spacing:.1em; display:block; margin-bottom:9px;}
+  h3{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:12px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted);
+    font-weight:400; margin:34px 0 12px; padding-bottom:7px; border-bottom:1px solid var(--rule-2);}
+  .lede{font-size:18.5px; color:var(--ink-2); max-width:62ch;}
+
+  figure{margin:26px 0 0; padding:0;}
+  .chart{border:1px solid var(--rule); background:var(--card); padding:22px 20px 14px; overflow-x:auto;}
+  .chart svg{display:block; width:100%; height:auto; min-width:520px;}
+  .duo{display:grid; grid-template-columns:repeat(auto-fit,minmax(360px,1fr)); gap:18px;}
+  figcaption{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:12px; color:var(--muted); line-height:1.55; margin-top:11px; max-width:84ch;}
+  .legend{display:flex; flex-wrap:wrap; gap:5px 20px; margin-bottom:14px;
+    font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:11.5px; color:var(--muted);}
+  .legend i{width:11px; height:11px; display:inline-block; margin-right:6px;
+    vertical-align:-1px; border-radius:1px;}
+  .legend .ln{width:16px; height:2px; display:inline-block; margin-right:6px; vertical-align:2px;}
+
+  .tbl-wrap{overflow-x:auto; margin:18px 0 0; border:1px solid var(--rule);}
+  table{border-collapse:collapse; width:100%; min-width:520px; background:var(--card);
+    font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:12.5px; font-variant-numeric:tabular-nums;}
+  th{text-align:left; font-weight:400; color:var(--muted); letter-spacing:.06em;
+    text-transform:uppercase; font-size:10.5px; padding:11px 14px;
+    border-bottom:1px solid var(--rule); white-space:nowrap;}
+  td{padding:10px 14px; border-bottom:1px solid var(--rule-2); white-space:nowrap;}
+  tr:last-child td{border-bottom:none;}
+  td.num,th.num{text-align:right;}
+  tr.hi td{background:var(--accent-soft);}
+  tr.hi td:first-child{box-shadow:inset 3px 0 0 var(--accent);}
+  tr.bad td{background:var(--warn-soft);}
+  tr.bad td:first-child{box-shadow:inset 3px 0 0 var(--warn);}
+  tr.good td{background:color-mix(in srgb, var(--pos) 10%, transparent);}
+  tr.good td:first-child{box-shadow:inset 3px 0 0 var(--pos);}
+  .pos{color:var(--pos);} .neg{color:var(--neg);} .dim{color:var(--muted);}
+
+  .flag{border-left:3px solid var(--warn); background:var(--warn-soft);
+    padding:18px 22px; margin:26px 0 0; max-width:660px;}
+  .flag .t{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--warn); margin:0 0 9px;}
+  .flag p:last-child{margin-bottom:0;}
+  .note{border-left:3px solid var(--accent); background:var(--accent-soft);
+    padding:18px 22px; margin:26px 0 0; max-width:660px;}
+  .note .t{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--accent); margin:0 0 9px;}
+  .note p:last-child{margin-bottom:0;}
+  .good-box{border-left:3px solid var(--pos); background:color-mix(in srgb, var(--pos) 8%, transparent);
+    padding:18px 22px; margin:26px 0 0; max-width:660px;}
+  .good-box .t{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--pos); margin:0 0 9px;}
+  .good-box p:last-child{margin-bottom:0;}
+
+  ul{margin:0 0 1.1em; padding-left:1.15em; max-width:62ch;}
+  li{margin-bottom:.55em;} li::marker{color:var(--accent);}
+
+  footer{margin-top:80px; padding-top:26px; border-top:1px solid var(--rule);
+    font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:11.5px; color:var(--muted); line-height:1.7; max-width:74ch;}
+  @media (max-width:640px){
+    body{font-size:16px;} .wrap{padding:0 18px 80px;} .tile .v{font-size:19px;}
+  }
+</style>
+
+<div class="wrap">
+
+<header>
+  <p class="eyebrow">BTCUSDT.P 5min · iTransformer · Round 3 · 新特徵來源 + 殘差深度 + 損失函數比較</p>
+  <h1>新特徵、更深的模型、六種損失函數都試過了——測試集勝率從 50.59% 掉到 42.79%，是三輪最差的一次。</h1>
+  <p class="dek">這輪加了三組全新特徵來源（未平倉量/多空比、資金費率、mark price 溢價，共 19 個候選）、一個殘差深層架構（Pre-LN + LayerScale + DropPath）、系統性比較 6 種損失函數，並把 <code>entry_at</code> 固定為 1、賠率固定為 0.85。方法論比 Round 1/2 都更嚴謹——兩階段比較全程只碰驗證集，測試集只評估一次。但結果不是變好，而是變差：測試集勝率 <strong>42.79%</strong>，95% CI [38.12%, 47.59%]，不但沒跨過損益兩平的 54.05%，連擲硬幣的 50% 都沒到。校準曲線找到了機制上的解釋：模型最高信心的那個區間，實際勝率恰好貼著 49.8%——訊號在最該有把握的地方，剛好沒有把握。</p>
+  <div class="meta">
+    <span>特徵 34+19=53 → 15（top-k 規則）</span>
+    <span>6 個損失函數比較</span>
+    <span>e_layers 1 vs 4（殘差）</span>
+    <span>entry_at 固定 1</span>
+    <span>賠率 0.85 → 損益兩平 54.05%</span>
+  </div>
+</header>
+
+<section style="padding-top:40px;">
+  <div class="tiles">
+    <div class="tile"><p class="k">GBDT 關卡（53 特徵，僅 train+val）</p><p class="v">0.5099</p><p class="n">95% CI [0.5063, 0.5132]，與 Round 2 的 0.5081 重疊</p></div>
+    <div class="tile"><p class="k">損失函數比較（6 種，驗證集）</p><p class="v acc">focal_g2 勝出</p><p class="n">val AUC 0.5329，現行方法本身就是贏家</p></div>
+    <div class="tile"><p class="k">深度比較（驗證集）</p><p class="v">e_layers=1 勝</p><p class="n">殘差 4 層版 AUC 0.5242 較低，加深沒有幫助</p></div>
+    <div class="tile"><p class="k">新特徵入選比例</p><p class="v acc">4 / 15</p><p class="n">OI_Chg_72、TopTrader_Pos_LS、Taker_Ratio、TopTrader_Acct_LS</p></div>
+    <div class="tile"><p class="k">測試集勝率</p><p class="v neg">42.79%</p><p class="n">95% CI [38.12%, 47.59%]，全部低於 50%</p></div>
+    <div class="tile"><p class="k">關卡結論</p><p class="v neg">未通過</p><p class="n">三輪裡最差：51.32% → 50.59% → 42.79%</p></div>
+  </div>
+</section>
+
+<section>
+  <h2><span class="num">01 — 背景</span>兩輪都卡在 51% 附近，這輪換方向：正交特徵、深度、損失函數</h2>
+  <p class="lede">Round 2（<code>report/2026-08-17-round2/</code>）測試集勝率 50.59%，95% CI [45.84%, 55.33%]，跨過擲硬幣的 50%。兩輪下來 GBDT 與 iTransformer 的 AUC 都收斂在 51% 附近——34 個特徵全是價量衍生指標，等於用同一批資訊反覆問同一個問題。這輪的假說是：瓶頸可能不在模型，而在特徵來源本身太同質。</p>
+
+  <p>本輪四項明確要求：(1) 賠率固定 0.85，損益兩平勝率 54.05%；(2) <code>entry_at</code> 固定為 1，不再網格選擇——Round 2 已證明驗證集量級撐不起這個選擇（選中的 3 在驗證集 57.17%，測試集只剩 50.59%；反而樣本最大、CI 最穩的 1 沒被選中）；(3) 加入一組完全不同的特徵來源；(4) 最終特徵數不低於 15。額外再加碼：模型深度（參考殘差網路等知名架構）與損失函數的系統性比較。</p>
+
+  <h3>訂單簿：歷史有、即時無法重現，確認跳過</h3>
+  <p><code>futures/um/daily/bookDepth/</code> 歷史封存完整（±0.2~5% 共 12 檔位），但即時 <code>/fapi/v1/depth</code> 的 <code>limit</code> 上限 1000（傳 5000 回 <code>-1130</code>），實測只覆蓋 ±0.185%，連最窄的 ±0.2% 檔位都到不了。要即時取得完整深度須自行維護 WebSocket 全額訂單簿，REST 快照連初始 seed 都不足——已確認跳過，改用三組確定可行的來源。</p>
+
+  <h3>三組新來源：未平倉量/多空比、資金費率、premium/mark price</h3>
+  <p>歷史封存與即時 REST 端點的欄位名稱完全不同，對錯了會靜默餵錯特徵。用重疊時段做逐欄交叉比對，median 相對差全部 &lt; 1e-3（例如 <code>count_toptrader_long_short_ratio</code> 對應即時 <code>topLongShortAccountRatio</code>，相對差 2.78e-04；錯誤對應則是 3.07e-01，差了近千倍），確認對應關係正確後才寫進 <code>toolbywi/binance_extra.py</code> / <code>binance_live.py</code>。三組來源共設計 19 個新特徵：未平倉量與多空比相關 12 個、資金費率相關 3 個、premium/mark price 相關 4 個，全部只用 <code>pct_change</code>/<code>diff</code>/<code>rolling</code>（後看）與時鐘（<code>Bars_To_Funding</code>），無任何前視。候選特徵總數：34（既有）+ 19（新）= 53。</p>
+</section>
+
+<section>
+  <h2><span class="num">02 — 新特徵過了關卡，但沒推動 AUC</span>4 個新來源特徵擠進了前 15 名，整體訊號量級沒變</h2>
+  <p class="lede">GBDT 關卡（<code>gbdt_probe.py</code>，只用 train+val，測試期未被讀取，跨 5 折 TimeSeriesSplit × 5 次重複合併 25 個樣本算 permutation importance）在 53 個候選特徵上算出 OOF AUC <strong>0.5099</strong>，95% CI [0.5063, 0.5132]——與 Round 2 只用 34 個舊特徵的 0.5081 [0.5049, 0.5112] 相比，區間大幅重疊，統計上看不出有意義的提升，但也沒有變差，符合關卡「沒有反向訊號就繼續往下走」的判斷標準。</p>
+
+  <p>1σ 規則（<code>importance_mean − importance_std &gt; 0</code>）在 53 個特徵裡只有 2 個通過，比 Round 2（34 個裡 4 個通過）比例更低——新特徵稀釋了整體訊號密度，不是加強了它。因此套用 top-k 底線規則（<code>k = max(15, 1σ通過數) = max(15, 2) = 15</code>），直接取重要度前 15 名，其中 4 個來自新來源，排名不算頂尖但確實擠進了前 15：</p>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>排名</th><th>特徵</th><th class="num">importance_mean</th><th>來源</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">1</td><td class="mono">Stoch_D</td><td class="num">0.00158</td><td class="dim">既有</td></tr>
+        <tr><td class="mono">2</td><td class="mono">VWAP_Dev</td><td class="num">0.00144</td><td class="dim">既有</td></tr>
+        <tr><td class="mono">3</td><td class="mono">Stoch_K</td><td class="num">0.00102</td><td class="dim">既有</td></tr>
+        <tr><td class="mono">4</td><td class="mono">ROC_30</td><td class="num">0.00099</td><td class="dim">既有</td></tr>
+        <tr><td class="mono">5</td><td class="mono">BB_PB</td><td class="num">0.00093</td><td class="dim">既有</td></tr>
+        <tr><td class="mono">6</td><td class="mono">CCI_20</td><td class="num">0.00093</td><td class="dim">既有</td></tr>
+        <tr class="hi"><td class="mono">7</td><td class="mono">OI_Chg_72</td><td class="num pos">0.00072</td><td class="acc">新：未平倉量 6 小時變化</td></tr>
+        <tr class="hi"><td class="mono">8</td><td class="mono">TopTrader_Pos_LS</td><td class="num pos">0.00069</td><td class="acc">新：大戶持倉多空比</td></tr>
+        <tr class="hi"><td class="mono">9</td><td class="mono">Taker_Ratio</td><td class="num pos">0.00062</td><td class="acc">新：主動買賣單比</td></tr>
+        <tr><td class="mono">10</td><td class="mono">ATR_14</td><td class="num">0.00062</td><td class="dim">既有</td></tr>
+        <tr><td class="mono">11</td><td class="mono">EMA_72</td><td class="num">0.00062</td><td class="dim">既有</td></tr>
+        <tr><td class="mono">12</td><td class="mono">OBV</td><td class="num">0.00059</td><td class="dim">既有</td></tr>
+        <tr><td class="mono">13</td><td class="mono">RSI_30</td><td class="num">0.00058</td><td class="dim">既有</td></tr>
+        <tr><td class="mono">14</td><td class="mono">RSI_14</td><td class="num">0.00048</td><td class="dim">既有</td></tr>
+        <tr class="hi"><td class="mono">15</td><td class="mono">TopTrader_Acct_LS</td><td class="num pos">0.00045</td><td class="acc">新：大戶帳戶數多空比</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note">
+    <p class="t">新特徵沒有無效，但也不是救星</p>
+    <p>4 個新來源特徵確實比 60% 的既有特徵重要度更高，說明未平倉量與大戶多空比裡有一些既有價量指標沒完全覆蓋到的資訊。但即使加了進去，53 個特徵裡只有 2 個能通過 1σ 顯著性、整體 OOF AUC 只從 0.5081 動到 0.5099（CI 大幅重疊）——量級上仍然是「幾乎沒有訊號」，不是「訊號被解鎖」。</p>
+  </div>
+</section>
+
+<section>
+  <h2><span class="num">03 — 損失函數比較：現行 focal loss 本身就是贏家</span>「plain BCE 應該更好」的假說沒有成立</h2>
+  <p class="lede">假說是這樣的：focal loss 是為極端類別不平衡設計的，我們的標籤是 50.1/49.9，<code>focal_alpha≈0.4985≈0.5</code> 讓 α 項幾乎是 no-op，又因為 <code>pt≈0.5</code> 幾乎處處成立，<code>(1−pt)²≈0.25</code> 近乎均勻縮放——主要效果可能是把模型答對的樣本梯度壓掉，在弱訊號問題上等於丟掉本來就稀少的可用訊號。固定 <code>e_layers=1</code>（Round 2 架構），測試 6 個損失函數變體，全部在驗證集上比較：</p>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>損失函數</th><th>定義</th><th class="num">驗證集 AUC</th><th class="num">Top5% 交易數</th><th class="num">勝率</th><th class="num">CI 下界</th></tr></thead>
+      <tbody>
+        <tr class="hi"><td class="mono">focal_g2 ← 勝出</td><td class="dim">現行（α=資料推導, γ=2）</td><td class="num pos">0.5329</td><td class="num">151</td><td class="num">54.30%</td><td class="num">46.35%</td></tr>
+        <tr><td class="mono">rank</td><td class="dim">pairwise ranking（RankNet）</td><td class="num">0.5324</td><td class="num">132</td><td class="num">53.03%</td><td class="num">44.55%</td></tr>
+        <tr><td class="mono">focal_g05</td><td class="dim">γ=0.5（較弱 focal）</td><td class="num">0.5317</td><td class="num">134</td><td class="num">55.22%</td><td class="num">46.78%</td></tr>
+        <tr><td class="mono">bce_ls</td><td class="dim">BCE + label smoothing 0.05</td><td class="num">0.5314</td><td class="num">128</td><td class="num">50.78%</td><td class="num">42.22%</td></tr>
+        <tr><td class="mono">brier</td><td class="dim">proper scoring rule（MSE on prob）</td><td class="num">0.5313</td><td class="num">128</td><td class="num">50.00%</td><td class="num">41.47%</td></tr>
+        <tr><td class="mono">bce</td><td class="dim">α=0.5, γ=0，標準 logistic</td><td class="num">0.5312</td><td class="num">126</td><td class="num">50.00%</td><td class="num">41.40%</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>6 個變體的驗證集 AUC 全部落在 0.5312~0.5329 這個窄帶裡，差距（0.0017）遠小於任何一折的抽樣雜訊——換句話說，<strong>損失函數在這個問題上幾乎不影響結果</strong>。「plain BCE 會更好」的假說沒有成立：<code>bce</code> 反而是驗證集 AUC 最低的一個。現行的 <code>focal_g2</code> 依既定規則（驗證集 AUC 最高）勝出，但這更像是在雜訊範圍內的平局，而非某個損失函數找到了額外訊號。</p>
+</section>
+
+<section>
+  <h2><span class="num">04 — 深度比較：殘差 4 層版沒有贏，如預先設想地過擬合更嚴重</span></h2>
+  <p class="lede">用勝出的 <code>focal_g2</code>，比較 Round 2 架構（<code>e_layers=1</code>）與新增的殘差深層版 <code>models/iTransformerRes.py</code>（<code>e_layers=4</code>，Pre-LN + LayerScale(init 1e-4) + DropPath(線性升到 0.1)，約 2.24M 參數，是淺層版 659K 的 3.4 倍）：</p>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>架構</th><th class="num">參數量</th><th class="num">驗證集 AUC</th><th class="num">Top5% 交易數</th><th class="num">勝率</th><th class="num">CI 下界</th></tr></thead>
+      <tbody>
+        <tr class="hi"><td class="mono">e_layers=1（Round 2 架構）← 勝出</td><td class="num">659K</td><td class="num pos">0.5329</td><td class="num">151</td><td class="num">54.30%</td><td class="num">46.35%</td></tr>
+        <tr><td class="mono">e_layers=4（殘差，Pre-LN+LayerScale+DropPath）</td><td class="num">2.24M</td><td class="num">0.5242</td><td class="num">83</td><td class="num">59.04%</td><td class="num">48.29%</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>殘差版的 Top5% 勝率（59.04%）數字上看起來很亮眼，但交易數只有 83 筆（淺層版的一半多），CI 下界 48.29% 反而更寬更弱，而且主要選擇指標「驗證集 AUC」（0.5242）明顯低於淺層版（0.5329）——這正是為什麼協定把 AUC 定為主要指標、勝率只當輔助參考：83 筆交易的勝率波動本來就大，容易被單一漂亮的百分位數字誤導。依既定規則，淺層版勝出。</p>
+
+  <div class="flag">
+    <p class="t">加深沒有幫助，符合實驗前的誠實預期</p>
+    <p>計劃階段就寫明：「Round 1/2 都在 epoch 1 就過擬合，加深很可能讓過擬合更嚴重」，並要求一定要跑 <code>e_layers=1</code> 對照組，而不是只跑深的然後假設它更好。結果證實了這個預期——659K 參數在 132,556 列訓練資料、幾乎沒有訊號的問題上已經是上限，2.24M 參數只是加大了過擬合空間，不是加大了模型能學到的東西。</p>
+  </div>
+</section>
+
+<section>
+  <h2><span class="num">05 — 最終測試結果：三輪最差，且遠低於統計功效預估的門檻</span></h2>
+  <p class="lede">最終選定組合：<code>iTransformer, e_layers=1, focal_g2, seq_len=512, 15 個特徵</code>。門檻改用驗證集百分位（30/20/10/5/3/2/1%），在下單數 ≥100 的候選裡取 CI 下界最高者：</p>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>百分位</th><th class="num">門檻</th><th class="num">驗證集交易數</th><th class="num">驗證集勝率</th><th class="num">CI 下界</th><th></th></tr></thead>
+      <tbody>
+        <tr><td class="mono">30%</td><td class="num">0.4994</td><td class="num">359</td><td class="num">51.81%</td><td class="num">46.65%</td><td></td></tr>
+        <tr><td class="mono">20%</td><td class="num">0.5034</td><td class="num">316</td><td class="num">51.90%</td><td class="num">46.40%</td><td></td></tr>
+        <tr class="hi"><td class="mono">10% ← 鎖定</td><td class="num">0.5090</td><td class="num">217</td><td class="num pos">54.84%</td><td class="num pos">48.19%</td><td>CI 下界最高</td></tr>
+        <tr><td class="mono">5%</td><td class="num">0.5133</td><td class="num">151</td><td class="num">54.30%</td><td class="num">46.35%</td><td></td></tr>
+        <tr><td class="mono">3%</td><td class="num">0.5164</td><td class="num">95</td><td class="num">48.42%</td><td class="num dim">--</td><td>&lt;100 筆排除</td></tr>
+        <tr><td class="mono">2%</td><td class="num">0.5188</td><td class="num">68</td><td class="num">42.65%</td><td class="num dim">--</td><td>&lt;100 筆排除</td></tr>
+        <tr><td class="mono">1%</td><td class="num">0.5222</td><td class="num">44</td><td class="num">45.45%</td><td class="num dim">--</td><td>&lt;100 筆排除</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>10% 百分位在驗證集上鎖定門檻（0.5090）、entry_at=1（事前固定，不做任何選擇），拿到測試集只評估一次：</p>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>統計</th><th class="num">交易數</th><th class="num">勝率</th><th>95% CI</th><th>結論</th></tr></thead>
+      <tbody>
+        <tr class="bad"><td class="mono">主要指標（叢集規則）</td><td class="num">416</td><td class="num neg">42.79%</td><td class="mono">[38.12%, 47.59%]</td><td class="neg">遠低於損益兩平，也低於 50%</td></tr>
+        <tr><td class="mono">busy_only 次要參考（僅鎖倉，不要求叢集斷開）</td><td class="num">778</td><td class="num">47.81%</td><td class="mono dim">[44.32%, 51.33%]</td><td class="dim">樣本數更大但仍未過線</td></tr>
+        <tr><td class="mono">always_up 基準</td><td class="num dim">--</td><td class="num dim">50.00%</td><td class="dim">--</td><td class="dim">參考</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>實驗前的統計功效試算（僅算交易數、不看勝負，無決策洩漏）預估：這個叢集規則下可行的交易數量級（400~650 筆）需要 <strong>57.9%~60%</strong> 的觀測勝率才能讓 CI 下界穩穩站上 54.05%。實際拿到的是 42.79%——不是「差一點沒過」，是比及格線低了超過 15 個百分點，比擲硬幣還低超過 7 個百分點。驗證集 AUC（0.5329）到測試集 AUC（<strong>0.5081</strong>）的落差，說明驗證集上看到的「訊號」很大成分是對驗證集本身的過擬合，沒有泛化到測試期。</p>
+
+  <div class="note">
+    <p class="t">先排除「模型壞掉」的可能性</p>
+    <p>用獨立擬合的 GBDT（同樣 15 個特徵，只用 train+val 訓練，測試集只評分一次）做交叉檢查：GBDT 測試集 AUC 為 <strong>0.5127</strong>，跟 transformer 的 0.5081 幾乎一樣。兩個完全不同的模型族在同一份測試資料上給出高度一致的低 AUC，排除了「iTransformer 訓練壞掉或輸出方向反了」的可能——這是「這個特徵集合在 30 分鐘尺度上就是沒有可利用邊際」的真實發現，不是程式錯誤。</p>
+  </div>
+
+  <div class="flag">
+    <p class="t">額外的描述性檢查（不影響任何決策）</p>
+    <p>在測試集機率上另外掃了一次百分位門檻（30%~1%），純粹描述用途、事前未鎖定、不作為任何選擇依據：勝率落在 49.55%~52.06% 之間，沒有任何一個操作點接近 54.05%。這排除了「只是門檻沒選對」的解釋——換哪個百分位都一樣，訊號本身就不在那裡。</p>
+  </div>
+</section>
+
+<section>
+  <h2><span class="num">06 — 為什麼沒有優勢：機率分佈與校準曲線</span>模型最有信心的地方，剛好沒有把握</h2>
+  <p class="lede">把測試集 33,139 筆預測依 <code>p_up</code> 由低到高切成 8 個等量區間，畫出「預測機率 vs 該區間實際勝率」的校準曲線，底下疊上機率密度直方圖（20 桶）。灰色虛線是完美校準的參考線（y=x），紅色虛線是損益兩平 54.05%：</p>
+
+  <figure>
+    <div class="chart">
+      <div class="legend">
+        <span><i class="ln" style="background:var(--muted)"></i>完美校準（y=x）</span>
+        <span><i class="ln" style="background:var(--warn)"></i>損益兩平 54.05%</span>
+        <span><i class="ln" style="background:var(--accent)"></i>實際校準曲線（8 分位）</span>
+        <span><i style="background:var(--muted)"></i>機率密度（下方直方圖）</span>
+      </div>
+      <svg viewBox="0 0 940 340" xmlns="http://www.w3.org/2000/svg" role="img"
+           aria-label="測試集校準曲線與機率密度分佈，顯示模型最高信心區間的實際勝率反而貼近五成">
+        <g transform="translate(30,10)">
+          <line x1="0" y1="210.0" x2="900" y2="210.0" stroke="var(--grid)"/><text x="-6" y="213.0" text-anchor="end" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">0.40</text>
+          <line x1="0" y1="162.5" x2="900" y2="162.5" stroke="var(--grid)"/><text x="-6" y="165.5" text-anchor="end" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">0.45</text>
+          <line x1="0" y1="115.0" x2="900" y2="115.0" stroke="var(--grid)"/><text x="-6" y="118.0" text-anchor="end" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">0.50</text>
+          <line x1="0" y1="67.5" x2="900" y2="67.5" stroke="var(--grid)"/><text x="-6" y="70.5" text-anchor="end" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">0.55</text>
+          <line x1="0" y1="20.0" x2="900" y2="20.0" stroke="var(--grid)"/><text x="-6" y="23.0" text-anchor="end" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">0.60</text>
+
+          <line x1="0" y1="76.5" x2="900" y2="76.5" stroke="var(--warn)" stroke-width="1" stroke-dasharray="4 3"/>
+          <text x="905" y="80" text-anchor="start" font-family="ui-monospace,Menlo,monospace" font-size="10" fill="var(--warn)">54.05%</text>
+
+          <line x1="0.0" y1="191.0" x2="900.0" y2="69.4" stroke="var(--muted)" stroke-width="1.2" stroke-dasharray="2 3"/>
+
+          <polyline points="334.3,142.4 419.1,100.4 462.6,121.3 495.6,125.3 524.9,105.8 555.1,100.1 592.4,107.9 660.8,116.8" fill="none" stroke="var(--accent)" stroke-width="2"/>
+          <circle cx="334.3" cy="142.4" r="3.5" fill="var(--accent)"/>
+          <circle cx="419.1" cy="100.4" r="3.5" fill="var(--accent)"/>
+          <circle cx="462.6" cy="121.3" r="3.5" fill="var(--accent)"/>
+          <circle cx="495.6" cy="125.3" r="3.5" fill="var(--accent)"/>
+          <circle cx="524.9" cy="105.8" r="3.5" fill="var(--accent)"/>
+          <circle cx="555.1" cy="100.1" r="3.5" fill="var(--accent)"/>
+          <circle cx="592.4" cy="107.9" r="3.5" fill="var(--accent)"/>
+          <circle cx="660.8" cy="116.8" r="6" fill="var(--neg)"/>
+          <text x="660.8" y="116.8" dy="-13" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="10" fill="var(--neg)">本系統操作點：pred 0.514 -&gt; 實際 49.8%</text>
+
+          <text x="0" y="-6" font-family="ui-monospace,Menlo,monospace" font-size="10" fill="var(--muted)">實際勝率（8 分位）</text>
+
+          <text x="0" y="228" font-family="ui-monospace,Menlo,monospace" font-size="10" fill="var(--muted)">機率密度（測試集 p_up 直方圖，20 桶）</text>
+          <line x1="0" y1="290.0" x2="900" y2="290.0" stroke="var(--rule)" stroke-width="1"/>
+          <rect x="2.0" y="290.0" width="41.0" height="0.0" fill="var(--muted)" opacity=".6"/>
+          <rect x="47.0" y="289.9" width="41.0" height="0.1" fill="var(--muted)" opacity=".6"/>
+          <rect x="92.0" y="289.9" width="41.0" height="0.1" fill="var(--muted)" opacity=".6"/>
+          <rect x="137.0" y="289.5" width="41.0" height="0.5" fill="var(--muted)" opacity=".6"/>
+          <rect x="182.0" y="288.8" width="41.0" height="1.2" fill="var(--muted)" opacity=".6"/>
+          <rect x="227.0" y="287.8" width="41.0" height="2.2" fill="var(--muted)" opacity=".6"/>
+          <rect x="272.0" y="284.6" width="41.0" height="5.4" fill="var(--muted)" opacity=".6"/>
+          <rect x="317.0" y="277.9" width="41.0" height="12.1" fill="var(--muted)" opacity=".6"/>
+          <rect x="362.0" y="267.8" width="41.0" height="22.2" fill="var(--muted)" opacity=".6"/>
+          <rect x="407.0" y="256.4" width="41.0" height="33.6" fill="var(--muted)" opacity=".6"/>
+          <rect x="452.0" y="242.8" width="41.0" height="47.2" fill="var(--muted)" opacity=".6"/>
+          <rect x="497.0" y="235.0" width="41.0" height="55.0" fill="var(--accent)" opacity=".8"/>
+          <rect x="542.0" y="242.9" width="41.0" height="47.1" fill="var(--muted)" opacity=".6"/>
+          <rect x="587.0" y="257.6" width="41.0" height="32.4" fill="var(--muted)" opacity=".6"/>
+          <rect x="632.0" y="272.9" width="41.0" height="17.1" fill="var(--muted)" opacity=".6"/>
+          <rect x="677.0" y="283.0" width="41.0" height="7.0" fill="var(--muted)" opacity=".6"/>
+          <rect x="722.0" y="287.6" width="41.0" height="2.4" fill="var(--muted)" opacity=".6"/>
+          <rect x="767.0" y="289.5" width="41.0" height="0.5" fill="var(--muted)" opacity=".6"/>
+          <rect x="812.0" y="289.9" width="41.0" height="0.1" fill="var(--muted)" opacity=".6"/>
+          <rect x="857.0" y="290.0" width="41.0" height="0.0" fill="var(--muted)" opacity=".6"/>
+
+          <text x="140.6" y="310" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">0.44</text>
+          <text x="281.3" y="310" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">0.46</text>
+          <text x="421.9" y="310" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">0.48</text>
+          <text x="562.5" y="310" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">0.50</text>
+          <text x="703.1" y="310" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">0.52</text>
+          <text x="843.8" y="310" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">0.54</text>
+          <text x="450" y="326" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="10" fill="var(--muted)">預測機率 p_up（測試集）</text>
+        </g>
+      </svg>
+    </div>
+    <figcaption>機率密度集中在 0.48~0.51 之間，std 只有 0.0141——跟 Round 2 的壓縮程度相近，換損失函數、加特徵都沒有改變這一點。校準曲線本身在 8 個分位之間上下震盪（47.1% ~ 51.6%），沒有隨預測機率單調上升的趨勢；最右側（模型最高信心）的區間實際勝率是 49.8%，比左邊第二高的區間（49.9% 預測 -&gt; 51.6% 實際）還低——這是校準反轉：模型说「這裡更有把握」的地方，反而没有更準。</figcaption>
+  </figure>
+</section>
+
+<section>
+  <h2><span class="num">07 — 開單時間分佈</span>交易平均分散在 24 小時，沒有集中在特定時段</h2>
+  <p class="lede">416 筆測試集交易依進場時間的小時（UTC）分佈如下——如果訊號集中在特定時段（例如亞洲時段流動性較薄），可能暗示某種可利用的結構性偏差；如果均勻分散，代表模型的（弱）訊號不是來自時段效應：</p>
+
+  <figure>
+    <div class="chart">
+      <div class="legend">
+        <span><i style="background:var(--accent)"></i>各小時進場筆數</span>
+        <span><i class="ln" style="background:var(--muted)"></i>平均 17.3 筆/小時</span>
+      </div>
+      <svg viewBox="0 0 940 250" xmlns="http://www.w3.org/2000/svg" role="img"
+           aria-label="416 筆測試集交易依進場小時（UTC）的分佈直方圖">
+        <g transform="translate(30,10)">
+          <line x1="0" y1="200.0" x2="900" y2="200.0" stroke="var(--ink)" stroke-width="1"/>
+          <line x1="0" y1="88.6" x2="900" y2="88.6" stroke="var(--muted)" stroke-width="1" stroke-dasharray="4 3"/>
+
+          <rect x="2.0" y="116.4" width="33.5" height="83.6" fill="var(--accent)" opacity=".75"/>
+          <rect x="39.5" y="116.4" width="33.5" height="83.6" fill="var(--accent)" opacity=".75"/>
+          <rect x="77.0" y="84.3" width="33.5" height="115.7" fill="var(--accent)" opacity=".75"/>
+          <rect x="114.5" y="129.3" width="33.5" height="70.7" fill="var(--accent)" opacity=".75"/>
+          <rect x="152.0" y="116.4" width="33.5" height="83.6" fill="var(--accent)" opacity=".75"/>
+          <rect x="189.5" y="77.9" width="33.5" height="122.1" fill="var(--accent)" opacity=".75"/>
+          <rect x="227.0" y="71.4" width="33.5" height="128.6" fill="var(--accent)" opacity=".75"/>
+          <rect x="264.5" y="97.1" width="33.5" height="102.9" fill="var(--accent)" opacity=".75"/>
+          <rect x="302.0" y="52.1" width="33.5" height="147.9" fill="var(--accent)" opacity=".75"/>
+          <rect x="339.5" y="97.1" width="33.5" height="102.9" fill="var(--accent)" opacity=".75"/>
+          <rect x="377.0" y="71.4" width="33.5" height="128.6" fill="var(--accent)" opacity=".75"/>
+          <rect x="414.5" y="103.6" width="33.5" height="96.4" fill="var(--accent)" opacity=".75"/>
+          <rect x="452.0" y="97.1" width="33.5" height="102.9" fill="var(--accent)" opacity=".75"/>
+          <rect x="489.5" y="58.6" width="33.5" height="141.4" fill="var(--accent)" opacity=".75"/>
+          <rect x="527.0" y="84.3" width="33.5" height="115.7" fill="var(--accent)" opacity=".75"/>
+          <rect x="564.5" y="77.9" width="33.5" height="122.1" fill="var(--accent)" opacity=".75"/>
+          <rect x="602.0" y="97.1" width="33.5" height="102.9" fill="var(--accent)" opacity=".75"/>
+          <rect x="639.5" y="71.4" width="33.5" height="128.6" fill="var(--accent)" opacity=".75"/>
+          <rect x="677.0" y="45.7" width="33.5" height="154.3" fill="var(--accent)" opacity=".75"/>
+          <rect x="714.5" y="84.3" width="33.5" height="115.7" fill="var(--accent)" opacity=".75"/>
+          <rect x="752.0" y="148.6" width="33.5" height="51.4" fill="var(--accent)" opacity=".75"/>
+          <rect x="789.5" y="97.1" width="33.5" height="102.9" fill="var(--accent)" opacity=".75"/>
+          <rect x="827.0" y="20.0" width="33.5" height="180.0" fill="var(--accent)"/>
+          <rect x="864.5" y="110.0" width="33.5" height="90.0" fill="var(--accent)" opacity=".75"/>
+
+          <text x="18.8" y="216" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="9" fill="var(--muted)">0</text>
+          <text x="131.3" y="216" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="9" fill="var(--muted)">3</text>
+          <text x="243.8" y="216" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="9" fill="var(--muted)">6</text>
+          <text x="356.3" y="216" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="9" fill="var(--muted)">9</text>
+          <text x="468.8" y="216" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="9" fill="var(--muted)">12</text>
+          <text x="581.3" y="216" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="9" fill="var(--muted)">15</text>
+          <text x="693.8" y="216" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="9" fill="var(--muted)">18</text>
+          <text x="806.3" y="216" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="9" fill="var(--muted)">21</text>
+          <text x="450" y="232" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="10" fill="var(--muted)">進場小時（UTC）</text>
+        </g>
+      </svg>
+    </div>
+    <figcaption>24 小時分佈在 8~28 筆之間，最高的 22 時（UTC，對應台北 06 時）28 筆、最低的 20 時 8 筆，沒有明顯集中在單一交易時段。排除了「訊號其實是某個特定時段的流動性/波動偽相關」這個解釋——弱訊號分散在全天，跟時區/時段結構無關。</figcaption>
+  </figure>
+</section>
+
+<section>
+  <h2><span class="num">08 — 權益曲線與回撤</span>固定 2% 下注、賠率 0.85，416 筆交易後只剩 16.4%</h2>
+  <p class="lede">用測試集實際交易序列模擬：每筆固定押目前權益的 2%，贏拿 <code>+0.85×押注</code>、輸失去押注，從 1.0 開始逐筆累計：</p>
+
+  <figure>
+    <div class="chart">
+      <div class="legend">
+        <span><i class="ln" style="background:var(--accent)"></i>權益（起始 1.0）</span>
+        <span><i class="ln" style="background:var(--neg)"></i>回撤（underwater，相對歷史新高）</span>
+      </div>
+      <svg viewBox="0 0 940 280" xmlns="http://www.w3.org/2000/svg" role="img"
+           aria-label="416 筆測試集交易的權益曲線與回撤，權益從 1.0 降到 0.164，最大回撤 84.1%">
+        <g transform="translate(30,10)">
+          <line x1="0" y1="26.7" x2="900" y2="26.7" stroke="var(--muted)" stroke-width="1" stroke-dasharray="3 3"/>
+          <text x="905" y="30" text-anchor="start" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">1.00</text>
+          <line x1="0" y1="93.3" x2="900" y2="93.3" stroke="var(--grid)"/><text x="-6" y="96.3" text-anchor="end" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">0.50</text>
+          <line x1="0" y1="160.0" x2="900" y2="160.0" stroke="var(--ink)" stroke-width="1"/><text x="-6" y="163.0" text-anchor="end" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">0.00</text>
+
+          <polyline points="0.0,29.3 6.5,27.6 13.0,30.6 19.5,28.9 26.0,27.1 32.5,34.9 39.0,33.2 45.5,36.2 52.0,39.0 58.6,46.2 65.1,48.8 71.6,47.3 78.1,49.9 84.6,44.2 91.1,51.0 97.6,49.5 104.1,48.0 110.6,50.6 117.1,49.1 123.6,55.7 130.1,61.8 136.6,67.6 143.1,66.3 149.6,68.5 156.1,73.9 162.7,75.9 169.2,74.7 175.7,73.6 182.2,72.4 188.7,67.9 195.2,63.1 201.7,58.1 208.2,64.1 214.7,62.7 221.2,61.4 227.7,63.7 234.2,62.4 240.7,68.1 247.2,70.3 253.7,72.4 260.2,74.4 266.7,76.4 273.3,75.3 279.8,74.1 286.3,76.1 292.8,75.0 299.3,76.9 305.8,78.9 312.3,77.8 318.8,76.7 325.3,78.6 331.8,80.5 338.3,76.4 344.8,75.2 351.3,77.2 357.8,72.9 364.3,71.7 370.8,67.1 377.3,69.3 383.9,71.4 390.4,73.5 396.9,72.3 403.4,74.3 409.9,76.3 416.4,75.2 422.9,80.2 429.4,79.1 435.9,81.0 442.4,85.6 448.9,87.4 455.4,91.6 461.9,95.7 468.4,99.4 474.9,100.8 481.4,104.3 488.0,107.6 494.5,108.8 501.0,110.0 507.5,109.3 514.0,108.6 520.5,111.7 527.0,112.8 533.5,113.9 540.0,116.6 546.5,114.3 553.0,113.7 559.5,114.8 566.0,114.2 572.5,115.3 579.0,116.3 585.5,118.9 592.0,121.3 598.6,123.6 605.1,123.1 611.6,121.1 618.1,120.6 624.6,120.1 631.1,122.4 637.6,123.3 644.1,122.8 650.6,122.3 657.1,121.8 663.6,122.7 670.1,123.5 676.6,125.7 683.1,126.5 689.6,126.0 696.1,126.8 702.7,125.1 709.2,123.3 715.7,124.1 722.2,125.0 728.7,127.0 735.2,127.8 741.7,127.4 748.2,128.1 754.7,128.9 761.2,129.6 767.7,131.4 774.2,133.1 780.7,132.7 787.2,133.3 793.7,134.0 800.2,135.5 806.7,135.2 813.3,134.8 819.8,135.4 826.3,136.0 832.8,136.5 839.3,137.1 845.8,137.6 852.3,138.1 858.8,137.8 865.3,136.7 871.8,137.2 878.3,136.9 884.8,137.5 891.3,137.2 897.8,137.7 900.0,138.1" fill="none" stroke="var(--accent)" stroke-width="2"/>
+          <circle cx="900.0" cy="138.1" r="4.5" fill="var(--accent)"/>
+          <text x="900.0" y="138.1" dy="-10" text-anchor="end" font-family="ui-monospace,Menlo,monospace" font-size="10" fill="var(--accent)">最終 0.164</text>
+
+          <text x="0" y="-6" font-family="ui-monospace,Menlo,monospace" font-size="10" fill="var(--muted)">權益（線性刻度，2% 固定押注）</text>
+
+          <text x="0" y="200" font-family="ui-monospace,Menlo,monospace" font-size="10" fill="var(--muted)">回撤（相對歷史新高，underwater）</text>
+          <line x1="0" y1="180.0" x2="900" y2="180.0" stroke="var(--ink)" stroke-width="1"/><text x="-6" y="183.0" text-anchor="end" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">0%</text>
+          <line x1="0" y1="206.7" x2="900" y2="206.7" stroke="var(--grid)"/><text x="-6" y="209.7" text-anchor="end" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">-30%</text>
+          <line x1="0" y1="233.3" x2="900" y2="233.3" stroke="var(--grid)"/><text x="-6" y="236.3" text-anchor="end" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">-60%</text>
+          <line x1="0" y1="260.0" x2="900" y2="260.0" stroke="var(--grid)"/><text x="-6" y="263.0" text-anchor="end" font-family="ui-monospace,Menlo,monospace" font-size="9.5" fill="var(--muted)">-90%</text>
+
+          <polyline points="0.0,181.8 6.5,181.8 13.0,183.8 19.5,182.6 26.0,181.5 32.5,186.6 39.0,185.5 45.5,187.4 52.0,189.3 58.6,194.0 65.1,195.8 71.6,194.8 78.1,196.5 84.6,192.7 91.1,197.2 97.6,196.2 104.1,195.2 110.6,197.0 117.1,196.0 123.6,200.3 130.1,204.3 136.6,208.1 143.1,207.3 149.6,208.7 156.1,212.2 162.7,213.6 169.2,212.8 175.7,212.0 182.2,211.3 188.7,208.3 195.2,205.1 201.7,201.8 208.2,205.8 214.7,204.9 221.2,204.1 227.7,205.6 234.2,204.7 240.7,208.5 247.2,209.9 253.7,211.3 260.2,212.6 266.7,213.9 273.3,213.2 279.8,212.4 286.3,213.7 292.8,213.0 299.3,214.3 305.8,215.5 312.3,214.8 318.8,214.1 325.3,215.4 331.8,216.6 338.3,213.9 344.8,213.1 351.3,214.4 357.8,211.6 364.3,210.8 370.8,207.8 377.3,209.2 383.9,210.6 390.4,212.0 396.9,211.2 403.4,212.6 409.9,213.9 416.4,213.1 422.9,216.4 429.4,215.7 435.9,216.9 442.4,220.0 448.9,221.1 455.4,223.9 461.9,226.6 468.4,229.1 474.9,230.0 481.4,232.3 488.0,234.4 494.5,235.2 501.0,236.0 507.5,235.6 514.0,235.1 520.5,237.1 527.0,237.8 533.5,238.6 540.0,240.3 546.5,238.9 553.0,238.5 559.5,239.2 566.0,238.8 572.5,239.5 579.0,240.1 585.5,241.8 592.0,243.4 598.6,244.9 605.1,244.6 611.6,243.3 618.1,243.0 624.6,242.6 631.1,244.2 637.6,244.8 644.1,244.4 650.6,244.1 657.1,243.8 663.6,244.3 670.1,244.9 676.6,246.3 683.1,246.8 689.6,246.5 696.1,247.1 702.7,245.9 709.2,244.7 715.7,245.3 722.2,245.9 728.7,247.2 735.2,247.7 741.7,247.4 748.2,247.9 754.7,248.4 761.2,248.9 767.7,250.1 774.2,251.2 780.7,250.9 787.2,251.4 793.7,251.8 800.2,252.8 806.7,252.5 813.3,252.3 819.8,252.7 826.3,253.1 832.8,253.5 839.3,253.8 845.8,254.2 852.3,254.5 858.8,254.3 865.3,253.6 871.8,253.9 878.3,253.7 884.8,254.1 891.3,253.9 897.8,254.2 900.0,254.5" fill="none" stroke="var(--neg)" stroke-width="2"/>
+          <circle cx="854.5" cy="254.8" r="4.5" fill="var(--neg)"/>
+          <text x="854.5" y="254.8" dy="14" text-anchor="end" font-family="ui-monospace,Menlo,monospace" font-size="10" fill="var(--neg)">最大回撤 -84.1%</text>
+
+          <text x="450" y="272" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="10" fill="var(--muted)">交易序號（1 -&gt; 416，2026-04-23 -&gt; 2026-08-16）</text>
+        </g>
+      </svg>
+    </div>
+    <figcaption>權益從 1.0 一路降到 0.164（-83.6%），最大回撤 -84.1%（第 395 筆附近）。曲線幾乎沒有明顯的反彈段——不是「大賠一次然後打平」，而是持續小額虧損的斜率，跟 42.79% 的整體勝率一致：odds=0.85 下，勝率要到 54.05% 才打平，42.79% 意味著平均每筆期望值是負的，權益曲線持續向下是數學上的必然，不是運氣不好。</figcaption>
+  </figure>
+</section>
+
+<section>
+  <h2><span class="num">09 — 結論</span>三輪方法論持續變嚴謹，但訊號本身沒有變強</h2>
+  <ul>
+    <li><strong>未通過關卡，且是三輪最差</strong>：測試集勝率 42.79%，95% CI [38.12%, 47.59%]，遠低於損益兩平 54.05%，也低於擲硬幣的 50%。Round 1 → 2 → 3 的測試集勝率是 51.32% → 50.59% → 42.79%，加了更多特徵、更深的模型、系統性損失函數搜尋，結果不是持平或改善，是明顯變差。</li>
+    <li><strong>新特徵來源沒有無效，但量級不夠</strong>：4 個新來源特徵擠進重要度前 15 名，GBDT 關卡 AUC 從 0.5081 微升到 0.5099（CI 大幅重疊，統計上不顯著），53 個候選裡只有 2 個通過 1σ 顯著性——訊號被稀釋而非被放大。</li>
+    <li><strong>「plain BCE 更適合」的假說沒有成立</strong>：6 個損失函數的驗證集 AUC 全部落在 0.5312~0.5329 的窄帶內，現行 focal_g2 依既定規則（AUC 最高）勝出，但差距在雜訊範圍內——損失函數不是這個問題的瓶頸。</li>
+    <li><strong>加深模型如預期地沒有幫助</strong>：殘差 4 層版（2.24M 參數）驗證集 AUC 0.5242，低於淺層 1 層版（659K 參數）的 0.5329——計劃階段就寫明這是誠實預期的結果，用對照組直接驗證，而不是只跑深的然後假設更好。</li>
+    <li><strong>校準曲線給出了機制上的解釋</strong>：模型最高信心的區間，測試集實際勝率是 49.8%，比次高信心區間（51.6%）還低——出現校準反轉。這代表模型的機率排序在系統實際操作的高信心端沒有單調對應到真實勝率，這正是「驗證集選中的門檻在測試集失靈」的根本原因，比單純說「過擬合」更具體。</li>
+    <li><strong>已排除「模型壞掉」的可能</strong>：獨立擬合的 GBDT 在同樣 15 個特徵、同一測試集上給出 AUC 0.5127，跟 transformer 的 0.5081 高度一致——兩個不同模型族收斂到同一個「幾乎沒有邊際」的結論，這是資料/特徵集合本身的限制，不是實作錯誤。</li>
+  </ul>
+
+  <div class="good-box">
+    <p class="t">下一步建議（僅供參考，非既定計畫）</p>
+    <p>(1) 三輪下來，GBDT 與 iTransformer 在 5 分鐘 K 線衍生特徵 + 30 分鐘方向標籤這個組合上，AUC 上限反覆收斂在 0.50~0.51，即使換了三組完全正交的特徵來源、加深模型、系統性搜尋損失函數，都沒能推動這個數字——這可能代表問題不在「還沒找到對的特徵/架構/損失函數」，而是 30 分鐘方向這個標籤在這個時間尺度上，用目前這類特徵就是接近隨機的；(2) 若要繼續嘗試，比較有機會的方向是換全新的資訊類型（不是價量/持倉衍生指標），例如鏈上資料、跨交易所價差、或更長的結算週期（減少雜訊佔比）；(3) 若確定要用真金白銀操作，42.79% 的勝率在賠率 0.85 下期望值明確為負，不建議依此系統下單。</p>
+  </div>
+</section>
+
+<footer>
+  <p>資料：BTCUSDT + ETHUSDT/BNBUSDT/SOLUSDT 5min（2025-01-01 ~ 2026-07-31，165,695 列，經新特徵來源合併與 inf/NaN 清理後）；新增未平倉量/多空比（<code>futures/um/daily/metrics/</code>）、資金費率（<code>futures/um/monthly/fundingRate/</code>）、premium/mark price（<code>premiumIndexKlines/</code>、<code>markPriceKlines/</code>）三組來源，歷史封存與即時 REST 端點的欄位對應以重疊時段交叉比對確認，median 相對差 &lt; 1e-3。特徵候選 34+19=53，經 GBDT 關卡（僅 train+val，5 折 TimeSeriesSplit × 5 次重複 permutation importance）top-k 規則（<code>k=max(15, 1sigma 通過數)=max(15,2)=15</code>）篩至 15 個。模型：iTransformer，<code>seq_len=512, label_len=48, pred_len=1, d_model=256, d_ff=512, e_layers=1, n_heads=8, dropout=0.2, batch_size=64, lr=1e-4, lradj=type3, focal_alpha=0.4985, patience=5</code>，損失函數 <code>focal_g2</code>（6 種變體比較後依驗證集 AUC 勝出），Apple MPS 訓練。深度對照：新增 <code>models/iTransformerRes.py</code>（Pre-LN + LayerScale(init 1e-4) + DropPath(線性至 0.1)，<code>e_layers=4</code>，2.24M 參數），依驗證集 AUC 比較後由 e_layers=1 版本勝出，未採用。<code>entry_at</code> 事前固定為 1，不做任何選擇/掃描；賠率固定 0.85，損益兩平 54.05%。門檻改用驗證集百分位（30/20/10/5/3/2/1%），在下單數 &gt;=100 的候選中取 CI 下界最高者（10% 百分位，門檻 0.5090），測試集只評估一次。叢集進場（<code>toolbywi/event_common.py</code> 的 <code>cluster_entries()</code>/<code>cluster_step()</code>）只認買漲方向，gap=6 對齊 30 分鐘結算，保證任兩筆交易 index 差 &gt; gap；<code>evaluate_event.py</code> 的 <code>collect_predictions()</code> 手動重建 <code>shuffle=False</code> 的 DataLoader（<code>data_provider/data_factory.py</code> 對非 test flag 預設 shuffle=True，會打亂叢集規則依賴的時間順序，已修正）。權益曲線與回撤：測試集 416 筆交易，固定押注比例 2%，賠率 0.85，起始權益 1.0。GBDT 獨立檢查：<code>HistGradientBoostingClassifier</code>，同 15 個特徵，僅 train+val 訓練，測試集只評分一次（AUC 0.5127，未用於任何決策，僅作為 transformer 結果是否合理的交叉驗證）。靜態洩漏稽核（<code>audit_lookahead.py</code>）掃描全部管線程式碼。原始數據見專案 <code>dataset/event30m_v3/gbdt_probe_report.json</code>（53 特徵重要度）、<code>dataset/event30m_v3_sel/meta.json</code>、<code>dataset/event30m_v3_sel/checkpoint_comparison.json</code>（損失函數與深度比較全部候選）、<code>dataset/event30m_v3_sel/evaluate_report.json</code>（驗證集網格與測試結果）、<code>dataset/event30m_v3_sel/trades.csv</code>（逐筆交易明細）。</p>
+</footer>
+
+</div>

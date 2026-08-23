@@ -1,0 +1,132 @@
+{
+  "breakeven": 0.5405405405405405,
+  "min_trades": 300,
+  "val_reports": [
+    {
+      "threshold": 0.5,
+      "n_trades": 17047,
+      "n_correct": 8690,
+      "win_rate": 0.50976711444829,
+      "ci_lo": 0.5022614408760919,
+      "ci_hi": 0.5172683870684247,
+      "n_up": 7015,
+      "n_down": 10032
+    },
+    {
+      "threshold": 0.52,
+      "n_trades": 7190,
+      "n_correct": 3709,
+      "win_rate": 0.5158553546592489,
+      "ci_lo": 0.5042985545889804,
+      "ci_hi": 0.5273952214422439,
+      "n_up": 2791,
+      "n_down": 4399
+    },
+    {
+      "threshold": 0.54,
+      "n_trades": 1869,
+      "n_correct": 901,
+      "win_rate": 0.48207597645799893,
+      "ci_lo": 0.45948251312606325,
+      "ci_hi": 0.504742969130086,
+      "n_up": 725,
+      "n_down": 1144
+    },
+    {
+      "threshold": 0.56,
+      "n_trades": 364,
+      "n_correct": 157,
+      "win_rate": 0.43131868131868134,
+      "ci_lo": 0.3814191034663354,
+      "ci_hi": 0.4826527709757114,
+      "n_up": 130,
+      "n_down": 234
+    },
+    {
+      "threshold": 0.58,
+      "n_trades": 58,
+      "n_correct": 28,
+      "win_rate": 0.4827586206896552,
+      "ci_lo": 0.3592818542405501,
+      "ci_hi": 0.6083773821659054,
+      "n_up": 15,
+      "n_down": 43
+    },
+    {
+      "threshold": 0.6,
+      "n_trades": 5,
+      "n_correct": 0,
+      "win_rate": 0.0,
+      "ci_lo": 0.0,
+      "ci_hi": 0.43448246478317476,
+      "n_up": 5,
+      "n_down": 0
+    },
+    {
+      "threshold": 0.62,
+      "n_trades": 0,
+      "n_correct": 0,
+      "win_rate": null,
+      "ci_lo": null,
+      "ci_hi": null,
+      "n_up": 0,
+      "n_down": 0
+    },
+    {
+      "threshold": 0.65,
+      "n_trades": 0,
+      "n_correct": 0,
+      "win_rate": null,
+      "ci_lo": null,
+      "ci_hi": null,
+      "n_up": 0,
+      "n_down": 0
+    },
+    {
+      "threshold": 0.68,
+      "n_trades": 0,
+      "n_correct": 0,
+      "win_rate": null,
+      "ci_lo": null,
+      "ci_hi": null,
+      "n_up": 0,
+      "n_down": 0
+    },
+    {
+      "threshold": 0.7,
+      "n_trades": 0,
+      "n_correct": 0,
+      "win_rate": null,
+      "ci_lo": null,
+      "ci_hi": null,
+      "n_up": 0,
+      "n_down": 0
+    },
+    {
+      "threshold": 0.75,
+      "n_trades": 0,
+      "n_correct": 0,
+      "win_rate": null,
+      "ci_lo": null,
+      "ci_hi": null,
+      "n_up": 0,
+      "n_down": 0
+    }
+  ],
+  "chosen_threshold": 0.52,
+  "test": {
+    "threshold": 0.52,
+    "n_trades": 13220,
+    "n_correct": 6785,
+    "win_rate": 0.5132375189107413,
+    "ci_lo": 0.5047147039500949,
+    "ci_hi": 0.5217526430072857,
+    "n_up": 5426,
+    "n_down": 7794
+  },
+  "baselines": {
+    "always_up": 0.4957174703742814,
+    "majority": 0.5042825296257186
+  },
+  "passed": false
+}
